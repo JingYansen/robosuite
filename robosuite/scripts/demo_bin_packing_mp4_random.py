@@ -9,20 +9,52 @@ import numpy as np
 from PIL import Image
 import subprocess
 
-LOAD_PATH = '/home/yeweirui/checkpoint/openai-2020-02-10-06-28-37-891146/checkpoints/02100'
-
 DEMO_PATH = 'demo'
 
 if not os.path.exists(DEMO_PATH):
     os.makedirs(DEMO_PATH)
 
-DEMO_PATH += '/states_demo_16obj.mp4'
+DEMO_PATH += '/human.mp4'
+
+class human_policy:
+    def __init__(self, low, high, delta=[0.061, 0.072]):
+        self.low = np.copy(low)
+        self.high = np.copy(high)
+        self.delta = delta
+        self.index = 0
+        self.actions = []
+
+        self.prepare()
+
+    def prepare(self):
+        for i in range(3):
+            for j in range(4):
+                action = self.low + self.delta * np.array([i, j])
+
+                self.actions.append(action)
+
+        for i in range(2):
+            for j in range(2):
+                action = self.low + (self.delta + np.array([0.03, 0.035])) * np.array([i, j])
+
+                self.actions.append(action)
+
+
+
+    def step(self):
+        action = self.actions[self.index]
+        self.index += 1
+        return np.array(action)
+
 
 if __name__ == "__main__":
 
     # Notice how the environment is wrapped by the wrapper
-    low = np.array([0.5, 0.15])
-    high = np.array([0.7, 0.6])
+    low = np.array([0.54, 0.27])
+    high = np.array([0.7, 0.5])
+
+    # low = np.array([0.5, 0.15])
+    # high = np.array([0.7, 0.6])
     obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
 
     # obj_names = ['Milk'] + ['Bread'] + ['Cereal'] + ['Can']
@@ -32,7 +64,7 @@ if __name__ == "__main__":
     subprocess.call(['mkdir', '-p', 'demo'])
     time_step_counter = 0
 
-    num_envs = 8
+    num_envs = 4
 
     env = MyGymWrapper(
         suite.make(
@@ -48,18 +80,15 @@ if __name__ == "__main__":
         num_envs=num_envs,
     )
 
-    model = ppo2.learn(network='mlp', env=env,
-                       total_timesteps=0, nsteps=16, save_interval=100, lr=1e-3,
-                       num_layers=3, load_path=LOAD_PATH)
-
     n_episode = 4
-    state = model.initial_state if hasattr(model, 'initial_state') else None
+    state = None
     dones = np.zeros((1,))
 
 
     for i_episode in range(n_episode):
         obs = env.reset()
         obs = np.array([obs.tolist()] * num_envs)
+        human = human_policy(low=low, high=high)
 
         for i in range(100):
 
@@ -74,13 +103,10 @@ if __name__ == "__main__":
                 img.save('frames/frame-%.10d.png' % time_step_counter)
                 time_step_counter += 1
 
-            if state is not None:
-                actions, _, state, _ = model.step(obs, S=state, M=dones)
-            else:
-                actions, _, _, _ = model.step(obs)
+            # actions = env.action_space.sample()
+            actions = human.step()
 
-            # print('action: ', actions[0])
-            obs, rew, done, _ = env.step(actions[0])
+            obs, rew, done, _ = env.step(actions)
             obs = np.array([obs.tolist()] * num_envs)
 
             if done:

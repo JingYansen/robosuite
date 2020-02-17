@@ -20,8 +20,9 @@ from robosuite.wrappers import MyGymWrapper
 
 def train(args, env):
     config = tf.ConfigProto(allow_soft_placement=True,
-                            intra_op_parallelism_threads=1,
-                            inter_op_parallelism_threads=1)
+                            device_count={"CPU": 32},
+                            intra_op_parallelism_threads=32,
+                            inter_op_parallelism_threads=32)
     config.gpu_options.allow_growth = True
     get_session(config=config)
 
@@ -70,9 +71,9 @@ if __name__ == "__main__":
     PATH = os.path.dirname(os.path.realpath(__file__))
     low = np.array([0.5, 0.15])
     high = np.array([0.7, 0.6])
-    obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
+    # obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
 
-    # obj_names = ['Milk'] + ['Bread'] + ['Cereal'] + ['Can']
+    obj_names = ['Milk'] + ['Bread'] + ['Cereal'] + ['Can']
 
     ## make env
     # Notice how the environment is wrapped by the wrapper
