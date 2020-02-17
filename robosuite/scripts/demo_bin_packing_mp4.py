@@ -34,6 +34,8 @@ if __name__ == "__main__":
 
     num_envs = 8
 
+    render_drop_freq = 5
+
     env = MyGymWrapper(
         suite.make(
             'BinPackPlace',
@@ -42,6 +44,8 @@ if __name__ == "__main__":
             ignore_done=False,
             use_camera_obs=False,
             control_freq=1,
+
+            render_drop_freq=render_drop_freq,
             obj_names=obj_names
         ),
         action_bound=(low, high),
@@ -63,37 +67,23 @@ if __name__ == "__main__":
 
         for i in range(100):
 
-            for _ in range(20):
-                image_data_bird = env.sim.render(width=640, height=480, camera_name='birdview')
-                image_data_agent = env.sim.render(width=640, height=480, camera_name='agentview')
-                image_data_agent = np.rot90(image_data_agent, 2)
+            if state is not None:
+                actions, _, state, _ = model.step(obs, S=state, M=dones)
+            else:
+                actions, _, _, _ = model.step(obs)
 
+            obs, rew, done, info = env.step(actions[0])
+            obs = np.array([obs.tolist()] * num_envs)
+
+            for i in range(len(info['birdview'])):
+                image_data_bird, image_data_agent = info['birdview'][i], info['agentview'][i]
                 image_data = np.concatenate((image_data_bird, image_data_agent), 1)
 
                 img = Image.fromarray(image_data, 'RGB')
                 img.save('frames/frame-%.10d.png' % time_step_counter)
                 time_step_counter += 1
 
-            if state is not None:
-                actions, _, state, _ = model.step(obs, S=state, M=dones)
-            else:
-                actions, _, _, _ = model.step(obs)
-
-            # print('action: ', actions[0])
-            obs, rew, done, _ = env.step(actions[0])
-            obs = np.array([obs.tolist()] * num_envs)
-
             if done:
-                for _ in range(20):
-                    image_data_bird = env.sim.render(width=640, height=480, camera_name='birdview')
-                    image_data_agent = env.sim.render(width=640, height=480, camera_name='agentview')
-                    image_data_agent = np.rot90(image_data_agent, 2)
-
-                    image_data = np.concatenate((image_data_bird, image_data_agent), 1)
-
-                    img = Image.fromarray(image_data, 'RGB')
-                    img.save('frames/frame-%.10d.png' % time_step_counter)
-                    time_step_counter += 1
                 break
 
     subprocess.call(

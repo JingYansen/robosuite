@@ -50,6 +50,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         camera_width=256,
         camera_depth=False,
 
+        render_drop_freq=0,
         obj_names=['Milk'] * 4 + ['Bread'] * 3,
     ):
         """
@@ -128,6 +129,8 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
         # task settings
         self.obj_names = obj_names
+        self.render_drop_freq = render_drop_freq
+
         self.single_object_mode = single_object_mode
         self.object_to_id = {"Milk": 0, "Bread": 1, "Cereal": 2, "Can": 3}
         self.obj_to_use = None
@@ -335,11 +338,26 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self.timestep += 1
         self._pre_action(action)
         end_time = self.cur_time + self.control_timestep
+
+        info = {}
+
+        if self.render_drop_freq:
+            i = 0
+            info['birdview'] = []
+            info['agentview'] = []
+
         while self.cur_time < end_time:
+
+            if self.render_drop_freq and i % self.render_drop_freq == 0:
+                info['birdview'].append(self.sim.render(width=640, height=480, camera_name='birdview'))
+                info['agentview'].append(np.rot90(self.sim.render(width=640, height=480, camera_name='agentview'), 2))
+
+            i += 1
+
             self.sim.step()
             self.cur_time += self.model_timestep
 
-        reward, done, info = self._post_action(action)
+        reward, done, _ = self._post_action(action)
 
         # done
         done = np.all(self.objects_not_take == 0)
