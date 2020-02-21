@@ -16,6 +16,12 @@ import random
 import argparse
 import robosuite as suite
 from robosuite.wrappers import MyGymWrapper
+import time
+
+try:
+    from mpi4py import MPI
+except ImportError:
+    MPI = None
 
 
 def train(args, env):
@@ -29,6 +35,8 @@ def train(args, env):
     network = args.network
     logger.configure()
 
+    start_time = time.time()
+
     if os.path.exists(args.load_path):
         model = ppo2.learn(network=network, env=env, load_path=args.load_path,
                            total_timesteps=args.total_timesteps, nsteps=args.nsteps, save_interval=args.save_interval, lr=args.lr,
@@ -40,8 +48,15 @@ def train(args, env):
                            lr=args.lr,
                            num_layers=args.num_layers)
 
+    end_time = time.time()
 
-    model.save(args.save_path)
+    print('Total time: ', end_time - start_time)
+
+    is_mpi_root = (MPI is None or MPI.COMM_WORLD.Get_rank() == 0)
+
+    if is_mpi_root:
+        print('Save model to ', args.save_path)
+        model.save(args.save_path)
 
 
 if __name__ == "__main__":

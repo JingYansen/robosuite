@@ -9,14 +9,15 @@ import numpy as np
 from PIL import Image
 import subprocess
 
-LOAD_PATH = '/home/yeweirui/checkpoint/openai-2020-02-10-06-28-37-891146/checkpoints/02100'
+# LOAD_PATH = '/home/yeweirui/checkpoint/openai-2020-02-10-06-28-37-891146/checkpoints/02100'
+LOAD_PATH = '/home/yeweirui/code/robosuite/robosuite/scripts/results/baselines/states_ppo_mlp_2layer_0.001lr_128stpes_4async_test_1core_20k/model.pth'
 
 DEMO_PATH = 'demo'
 
 if not os.path.exists(DEMO_PATH):
     os.makedirs(DEMO_PATH)
 
-DEMO_PATH += '/states_demo_16obj.mp4'
+DEMO_PATH += '/1cores_20k.mp4'
 
 if __name__ == "__main__":
 
@@ -32,9 +33,9 @@ if __name__ == "__main__":
     subprocess.call(['mkdir', '-p', 'demo'])
     time_step_counter = 0
 
-    num_envs = 8
+    num_envs = 4
 
-    render_drop_freq = 5
+    render_drop_freq = 10
 
     env = MyGymWrapper(
         suite.make(
@@ -45,6 +46,9 @@ if __name__ == "__main__":
             use_camera_obs=False,
             control_freq=1,
 
+            camera_height=320,
+            camera_width=240,
+
             render_drop_freq=render_drop_freq,
             obj_names=obj_names
         ),
@@ -54,9 +58,9 @@ if __name__ == "__main__":
 
     model = ppo2.learn(network='mlp', env=env,
                        total_timesteps=0, nsteps=16, save_interval=100, lr=1e-3,
-                       num_layers=3, load_path=LOAD_PATH)
+                       num_layers=2, load_path=LOAD_PATH)
 
-    n_episode = 4
+    n_episode = 2
     state = model.initial_state if hasattr(model, 'initial_state') else None
     dones = np.zeros((1,))
 
@@ -87,7 +91,7 @@ if __name__ == "__main__":
                 break
 
     subprocess.call(
-        ['ffmpeg', '-framerate', '50', '-y', '-i', 'frames/frame-%010d.png', '-r', '30', '-pix_fmt', 'yuv420p', '-s', '1280x480',
+        ['ffmpeg', '-framerate', '50', '-y', '-i', 'frames/frame-%010d.png', '-r', '30', '-pix_fmt', 'yuv420p', '-s', '640x240',
          DEMO_PATH])
 
     subprocess.call(['rm', '-rf', 'frames'])

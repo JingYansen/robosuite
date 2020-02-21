@@ -15,8 +15,8 @@ if __name__ == "__main__":
     low = np.array([0.5, 0.15])
     high = np.array([0.7, 0.6])
 
-    obj_names = ['Milk'] * 2
-    # obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2)
+    # obj_names = ['Milk'] * 2
+    obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
     # obj_names = ['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 1 + ['Can'] * 1
 
     has_renderer = False
@@ -40,21 +40,23 @@ if __name__ == "__main__":
 
 
     meter = []
-    for i in range(1000):
+    for _ in range(20):
+        env.reset()
+        for _ in range(len(obj_names)):
 
-        if has_renderer:
-            for _ in range(200):
-                env.render()
+            if has_renderer:
+                for _ in range(200):
+                    env.render()
 
-        action = env.action_space.sample()
+            action = env.action_space.sample()
 
-        time1 = time.time()
+            time1 = time.time()
 
-        observation, reward, done, info = env.step(action)
+            observation, reward, done, info = env.step(action)
 
-        time2 = time.time()
-        meter.append(time2 - time1)
-        print('step time: ', time2 - time1, ' second')
+            time2 = time.time()
+            meter.append(time2 - time1)
+            print('step time: ', time2 - time1, ' second')
 
     meter = np.array(meter)
     print('Average: ', meter.mean())

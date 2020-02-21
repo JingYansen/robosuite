@@ -4,8 +4,8 @@ python bin_packing_baselines_states.py \
     --alg ppo \
     --num_envs 4 \
     --control_freq 1 \
-    --total_timesteps 100000 \
+    --total_timesteps 10000 \
     --nsteps 128 \
     --save_interval 100 \
     --lr 1e-3 \
-    --debug 'test'
+    --debug 'test_1core_10k'

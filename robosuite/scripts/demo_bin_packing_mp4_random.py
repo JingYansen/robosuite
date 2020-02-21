@@ -14,7 +14,7 @@ DEMO_PATH = 'demo'
 if not os.path.exists(DEMO_PATH):
     os.makedirs(DEMO_PATH)
 
-DEMO_PATH += '/human.mp4'
+DEMO_PATH += '/human_0.006.mp4'
 
 class human_policy:
     def __init__(self, low, high, delta=[0.061, 0.072]):
@@ -55,7 +55,8 @@ if __name__ == "__main__":
 
     # low = np.array([0.5, 0.15])
     # high = np.array([0.7, 0.6])
-    obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
+    # obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
+    obj_names = ['Milk'] * 16
 
     # obj_names = ['Milk'] + ['Bread'] + ['Cereal'] + ['Can']
 
@@ -66,6 +67,8 @@ if __name__ == "__main__":
 
     num_envs = 4
 
+    render_drop_freq = 2
+
     env = MyGymWrapper(
         suite.make(
             'BinPackPlace',
@@ -74,13 +77,18 @@ if __name__ == "__main__":
             ignore_done=False,
             use_camera_obs=False,
             control_freq=1,
+
+            camera_height=640,
+            camera_width=480,
+
+            render_drop_freq=render_drop_freq,
             obj_names=obj_names
         ),
         action_bound=(low, high),
         num_envs=num_envs,
     )
 
-    n_episode = 4
+    n_episode = 2
     state = None
     dones = np.zeros((1,))
 
@@ -92,38 +100,25 @@ if __name__ == "__main__":
 
         for i in range(100):
 
-            for _ in range(20):
-                image_data_bird = env.sim.render(width=640, height=480, camera_name='birdview')
-                image_data_agent = env.sim.render(width=640, height=480, camera_name='agentview')
-                image_data_agent = np.rot90(image_data_agent, 2)
+            actions = human.step()
+            # actions = env.action_space.sample()
 
+            obs, rew, done, info = env.step(actions)
+            obs = np.array([obs.tolist()] * num_envs)
+
+            for i in range(len(info['birdview'])):
+                image_data_bird, image_data_agent = info['birdview'][i], info['agentview'][i]
                 image_data = np.concatenate((image_data_bird, image_data_agent), 1)
 
                 img = Image.fromarray(image_data, 'RGB')
                 img.save('frames/frame-%.10d.png' % time_step_counter)
                 time_step_counter += 1
 
-            # actions = env.action_space.sample()
-            actions = human.step()
-
-            obs, rew, done, _ = env.step(actions)
-            obs = np.array([obs.tolist()] * num_envs)
-
             if done:
-                for _ in range(20):
-                    image_data_bird = env.sim.render(width=640, height=480, camera_name='birdview')
-                    image_data_agent = env.sim.render(width=640, height=480, camera_name='agentview')
-                    image_data_agent = np.rot90(image_data_agent, 2)
-
-                    image_data = np.concatenate((image_data_bird, image_data_agent), 1)
-
-                    img = Image.fromarray(image_data, 'RGB')
-                    img.save('frames/frame-%.10d.png' % time_step_counter)
-                    time_step_counter += 1
                 break
 
     subprocess.call(
-        ['ffmpeg', '-framerate', '50', '-y', '-i', 'frames/frame-%010d.png', '-r', '30', '-pix_fmt', 'yuv420p', '-s', '1280x480',
+        ['ffmpeg', '-framerate', '50', '-y', '-i', 'frames/frame-%010d.png', '-r', '24', '-pix_fmt', 'yuv420p', '-s', '1280x480',
          DEMO_PATH])
 
     subprocess.call(['rm', '-rf', 'frames'])

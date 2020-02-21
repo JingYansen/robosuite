@@ -1,6 +1,7 @@
 robosuite/scripts/demo
 robosuite/scripts/frames
 robosuite/scripts/results
+*temp/
 
 
 # Byte-compiled / optimized / DLL files

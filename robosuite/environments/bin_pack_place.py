@@ -46,8 +46,8 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         horizon=1000,
         ignore_done=False,
         camera_name="frontview",
-        camera_height=256,
-        camera_width=256,
+        camera_height=128,
+        camera_width=128,
         camera_depth=False,
 
         render_drop_freq=0,
@@ -128,6 +128,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         """
 
         # task settings
+        random.shuffle(obj_names)
         self.obj_names = obj_names
         self.render_drop_freq = render_drop_freq
 
@@ -348,11 +349,12 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
         while self.cur_time < end_time:
 
-            if self.render_drop_freq and i % self.render_drop_freq == 0:
-                info['birdview'].append(self.sim.render(width=640, height=480, camera_name='birdview'))
-                info['agentview'].append(np.rot90(self.sim.render(width=640, height=480, camera_name='agentview'), 2))
+            if self.render_drop_freq:
+                if i % self.render_drop_freq == 0:
+                    info['birdview'].append(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview'))
+                    info['agentview'].append(np.rot90(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='agentview'), 2))
 
-            i += 1
+                i += 1
 
             self.sim.step()
             self.cur_time += self.model_timestep
