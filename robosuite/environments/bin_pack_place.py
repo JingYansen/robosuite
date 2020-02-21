@@ -1,11 +1,13 @@
 from collections import OrderedDict
 import random
 import numpy as np
+import gym
 
 import robosuite.utils.transform_utils as T
 from robosuite.utils.mjcf_utils import string_to_array
 from robosuite.environments.sawyer import SawyerEnv
 from gym.envs.mujoco import mujoco_env
+from gym import spaces
 
 from robosuite.models.arenas import BinPackingArena
 from robosuite.models.objects import (
@@ -45,13 +47,15 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         control_freq=10,
         horizon=1000,
         ignore_done=False,
-        camera_name="frontview",
+        camera_name="agentview",
         camera_height=128,
         camera_width=128,
         camera_depth=False,
 
         render_drop_freq=0,
-        obj_names=['Milk'] * 4 + ['Bread'] * 3,
+        obj_names=['Milk'] + ['Bread'] + ['Cereal'] * 2 + ['Can'] * 2,
+        keys='object-state',
+        action_bound=(np.array([0.5, 0.15]), np.array([0.7, 0.6])),
     ):
         """
         Args:
@@ -182,6 +186,40 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             self.sim.model._geom_name2id[k] for k in self.collision_check_geom_names
         ]
 
+        if keys is None:
+            assert self.use_object_obs, "Object observations need to be enabled."
+            keys = ["robot-state", "object-state"]
+        self.keys = keys
+
+        # set up observation and action spaces
+        flat_ob = self._flatten_obs(super().reset(), verbose=True)
+        self.obs_dim = flat_ob.shape
+        high = np.inf * np.ones(self.obs_dim)
+        low = -high
+        self.observation_space = spaces.Box(low=low, high=high)
+
+        low, high = action_bound
+        self.action_space = spaces.Box(low=low, high=high)
+
+    def reset(self):
+        ob_dict = super().reset()
+        return self._flatten_obs(ob_dict)
+
+    def _flatten_obs(self, obs_dict, verbose=False):
+        """
+        Filters keys of interest out and concatenate the information.
+
+        Args:
+            obs_dict: ordered dictionary of observations
+        """
+        ob_lst = []
+        for key in obs_dict:
+            if key in self.keys:
+                if verbose:
+                    print("adding key: {}".format(key))
+                ob_lst.append(obs_dict[key])
+        return np.concatenate(ob_lst)
+
     def _name2obj(self, name):
         assert name in self.object_to_id.keys()
 
@@ -277,7 +315,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
     def remove_object(self, obj):
         self.teleport_object(obj, x=10, y=10)
 
-    def teleport_object(self, obj, x, y, z=1.2):
+    def teleport_object(self, obj, x, y, z=1):
         """
         Teleport an object to a certain position (x, y, z).
         """
@@ -367,7 +405,9 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         if done:
             print('Done!')
 
-        return self._get_observation(), reward, done, info
+        ob_dict = self._get_observation()
+
+        return self._flatten_obs(ob_dict), reward, done, info
 
     def _get_reference(self):
         super()._get_reference()

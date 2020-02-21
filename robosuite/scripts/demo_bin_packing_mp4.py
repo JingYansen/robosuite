@@ -10,23 +10,23 @@ from PIL import Image
 import subprocess
 
 # LOAD_PATH = '/home/yeweirui/checkpoint/openai-2020-02-10-06-28-37-891146/checkpoints/02100'
-LOAD_PATH = '/home/yeweirui/code/robosuite/robosuite/scripts/results/baselines/states_ppo_mlp_2layer_0.001lr_128stpes_4async_test_1core_20k/model.pth'
+LOAD_PATH = '/home/yeweirui/code/robosuite/robosuite/scripts/results/baselines/states_ppo_mlp_2layer_0.001lr_128stpes_4async_test_1core_10k/model.pth'
 
 DEMO_PATH = 'demo'
 
 if not os.path.exists(DEMO_PATH):
     os.makedirs(DEMO_PATH)
 
-DEMO_PATH += '/1cores_20k.mp4'
+DEMO_PATH += '1cores_10k.mp4'
 
 if __name__ == "__main__":
 
     # Notice how the environment is wrapped by the wrapper
     low = np.array([0.5, 0.15])
     high = np.array([0.7, 0.6])
-    obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
+    # obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
 
-    # obj_names = ['Milk'] + ['Bread'] + ['Cereal'] + ['Can']
+    obj_names = ['Milk'] + ['Bread'] + ['Cereal'] + ['Can']
 
     subprocess.call(['rm', '-rf', 'frames'])
     subprocess.call(['mkdir', '-p', 'frames'])

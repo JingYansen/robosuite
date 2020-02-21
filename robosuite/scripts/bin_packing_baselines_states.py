@@ -1,22 +1,23 @@
+import sys
 import os
-import tensorflow as tf
-import numpy as np
-from gym.wrappers import TimeLimit
-from baselines.ppo2 import ppo2
-from baselines import logger
-from baselines.common.tf_util import get_session
-from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
-from baselines.common.vec_env.vec_normalize import VecNormalize
-from baselines.bench import Monitor
-from baselines.common.vec_env.vec_monitor import VecEnvWrapper
-from robosuite.environments.bin_pack_place import BinPackPlace
-from gym import spaces
-
-import random
-import argparse
-import robosuite as suite
-from robosuite.wrappers import MyGymWrapper
 import time
+import multiprocessing
+import argparse
+import gym
+
+import os.path as osp
+import numpy as np
+import tensorflow as tf
+import robosuite as suite
+
+from baselines.common.tf_util import get_session
+from baselines.common.vec_env.vec_normalize import VecNormalize
+from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
+from baselines import logger
+
+from robosuite.scripts.utils import make_vec_env
+from robosuite.wrappers import MyGymWrapper
+from importlib import import_module
 
 try:
     from mpi4py import MPI
@@ -24,39 +25,121 @@ except ImportError:
     MPI = None
 
 
-def train(args, env):
+def get_alg_module(alg, submodule=None):
+    submodule = submodule or alg
+    try:
+        # first try to import the alg module from baselines
+        alg_module = import_module('.'.join(['baselines', alg, submodule]))
+    except ImportError:
+        # then from rl_algs
+        alg_module = import_module('.'.join(['rl_' + 'algs', alg, submodule]))
+
+    return alg_module
+
+
+def get_learn_function(alg):
+    return get_alg_module(alg).learn
+
+
+def get_learn_function_defaults(alg, env_type):
+    try:
+        alg_defaults = get_alg_module(alg, 'defaults')
+        kwargs = getattr(alg_defaults, env_type)()
+    except (ImportError, AttributeError):
+        kwargs = {}
+    return kwargs
+
+
+def train(args, extra_args):
+    total_timesteps = int(args.num_timesteps)
+    seed = args.seed
+    args.env_id, args.env_type = 'BinPack-v0', 'mujoco'
+
+    learn = get_learn_function(args.alg)
+    alg_kwargs = get_learn_function_defaults(args.alg, args.env_type)
+    alg_kwargs.update(extra_args)
+
+    env = build_env(args)
+
+    if args.save_video_interval != 0:
+        env = VecVideoRecorder(env, osp.join(logger.get_dir(), "videos"),
+                               record_video_trigger=lambda x: x % args.save_video_interval == 0,
+                               video_length=args.save_video_length)
+
+    alg_kwargs['network'] = args.network
+
+    print('Training {} on {}:{} with arguments \n{}'.format(args.alg, args.env_type, args.env_id, alg_kwargs))
+
+    model = learn(
+        env=env,
+        seed=seed,
+        total_timesteps=total_timesteps,
+        **alg_kwargs
+    )
+
+    return model, env
+
+    # if os.path.exists(args.load_path):
+    #     model = ppo2.learn(network=network, env=env, load_path=args.load_path,
+    #                        total_timesteps=args.total_timesteps, nsteps=args.nsteps, save_interval=args.save_interval, lr=args.lr,
+    #                        num_layers=args.num_layers)
+    # else:
+    #     print('Warning: PATH ', args.load_path, ' does not exist.')
+    #     model = ppo2.learn(network=network, env=env,
+    #                        total_timesteps=args.total_timesteps, nsteps=args.nsteps, save_interval=args.save_interval,
+    #                        lr=args.lr,
+    #                        num_layers=args.num_layers)
+
+
+def configure_logger(log_path, **kwargs):
+    if log_path is not None:
+        logger.configure(log_path)
+    else:
+        logger.configure(**kwargs)
+
+def build_env(args):
+    ## make env in robosuite
+    obj_names = []
+    for i, name in zip(args.obj_nums, args.obj_types):
+        obj_names = obj_names + [name] * i
+
+    logger.log('Total objests: ', obj_names)
+
+    # env = suite.make(
+    #     'BinPackPlace',
+    #     has_renderer=args.render,
+    #     has_offscreen_renderer=False,
+    #     ignore_done=False,
+    #     use_camera_obs=False,
+    #     control_freq=args.control_freq,
+    #     obj_names=obj_names
+    # )
+
+    #
+    # env = MyGymWrapper(env, (low, high), num_env=args.num_env)
+    # env = gym.make('BinPack-v0')
+
+    ## make env in gym
+
+    ncpu = multiprocessing.cpu_count()
+    if sys.platform == 'darwin': ncpu //= 2
+    nenv = args.num_env or ncpu
+
+    seed = args.seed
+
     config = tf.ConfigProto(allow_soft_placement=True,
-                            device_count={"CPU": 32},
-                            intra_op_parallelism_threads=32,
-                            inter_op_parallelism_threads=32)
+                            intra_op_parallelism_threads=1,
+                            inter_op_parallelism_threads=1)
     config.gpu_options.allow_growth = True
     get_session(config=config)
 
-    network = args.network
-    logger.configure()
+    flatten_dict_observations = args.alg not in {'her'}
+    env = make_vec_env(args.env_id, args.env_type, args.num_env or 1, seed, reward_scale=args.reward_scale,
+                       flatten_dict_observations=flatten_dict_observations)
 
-    start_time = time.time()
+    env = VecNormalize(env, use_tf=True)
 
-    if os.path.exists(args.load_path):
-        model = ppo2.learn(network=network, env=env, load_path=args.load_path,
-                           total_timesteps=args.total_timesteps, nsteps=args.nsteps, save_interval=args.save_interval, lr=args.lr,
-                           num_layers=args.num_layers)
-    else:
-        print('Warning: PATH ', args.load_path, ' does not exist.')
-        model = ppo2.learn(network=network, env=env,
-                           total_timesteps=args.total_timesteps, nsteps=args.nsteps, save_interval=args.save_interval,
-                           lr=args.lr,
-                           num_layers=args.num_layers)
-
-    end_time = time.time()
-
-    print('Total time: ', end_time - start_time)
-
-    is_mpi_root = (MPI is None or MPI.COMM_WORLD.Get_rank() == 0)
-
-    if is_mpi_root:
-        print('Save model to ', args.save_path)
-        model.save(args.save_path)
+    return env
 
 
 if __name__ == "__main__":
@@ -65,13 +148,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Baseline Training...')
 
     parser.add_argument('--out_dir', type=str, default='results/baselines')
-    parser.add_argument('--alg', type=str, default='ppo')
-    parser.add_argument('--num_envs', type=int, default=4)
+    parser.add_argument('--alg', type=str, default='ppo2')
+    parser.add_argument('--num_env', type=int, default=4)
     parser.add_argument('--render', type=bool, default=False)
     parser.add_argument('--control_freq', type=int, default=1)
     parser.add_argument('--load_path', type=str, default='gg')
+    parser.add_argument('--obj_nums', type=list, default=[1, 1, 2, 2])
+    parser.add_argument('--reward_scale', type=float, default=1)
+    parser.add_argument('--save_video_interval', type=int, default=0)
+    parser.add_argument('--seed', default=None)
 
-    parser.add_argument('--total_timesteps', type=int, default=90000)
+    parser.add_argument('--num_timesteps', type=int, default=100000)
     parser.add_argument('--nsteps', type=int, default=128)
     parser.add_argument('--save_interval', type=int, default=100)
     parser.add_argument('--lr', type=float, default=1e-3)
@@ -86,25 +173,11 @@ if __name__ == "__main__":
     PATH = os.path.dirname(os.path.realpath(__file__))
     low = np.array([0.5, 0.15])
     high = np.array([0.7, 0.6])
-    # obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
 
-    obj_names = ['Milk'] + ['Bread'] + ['Cereal'] + ['Can']
-
-    ## make env
-    # Notice how the environment is wrapped by the wrapper
-    env = suite.make(
-        'BinPackPlace',
-        has_renderer=args.render,
-        has_offscreen_renderer=False,
-        ignore_done=False,
-        use_camera_obs=False,
-        control_freq=args.control_freq,
-        obj_names=obj_names
-    )
-
+    args.obj_types = ['Milk'] + ['Bread'] + ['Cereal'] + ['Can']
 
     info_dir = 'states_' + args.alg + '_' + args.network + '_' + str(args.num_layers) + 'layer_' +\
-               str(args.lr) + 'lr_' + str(args.nsteps) + 'stpes_' + str(args.num_envs) + 'async_' + args.debug
+               str(args.lr) + 'lr_' + str(args.nsteps) + 'stpes_' + str(args.num_env) + 'async_' + args.debug
 
     args.save_dir = os.path.join(PATH, args.out_dir, info_dir)
     if not os.path.exists(args.save_dir):
@@ -112,12 +185,19 @@ if __name__ == "__main__":
 
     args.save_path = os.path.join(args.save_dir, 'model.pth')
 
-    env = MyGymWrapper(env, (low, high), num_envs=args.num_envs)
-    env = Monitor(env, args.save_dir, allow_early_resets=True)
-    env = DummyVecEnv([lambda: env])
-    # env = VecNormalize(env)
+    if MPI is None or MPI.COMM_WORLD.Get_rank() == 0:
+        rank = 0
+        configure_logger(args.save_dir)
+    else:
+        rank = MPI.COMM_WORLD.Get_rank()
+        configure_logger(args.save_dir, format_strs=[])
 
     ## log
-    print(args)
+    logger.log(args)
 
-    train(args, env)
+    extra_args = {}
+    model, env = train(args, extra_args)
+
+    if args.save_path is not None and rank == 0:
+        save_path = osp.expanduser(args.save_path)
+        model.save(save_path)

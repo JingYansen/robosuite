@@ -14,7 +14,7 @@ DEMO_PATH = 'demo'
 if not os.path.exists(DEMO_PATH):
     os.makedirs(DEMO_PATH)
 
-DEMO_PATH += '/human_0.006.mp4'
+DEMO_PATH += '/random_test.mp4'
 
 class human_policy:
     def __init__(self, low, high, delta=[0.061, 0.072]):
@@ -50,13 +50,17 @@ class human_policy:
 if __name__ == "__main__":
 
     # Notice how the environment is wrapped by the wrapper
-    low = np.array([0.54, 0.27])
-    high = np.array([0.7, 0.5])
+    # low = np.array([0.63, 0.35])
+    low = np.array([0.57, 0.405])
+    high = low
+
+    # low = np.array([0.54, 0.27])
+    # high = np.array([0.7, 0.5])
 
     # low = np.array([0.5, 0.15])
     # high = np.array([0.7, 0.6])
     # obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
-    obj_names = ['Milk'] * 16
+    obj_names = ['Milk'] * 6
 
     # obj_names = ['Milk'] + ['Bread'] + ['Cereal'] + ['Can']
 
@@ -78,8 +82,8 @@ if __name__ == "__main__":
             use_camera_obs=False,
             control_freq=1,
 
-            camera_height=640,
-            camera_width=480,
+            camera_height=320,
+            camera_width=240,
 
             render_drop_freq=render_drop_freq,
             obj_names=obj_names
@@ -100,8 +104,8 @@ if __name__ == "__main__":
 
         for i in range(100):
 
-            actions = human.step()
-            # actions = env.action_space.sample()
+            # actions = human.step()
+            actions = env.action_space.sample()
 
             obs, rew, done, info = env.step(actions)
             obs = np.array([obs.tolist()] * num_envs)
@@ -114,11 +118,11 @@ if __name__ == "__main__":
                 img.save('frames/frame-%.10d.png' % time_step_counter)
                 time_step_counter += 1
 
-            if done:
-                break
+            # if done:
+            break
 
     subprocess.call(
-        ['ffmpeg', '-framerate', '50', '-y', '-i', 'frames/frame-%010d.png', '-r', '24', '-pix_fmt', 'yuv420p', '-s', '1280x480',
+        ['ffmpeg', '-framerate', '50', '-y', '-i', 'frames/frame-%010d.png', '-r', '24', '-pix_fmt', 'yuv420p', '-s', '640x240',
          DEMO_PATH])
 
     subprocess.call(['rm', '-rf', 'frames'])

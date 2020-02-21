@@ -33,8 +33,9 @@ class human_policy:
 if __name__ == "__main__":
 
     # Notice how the environment is wrapped by the wrapper
-    low = np.array([0.54, 0.27])
-    high = np.array([0.7, 0.6])
+    low = np.array([0.6, 0.3])
+    high = low
+    # high = np.array([0.66, 0.3])
 
     print('low: ', low)
     print('high: ', high)
@@ -70,7 +71,7 @@ if __name__ == "__main__":
 
             # action = env.action_space.sample()
             action = human.step()
-            print('action: ', action)
+            # print('action: ', action)
             observation, reward, done, info = env.step(action)
 
             if done:

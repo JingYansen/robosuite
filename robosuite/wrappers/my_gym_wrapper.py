@@ -12,7 +12,7 @@ from robosuite.wrappers import Wrapper
 class MyGymWrapper(Wrapper):
     env = None
 
-    def __init__(self, env, action_bound, num_envs=8, keys='object-state'):
+    def __init__(self, env, action_bound, num_env=8, keys='object-state'):
         """
         Initializes the Gym wrapper.
 
@@ -41,7 +41,7 @@ class MyGymWrapper(Wrapper):
         low, high = action_bound
         self.action_space = spaces.Box(low=low, high=high)
 
-        self.num_envs = num_envs
+        self.num_env = num_env
 
     def _flatten_obs(self, obs_dict, verbose=False):
         """
