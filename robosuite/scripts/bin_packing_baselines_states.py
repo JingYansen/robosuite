@@ -79,23 +79,13 @@ def train(args, extra_args):
 
     return model, env
 
-    # if os.path.exists(args.load_path):
-    #     model = ppo2.learn(network=network, env=env, load_path=args.load_path,
-    #                        total_timesteps=args.total_timesteps, nsteps=args.nsteps, save_interval=args.save_interval, lr=args.lr,
-    #                        num_layers=args.num_layers)
-    # else:
-    #     print('Warning: PATH ', args.load_path, ' does not exist.')
-    #     model = ppo2.learn(network=network, env=env,
-    #                        total_timesteps=args.total_timesteps, nsteps=args.nsteps, save_interval=args.save_interval,
-    #                        lr=args.lr,
-    #                        num_layers=args.num_layers)
-
 
 def configure_logger(log_path, **kwargs):
     if log_path is not None:
         logger.configure(log_path)
     else:
         logger.configure(**kwargs)
+
 
 def build_env(args):
     ## make env in robosuite
@@ -104,20 +94,6 @@ def build_env(args):
         obj_names = obj_names + [name] * i
 
     logger.log('Total objests: ', obj_names)
-
-    # env = suite.make(
-    #     'BinPackPlace',
-    #     has_renderer=args.render,
-    #     has_offscreen_renderer=False,
-    #     ignore_done=False,
-    #     use_camera_obs=False,
-    #     control_freq=args.control_freq,
-    #     obj_names=obj_names
-    # )
-
-    #
-    # env = MyGymWrapper(env, (low, high), num_env=args.num_env)
-    # env = gym.make('BinPack-v0')
 
     ## make env in gym
 
@@ -158,13 +134,13 @@ if __name__ == "__main__":
     parser.add_argument('--save_video_interval', type=int, default=0)
     parser.add_argument('--seed', default=None)
 
-    parser.add_argument('--num_timesteps', type=int, default=100000)
+    parser.add_argument('--num_timesteps', type=int, default=200000)
     parser.add_argument('--nsteps', type=int, default=128)
     parser.add_argument('--save_interval', type=int, default=100)
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--network', type=str, default='mlp')
     parser.add_argument('--num_layers', type=int, default=2)
-    parser.add_argument('--debug', type=str, default='more_obj')
+    parser.add_argument('--debug', type=str, default='test1')
 
 
     args = parser.parse_args()
