@@ -50,19 +50,11 @@ class human_policy:
 if __name__ == "__main__":
 
     # Notice how the environment is wrapped by the wrapper
-    # low = np.array([0.63, 0.35])
-    low = np.array([0.57, 0.405])
-    high = low
+    low = np.array([0.57, 0.35])
+    high = np.array([0.63, 0.405])
 
-    # low = np.array([0.54, 0.27])
-    # high = np.array([0.7, 0.5])
-
-    # low = np.array([0.5, 0.15])
-    # high = np.array([0.7, 0.6])
-    # obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
+    # obj_names = ['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 2 + ['Can'] * 2
     obj_names = ['Milk'] * 6
-
-    # obj_names = ['Milk'] + ['Bread'] + ['Cereal'] + ['Can']
 
     subprocess.call(['rm', '-rf', 'frames'])
     subprocess.call(['mkdir', '-p', 'frames'])
@@ -71,25 +63,22 @@ if __name__ == "__main__":
 
     num_envs = 4
 
-    render_drop_freq = 2
+    render_drop_freq = 5
 
-    env = MyGymWrapper(
-        suite.make(
-            'BinPackPlace',
-            has_renderer=False,
-            has_offscreen_renderer=False,
-            ignore_done=False,
-            use_camera_obs=False,
-            control_freq=1,
+    env = suite.make(
+        'BinPackPlace',
+        has_renderer=False,
+        has_offscreen_renderer=True,
+        ignore_done=False,
+        use_camera_obs=False,
+        control_freq=1,
 
-            camera_height=320,
-            camera_width=240,
+        camera_height=320,
+        camera_width=240,
 
-            render_drop_freq=render_drop_freq,
-            obj_names=obj_names
-        ),
+        render_drop_freq=render_drop_freq,
+        obj_names=obj_names,
         action_bound=(low, high),
-        num_envs=num_envs,
     )
 
     n_episode = 2
@@ -118,8 +107,8 @@ if __name__ == "__main__":
                 img.save('frames/frame-%.10d.png' % time_step_counter)
                 time_step_counter += 1
 
-            # if done:
-            break
+            if done:
+                break
 
     subprocess.call(
         ['ffmpeg', '-framerate', '50', '-y', '-i', 'frames/frame-%010d.png', '-r', '24', '-pix_fmt', 'yuv420p', '-s', '640x240',

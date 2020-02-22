@@ -31,6 +31,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self,
         gripper_type="TwoFingerGripper",
         table_full_size=(0.39, 0.49, 0.82),
+        table_target_size=(0.08, 0.08, 0.12),
         table_friction=(1, 0.005, 0.0001),
         use_camera_obs=True,
         use_object_obs=True,
@@ -142,6 +143,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
         # settings for table top
         self.table_full_size = table_full_size
+        self.table_target_size = table_target_size
         self.table_friction = table_friction
 
         # whether to show visual aid about where is the gripper
@@ -295,7 +297,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         # self.model.place_visual()
 
         self.bin_pos = string_to_array(self.model.bin2_body.get("pos"))
-        self.bin_size = self.model.bin_size
+        self.bin_size = self.table_target_size
 
     def clear_objects(self, obj):
         """
@@ -315,7 +317,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
     def remove_object(self, obj):
         self.teleport_object(obj, x=10, y=10)
 
-    def teleport_object(self, obj, x, y, z=1):
+    def teleport_object(self, obj, x, y, z=1.1):
         """
         Teleport an object to a certain position (x, y, z).
         """
@@ -434,20 +436,6 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self.objects_in_bins = np.zeros(len(self.ob_inits))
         self.objects_not_take = np.ones(len(self.ob_inits))
 
-        # target locations in bin for each object type
-        self.target_bin_placements = np.zeros((len(self.ob_inits), 3))
-        for j in range(len(self.ob_inits)):
-            bin_id = j
-            bin_x_low = self.bin_pos[0]
-            bin_y_low = self.bin_pos[1]
-            if bin_id == 0 or bin_id == 2:
-                bin_x_low -= self.bin_size[0] / 2.
-            if bin_id < 2:
-                bin_y_low -= self.bin_size[1] / 2.
-            bin_x_low += self.bin_size[0] / 4.
-            bin_y_low += self.bin_size[1] / 4.
-            self.target_bin_placements[j, :] = [bin_x_low, bin_y_low, self.bin_pos[2]]
-
     def _reset_internal(self):
         super()._reset_internal()
 
@@ -466,8 +454,8 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             staged_rewards = self.staged_rewards()
             reward += max(staged_rewards)
 
-        if reward != 0:
-            print('Reward: ', reward)
+        # if reward != 0:
+        print('Reward: ', reward)
         return reward
 
     def staged_rewards(self):
@@ -580,7 +568,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             and obj_pos[0] > bin_x_low
             and obj_pos[1] < bin_y_high
             and obj_pos[1] > bin_y_low
-            and obj_pos[2] < self.bin_pos[2] + 0.1
+            and obj_pos[2] < self.bin_pos[2] + self.bin_size[2]
         ):
             res = False
         return res

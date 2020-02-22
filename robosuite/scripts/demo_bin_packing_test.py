@@ -39,18 +39,17 @@ if __name__ == "__main__":
     high = np.array([0.5, 0.5])
     obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
 
-    env = MyGymWrapper(
-        suite.make(
-            'BinPackPlace',
-            has_renderer=True,
-            has_offscreen_renderer=False,
-            ignore_done=True,
-            use_camera_obs=False,
-            control_freq=1,
-            obj_names=obj_names
-        ),
+    env = suite.make(
+        'BinPackPlace',
+        has_renderer=False,
+        has_offscreen_renderer=False,
+        ignore_done=True,
+        use_camera_obs=False,
+        control_freq=1,
+        obj_names=obj_names,
         action_bound=(low, high)
     )
 
-    # import ipdb
-    # ipdb.set_trace()
+
+    import ipdb
+    ipdb.set_trace()
