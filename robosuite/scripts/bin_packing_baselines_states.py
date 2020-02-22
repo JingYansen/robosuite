@@ -41,22 +41,37 @@ def get_learn_function(alg):
     return get_alg_module(alg).learn
 
 
-def get_learn_function_defaults(alg, env_type):
-    try:
-        alg_defaults = get_alg_module(alg, 'defaults')
-        kwargs = getattr(alg_defaults, env_type)()
-    except (ImportError, AttributeError):
-        kwargs = {}
-    return kwargs
+def get_params(args):
+    params = {}
+
+    params['nsteps'] = args.nsteps
+    params['nminibatches'] = args.nminibatches
+    params['save_interval'] = args.save_interval
+    params['log_interval'] = args.log_interval
+    params['save_interval'] = args.save_interval
+    params['lr'] = args.lr
+    params['network'] = args.network
+
+    return params
+
+def get_network_params(args):
+    params = {}
+
+    if args.network is 'mlp':
+        params['num_layers'] = args.num_layers
+
+    return params
 
 
-def train(args, extra_args):
+def train(args):
     total_timesteps = int(args.num_timesteps)
     seed = args.seed
     args.env_id, args.env_type = 'BinPack-v0', 'mujoco'
 
+    ## get params
     learn = get_learn_function(args.alg)
-    alg_kwargs = get_learn_function_defaults(args.alg, args.env_type)
+    alg_kwargs = get_params(args)
+    extra_args = get_network_params(args)
     alg_kwargs.update(extra_args)
 
     env = build_env(args)
@@ -136,11 +151,13 @@ if __name__ == "__main__":
 
     parser.add_argument('--num_timesteps', type=int, default=200000)
     parser.add_argument('--nsteps', type=int, default=128)
+    parser.add_argument('--nminibatches', type=int, default=8)
+    parser.add_argument('--log_interval', type=int, default=5)
     parser.add_argument('--save_interval', type=int, default=100)
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--network', type=str, default='mlp')
     parser.add_argument('--num_layers', type=int, default=2)
-    parser.add_argument('--debug', type=str, default='test1')
+    parser.add_argument('--debug', type=str, default='test3')
 
 
     args = parser.parse_args()
@@ -171,8 +188,7 @@ if __name__ == "__main__":
     ## log
     logger.log(args)
 
-    extra_args = {}
-    model, env = train(args, extra_args)
+    model, env = train(args)
 
     if args.save_path is not None and rank == 0:
         save_path = osp.expanduser(args.save_path)
