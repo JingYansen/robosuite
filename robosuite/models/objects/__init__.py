@@ -1,7 +1,9 @@
 from .objects import MujocoObject, MujocoXMLObject, MujocoGeneratedObject
 
 from .xml_objects import (
+    BananaObject,
     BottleObject,
+    BowlObject,
     CanObject,
     LemonObject,
     MilkObject,
@@ -13,6 +15,8 @@ from .xml_objects import (
     BreadVisualObject,
     CerealVisualObject,
     CanVisualObject,
+    BananaVisualObject,
+    BowlVisualObject,
     PlateWithHoleObject,
 )
 

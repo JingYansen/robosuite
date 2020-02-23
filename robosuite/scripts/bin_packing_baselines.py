@@ -108,7 +108,7 @@ def build_env(args):
     for i, name in zip(args.obj_nums, args.obj_types):
         obj_names = obj_names + [name] * i
 
-    logger.log('Total objests: ', obj_names)
+    logger.log('Total objects: ', obj_names)
 
     ## make env in gym
 
@@ -128,7 +128,7 @@ def build_env(args):
     env = make_vec_env(args.env_id, args.env_type, args.num_env or 1, seed, reward_scale=args.reward_scale,
                        flatten_dict_observations=flatten_dict_observations)
 
-    env = VecNormalize(env, use_tf=True)
+    # env = VecNormalize(env, use_tf=True)
 
     return env
 
@@ -193,3 +193,5 @@ if __name__ == "__main__":
     if args.save_path is not None and rank == 0:
         save_path = osp.expanduser(args.save_path)
         model.save(save_path)
+
+    logger.log('Trained Over.')

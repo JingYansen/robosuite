@@ -2,6 +2,15 @@ from robosuite.models.objects import MujocoXMLObject
 from robosuite.utils.mjcf_utils import xml_path_completion
 
 
+class BananaObject(MujocoXMLObject):
+    """
+    Banana object
+    """
+
+    def __init__(self):
+        super().__init__(xml_path_completion("objects/banana.xml"))
+
+
 class BottleObject(MujocoXMLObject):
     """
     Bottle object
@@ -9,6 +18,15 @@ class BottleObject(MujocoXMLObject):
 
     def __init__(self):
         super().__init__(xml_path_completion("objects/bottle.xml"))
+
+
+class BowlObject(MujocoXMLObject):
+    """
+    Bowl object
+    """
+
+    def __init__(self):
+        super().__init__(xml_path_completion("objects/bowl.xml"))
 
 
 class CanObject(MujocoXMLObject):
@@ -111,6 +129,16 @@ class CanVisualObject(MujocoXMLObject):
 
     def __init__(self):
         super().__init__(xml_path_completion("objects/can-visual.xml"))
+
+
+class BananaVisualObject(MujocoXMLObject):
+    def __init__(self):
+        super().__init__(xml_path_completion("objects/banana-visual.xml"))
+
+
+class BowlVisualObject(MujocoXMLObject):
+    def __init__(self):
+        super().__init__(xml_path_completion("objects/bowl-visual.xml"))
 
 
 class PlateWithHoleObject(MujocoXMLObject):

@@ -14,7 +14,7 @@ DEMO_PATH = 'demo'
 if not os.path.exists(DEMO_PATH):
     os.makedirs(DEMO_PATH)
 
-DEMO_PATH += '/random_test_targetview.mp4'
+DEMO_PATH += '/random_convex.mp4'
 
 class human_policy:
     def __init__(self, low, high, delta=[0.061, 0.072]):
@@ -53,8 +53,11 @@ if __name__ == "__main__":
     low = np.array([0.57, 0.35])
     high = np.array([0.63, 0.405])
 
-    # obj_names = ['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 2 + ['Can'] * 2
-    obj_names = ['Milk'] * 6
+    obj_list = ['Milk', 'Bread', 'Cereal', 'Can', 'Banana', 'Bowl']
+    obj_num = [0, 0, 0, 0, 1, 1]
+    obj_names = []
+    for name, num in zip(obj_list, obj_num):
+        obj_names += [name] * num
 
     subprocess.call(['rm', '-rf', 'frames'])
     subprocess.call(['mkdir', '-p', 'frames'])

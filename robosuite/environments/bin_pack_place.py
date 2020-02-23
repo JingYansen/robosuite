@@ -15,12 +15,16 @@ from robosuite.models.objects import (
     BreadObject,
     CerealObject,
     CanObject,
+    BananaObject,
+    BowlObject,
 )
 from robosuite.models.objects import (
     MilkVisualObject,
     BreadVisualObject,
     CerealVisualObject,
     CanVisualObject,
+    BananaVisualObject,
+    BowlVisualObject,
 )
 
 from robosuite.models.tasks import BinPackingTask, UniformRandomSampler
@@ -138,7 +142,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self.render_drop_freq = render_drop_freq
 
         self.single_object_mode = single_object_mode
-        self.object_to_id = {"Milk": 0, "Bread": 1, "Cereal": 2, "Can": 3}
+        self.object_to_id = {"Milk": 0, "Bread": 1, "Cereal": 2, "Can": 3, "Banana": 4, "Bowl": 5}
         self.obj_to_use = None
 
         # settings for table top
@@ -233,6 +237,10 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             return CerealObject, CerealVisualObject
         elif name is 'Can':
             return CanObject, CanVisualObject
+        elif name is 'Banana':
+            return BananaObject, BananaVisualObject
+        elif name is 'Bowl':
+            return BowlObject, BowlVisualObject
 
     def _make_objects(self, names):
         self.item_names = []
@@ -428,11 +436,11 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         for i in range(len(self.ob_inits)):
             obj_str = str(self.item_names[i])
             self.obj_body_id[obj_str] = self.sim.model.body_name2id(obj_str)
-            self.obj_geom_id[obj_str] = self.sim.model.geom_name2id(obj_str)
+            # self.obj_geom_id[obj_str] = self.sim.model.geom_name2id(obj_str)
 
         # for checking distance to / contact with objects we want to pick up
         self.target_object_body_ids = list(map(int, self.obj_body_id.values()))
-        self.contact_with_object_geom_ids = list(map(int, self.obj_geom_id.values()))
+        # self.contact_with_object_geom_ids = list(map(int, self.obj_geom_id.values()))
 
         # keep track of which objects are in their corresponding bins
         self.objects_in_bins = np.zeros(len(self.ob_inits))
