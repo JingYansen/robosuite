@@ -14,7 +14,7 @@ DEMO_PATH = 'demo'
 if not os.path.exists(DEMO_PATH):
     os.makedirs(DEMO_PATH)
 
-DEMO_PATH += '/random_test.mp4'
+DEMO_PATH += '/random_test_targetview.mp4'
 
 class human_policy:
     def __init__(self, low, high, delta=[0.061, 0.072]):
@@ -100,7 +100,7 @@ if __name__ == "__main__":
             obs = np.array([obs.tolist()] * num_envs)
 
             for i in range(len(info['birdview'])):
-                image_data_bird, image_data_agent = info['birdview'][i], info['agentview'][i]
+                image_data_bird, image_data_agent = info['birdview'][i], info['targetview'][i]
                 image_data = np.concatenate((image_data_bird, image_data_agent), 1)
 
                 img = Image.fromarray(image_data, 'RGB')

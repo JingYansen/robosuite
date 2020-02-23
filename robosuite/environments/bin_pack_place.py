@@ -385,14 +385,16 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         if self.render_drop_freq:
             i = 0
             info['birdview'] = []
-            info['agentview'] = []
+            # info['agentview'] = []
+            info['targetview'] = []
 
         while self.cur_time < end_time:
 
             if self.render_drop_freq:
                 if i % self.render_drop_freq == 0:
                     info['birdview'].append(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview'))
-                    info['agentview'].append(np.rot90(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='agentview'), 2))
+                    # info['agentview'].append(np.rot90(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='agentview'), 2))
+                    info['targetview'].append(np.rot90(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='targetview'), 2))
 
                 i += 1
 
