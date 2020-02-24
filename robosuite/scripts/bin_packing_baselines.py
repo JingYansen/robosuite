@@ -14,6 +14,7 @@ from baselines.common.tf_util import get_session
 from baselines.common.vec_env.vec_normalize import VecNormalize
 from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
 from baselines import logger
+from PIL import Image
 
 from robosuite.scripts.utils import make_vec_env
 from robosuite.wrappers import MyGymWrapper
@@ -41,6 +42,20 @@ def get_learn_function(alg):
     return get_alg_module(alg).learn
 
 
+def get_env_kwargs(args):
+    env_kwargs = {}
+
+    env_kwargs['render_drop_freq'] = args.render_drop_freq
+    env_kwargs['control_freq'] = args.control_freq
+    env_kwargs['obj_names'] = args.obj_names
+    env_kwargs['camera_height'] = args.camera_height
+    env_kwargs['camera_width'] = args.camera_width
+    env_kwargs['use_camera_obs'] = args.use_camera_obs
+    env_kwargs['has_renderer'] = args.has_renderer
+    env_kwargs['has_offscreen_renderer'] = args.has_offscreen_renderer
+
+    return env_kwargs
+
 def get_params(args):
     params = {}
 
@@ -52,6 +67,7 @@ def get_params(args):
     params['save_interval'] = args.save_interval
     params['lr'] = args.lr
     params['network'] = args.network
+    params['load_path'] = args.load_path
 
     return params
 
@@ -109,9 +125,11 @@ def build_env(args):
     for i, name in zip(args.obj_nums, args.obj_types):
         obj_names = obj_names + [name] * i
 
-    logger.log('Total objects: ', obj_names)
+    args.obj_names = obj_names
+    logger.log('Total objects: ', args.obj_names)
 
     ## make env in gym
+    env_kwargs = get_env_kwargs(args)
 
     ncpu = multiprocessing.cpu_count()
     if sys.platform == 'darwin': ncpu //= 2
@@ -126,7 +144,7 @@ def build_env(args):
     get_session(config=config)
 
     flatten_dict_observations = args.alg not in {'her'}
-    env = make_vec_env(args.env_id, args.env_type, args.num_env or 1, seed, reward_scale=args.reward_scale,
+    env = make_vec_env(args.env_id, args.env_type, args.num_env or 1, seed, env_kwargs=env_kwargs, reward_scale=args.reward_scale,
                        flatten_dict_observations=flatten_dict_observations)
 
     # env = VecNormalize(env, use_tf=True)
@@ -134,21 +152,79 @@ def build_env(args):
     return env
 
 
+def make_video(model, env, args):
+    DEMO_PATH = 'demo'
+    import subprocess
+    subprocess.call(['rm', '-rf', 'frames'])
+    subprocess.call(['mkdir', '-p', 'frames'])
+    subprocess.call(['mkdir', '-p', DEMO_PATH])
+
+    DEMO_PATH = os.path.join(DEMO_PATH, args.video_name)
+
+    env.render_drop_freq = args.render_drop_freq
+
+    time_step_counter = 0
+    num_env = args.num_env
+    n_episode = 2
+    state = model.initial_state if hasattr(model, 'initial_state') else None
+    dones = np.zeros((1,))
+
+    for i_episode in range(n_episode):
+        obs = env.reset()
+
+        for i in range(100):
+
+            if state is not None:
+                actions, _, state, _ = model.step(obs, S=state, M=dones)
+            else:
+                actions, _, _, _ = model.step(obs)
+
+            obs, rew, done, info = env.step(actions)
+            info = info[0]
+            done = done[0]
+
+            for i in range(len(info['birdview'])):
+                image_data_bird, image_data_agent = info['birdview'][i], info['targetview'][i]
+                image_data = np.concatenate((image_data_bird, image_data_agent), 1)
+
+                img = Image.fromarray(image_data, 'RGB')
+                img.save('frames/frame-%.10d.png' % time_step_counter)
+                time_step_counter += 1
+
+            if done:
+                break
+
+    resolve = str(args.camera_height * 2) + 'x' + str(args.camera_width)
+    subprocess.call(
+        ['ffmpeg', '-framerate', '50', '-y', '-i', 'frames/frame-%010d.png', '-r', '30', '-pix_fmt', 'yuv420p',
+         '-s', resolve, DEMO_PATH])
+
+    subprocess.call(['rm', '-rf', 'frames'])
+
+
 if __name__ == "__main__":
 
     ## params
     parser = argparse.ArgumentParser(description='Baseline Training...')
 
+    ## env args
+    parser.add_argument('--has_renderer', type=bool, default=False)
+    parser.add_argument('--use_camera_obs', type=bool, default=True)
+    parser.add_argument('--has_offscreen_renderer', type=bool, default=False)
+
+    parser.add_argument('--control_freq', type=int, default=1)
+    parser.add_argument('--obj_nums', type=list, default=[1, 1, 2, 2])
+    parser.add_argument('--camera_height', type=int, default=128)
+    parser.add_argument('--camera_width', type=int, default=128)
+
+
+    ## alg args
     parser.add_argument('--out_dir', type=str, default='results/baselines')
     parser.add_argument('--alg', type=str, default='ppo2')
     parser.add_argument('--num_env', type=int, default=4)
-    parser.add_argument('--render', type=bool, default=False)
-    parser.add_argument('--control_freq', type=int, default=1)
     parser.add_argument('--load_path', type=str, default='gg')
-    parser.add_argument('--obj_nums', type=list, default=[1, 1, 2, 2])
     parser.add_argument('--reward_scale', type=float, default=1)
     parser.add_argument('--save_video_interval', type=int, default=0)
-    parser.add_argument('--seed', default=None)
 
     parser.add_argument('--num_timesteps', type=int, default=200000)
     parser.add_argument('--nsteps', type=int, default=128)
@@ -159,8 +235,16 @@ if __name__ == "__main__":
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--network', type=str, default='mlp')
     parser.add_argument('--num_layers', type=int, default=2)
-    parser.add_argument('--debug', type=str, default='test3')
 
+    ## video args
+    parser.add_argument('--make_video', type=bool, default=False)
+    parser.add_argument('--render_drop_freq', type=int, default=0)
+    parser.add_argument('--video_name', type=str, default='demo.mp4')
+
+    ## others
+    parser.add_argument('--seed', default=None)
+    parser.add_argument('--log', type=bool, default=True)
+    parser.add_argument('--debug', type=str, default='test3')
 
     args = parser.parse_args()
 
@@ -181,17 +265,22 @@ if __name__ == "__main__":
 
     args.save_path = os.path.join(args.save_dir, 'model.pth')
 
-    if MPI is None or MPI.COMM_WORLD.Get_rank() == 0:
-        rank = 0
-        configure_logger(args.save_dir)
-    else:
-        rank = MPI.COMM_WORLD.Get_rank()
-        configure_logger(args.save_dir, format_strs=[])
+    if args.log:
+        if MPI is None or MPI.COMM_WORLD.Get_rank() == 0:
+            rank = 0
+            configure_logger(args.save_dir)
+        else:
+            rank = MPI.COMM_WORLD.Get_rank()
+            configure_logger(args.save_dir, format_strs=[])
 
-    ## log
-    logger.log(args)
+        ## log
+        logger.log(args)
 
     model, env = train(args)
+
+    if args.make_video:
+        make_video(model, env, args)
+        exit(0)
 
     if args.save_path is not None and rank == 0:
         save_path = osp.expanduser(args.save_path)
