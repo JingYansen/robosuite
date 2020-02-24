@@ -47,12 +47,19 @@ def get_env_kwargs(args):
 
     env_kwargs['render_drop_freq'] = args.render_drop_freq
     env_kwargs['control_freq'] = args.control_freq
-    env_kwargs['obj_names'] = args.obj_names
+
+    ## Something strange here:
+    ## if set obj_names, error will occur.
+    # env_kwargs['obj_names'] = args.obj_names
+
     env_kwargs['camera_height'] = args.camera_height
     env_kwargs['camera_width'] = args.camera_width
     env_kwargs['use_camera_obs'] = args.use_camera_obs
     env_kwargs['has_renderer'] = args.has_renderer
     env_kwargs['has_offscreen_renderer'] = args.has_offscreen_renderer
+
+    env_kwargs['keys'] = args.keys
+    env_kwargs['camera_name'] = args.camera_name
 
     return env_kwargs
 
@@ -67,7 +74,11 @@ def get_params(args):
     params['save_interval'] = args.save_interval
     params['lr'] = args.lr
     params['network'] = args.network
-    params['load_path'] = args.load_path
+
+    if osp.exists(args.load_path):
+        params['load_path'] = args.load_path
+    else:
+        logger.log('Warning: path <' + args.load_path + '> not exists.')
 
     return params
 
@@ -209,14 +220,17 @@ if __name__ == "__main__":
 
     ## env args
     parser.add_argument('--has_renderer', type=bool, default=False)
-    parser.add_argument('--use_camera_obs', type=bool, default=True)
+    parser.add_argument('--use_camera_obs', type=bool, default=False)
     parser.add_argument('--has_offscreen_renderer', type=bool, default=False)
 
     parser.add_argument('--control_freq', type=int, default=1)
     parser.add_argument('--obj_nums', type=list, default=[1, 1, 2, 2])
+    parser.add_argument('--obj_names', type=list, default=[])
     parser.add_argument('--camera_height', type=int, default=128)
     parser.add_argument('--camera_width', type=int, default=128)
 
+    parser.add_argument('--keys', type=str, default='object-state')
+    parser.add_argument('--camera_name', type=str, default='targetview')
 
     ## alg args
     parser.add_argument('--out_dir', type=str, default='results/baselines')
@@ -255,7 +269,7 @@ if __name__ == "__main__":
 
     args.obj_types = ['Milk'] + ['Bread'] + ['Cereal'] + ['Can']
 
-    info_dir = 'states_' + args.alg + '_' + args.network + '_' + str(args.num_layers) + 'layer_' +\
+    info_dir = args.keys + '_' + args.alg + '_' + args.network + '_' + str(args.num_layers) + 'layer_' +\
                str(args.lr) + 'lr_' + str(args.nsteps) + 'stpes_' + str(args.num_env) + 'async_' + str(args.ent_coef) + 'explore_' +\
                args.debug
 

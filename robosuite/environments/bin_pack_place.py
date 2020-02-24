@@ -52,7 +52,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         control_freq=1,
         horizon=1000,
         ignore_done=False,
-        camera_name="agentview",
+        camera_name="targetview",
         camera_height=128,
         camera_width=128,
         camera_depth=False,

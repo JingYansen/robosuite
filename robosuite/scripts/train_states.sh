@@ -10,4 +10,4 @@ python bin_packing_baselines.py \
     --network mlp \
     --num_layers 2 \
     --ent_coef 0.01 \
-    --debug 'small_bin_not_norm'
+    --debug 'test'
