@@ -55,24 +55,38 @@ def adjust_camera_pos(env):
         import ipdb
         ipdb.set_trace()
 
+def test_random_take(env):
+    for _ in range(10):
+        env.reset()
+
+        for __ in range(100):
+            action = env.action_space.sample()
+            obs, rew, done, info = env.step(action)
+
+            for i in range(200):
+                env.render()
+
+            if done:
+                break
+
 
 if __name__ == "__main__":
 
     # Notice how the environment is wrapped by the wrapper
     low = np.array([0.57, 0.35])
     high = np.array([0.63, 0.405])
-    # obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
+    obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
 
     env = suite.make(
         'BinPackPlace',
-        has_renderer=False,
-        has_offscreen_renderer=True,
+        has_renderer=True,
+        has_offscreen_renderer=False,
         ignore_done=True,
-        use_camera_obs=True,
+        use_camera_obs=False,
         control_freq=1,
         # obj_names=obj_names,
         action_bound=(low, high)
     )
 
 
-    adjust_camera_pos(env)
+    test_random_take(env)

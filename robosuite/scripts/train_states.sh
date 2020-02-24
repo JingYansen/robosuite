@@ -8,5 +8,6 @@ python bin_packing_baselines.py \
     --save_interval 100 \
     --lr 1e-3 \
     --network mlp \
-    --num_layers 3 \
+    --num_layers 2 \
+    --ent_coef 0.01 \
     --debug 'small_bin_not_norm'

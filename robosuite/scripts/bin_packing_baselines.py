@@ -46,6 +46,7 @@ def get_params(args):
 
     params['nsteps'] = args.nsteps
     params['nminibatches'] = args.nminibatches
+    params['ent_coef'] = args.ent_coef
     params['save_interval'] = args.save_interval
     params['log_interval'] = args.log_interval
     params['save_interval'] = args.save_interval
@@ -152,6 +153,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_timesteps', type=int, default=200000)
     parser.add_argument('--nsteps', type=int, default=128)
     parser.add_argument('--nminibatches', type=int, default=8)
+    parser.add_argument('--ent_coef', type=float, default=0.0)
     parser.add_argument('--log_interval', type=int, default=5)
     parser.add_argument('--save_interval', type=int, default=100)
     parser.add_argument('--lr', type=float, default=1e-3)
@@ -170,7 +172,8 @@ if __name__ == "__main__":
     args.obj_types = ['Milk'] + ['Bread'] + ['Cereal'] + ['Can']
 
     info_dir = 'states_' + args.alg + '_' + args.network + '_' + str(args.num_layers) + 'layer_' +\
-               str(args.lr) + 'lr_' + str(args.nsteps) + 'stpes_' + str(args.num_env) + 'async_' + args.debug
+               str(args.lr) + 'lr_' + str(args.nsteps) + 'stpes_' + str(args.num_env) + 'async_' + str(args.ent_coef) + 'explore_' +\
+               args.debug
 
     args.save_dir = os.path.join(PATH, args.out_dir, info_dir)
     if not os.path.exists(args.save_dir):
@@ -195,3 +198,4 @@ if __name__ == "__main__":
         model.save(save_path)
 
     logger.log('Trained Over.')
+    logger.log('Save to ', args.save_dir)

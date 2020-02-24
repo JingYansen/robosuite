@@ -137,7 +137,6 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         """
 
         # task settings
-        random.shuffle(obj_names)
         self.obj_names = obj_names
         self.render_drop_freq = render_drop_freq
 
@@ -345,8 +344,14 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
 
     def take_an_object(self, action):
-        # print('Take an object!')
-        obj_idx = (self.objects_not_take != 0).argmax(axis=0)
+        ## random take an object
+        obj_idxs = np.nonzero(self.objects_not_take)[0]
+        if len(obj_idxs) is 0:
+            print('Warning: All objects have been taken.')
+            obj_idx = 0
+        else:
+            obj_idx = np.random.choice(obj_idxs)
+
         self.objects_not_take[obj_idx] = 0
 
         obj = self.object_names[obj_idx]
