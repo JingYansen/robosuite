@@ -14,7 +14,7 @@ DEMO_PATH = 'demo'
 if not os.path.exists(DEMO_PATH):
     os.makedirs(DEMO_PATH)
 
-DEMO_PATH += '/random_convex.mp4'
+DEMO_PATH += '/random_banana_bowl.mp4'
 
 class human_policy:
     def __init__(self, low, high, delta=[0.061, 0.072]):

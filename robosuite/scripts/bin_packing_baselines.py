@@ -120,6 +120,7 @@ def train(args):
         **alg_kwargs
     )
 
+    logger.log('Trained Over.')
     return model, env
 
 
@@ -175,7 +176,6 @@ def make_video(model, env, args):
     env.render_drop_freq = args.render_drop_freq
 
     time_step_counter = 0
-    num_env = args.num_env
     n_episode = 2
     state = model.initial_state if hasattr(model, 'initial_state') else None
     dones = np.zeros((1,))
@@ -211,6 +211,39 @@ def make_video(model, env, args):
          '-s', resolve, DEMO_PATH])
 
     subprocess.call(['rm', '-rf', 'frames'])
+
+
+def test(model, env, args):
+    logger.log("Test...")
+
+    n_episode = args.test_episode
+    num_env = args.num_env
+    state = model.initial_state if hasattr(model, 'initial_state') else None
+    dones = np.zeros((1,))
+    total_rewards = 0
+
+    for i_episode in range(n_episode):
+        obs = env.reset()
+
+        for i in range(100):
+
+            if state is not None:
+                actions, _, state, _ = model.step(obs, S=state, M=dones)
+            else:
+                actions, _, _, _ = model.step(obs)
+
+            obs, rew, done, info = env.step(actions)
+
+            for r in rew:
+                total_rewards += np.sum(r)
+
+            done = done[0]
+            if done:
+                break
+
+    avg_reward = total_rewards / (n_episode * num_env)
+    logger.log("Test ", n_episode, " episodes, average reward is: ", avg_reward)
+    logger.log("Test over.")
 
 
 if __name__ == "__main__":
@@ -255,6 +288,10 @@ if __name__ == "__main__":
     parser.add_argument('--render_drop_freq', type=int, default=0)
     parser.add_argument('--video_name', type=str, default='demo.mp4')
 
+    ## test args
+    parser.add_argument('--test', type=bool, default=True)
+    parser.add_argument('--test_episode', type=int, default=30)
+
     ## others
     parser.add_argument('--seed', default=None)
     parser.add_argument('--log', type=bool, default=True)
@@ -292,13 +329,13 @@ if __name__ == "__main__":
 
     model, env = train(args)
 
-    if args.make_video:
-        make_video(model, env, args)
-        exit(0)
-
     if args.save_path is not None and rank == 0:
         save_path = osp.expanduser(args.save_path)
         model.save(save_path)
+        logger.log('Save to ', args.save_dir)
 
-    logger.log('Trained Over.')
-    logger.log('Save to ', args.save_dir)
+    if args.test:
+        test(model, env, args)
+
+    if args.make_video:
+        make_video(model, env, args)

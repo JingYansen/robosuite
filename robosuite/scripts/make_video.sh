@@ -4,7 +4,7 @@ python bin_packing_baselines.py \
     --log False \
     --make_video True \
     --alg ppo2 \
-    --num_env 1 \
+    --num_env 8 \
     --num_timesteps 0 \
     --network mlp \
     --num_layers 2 \
@@ -14,5 +14,6 @@ python bin_packing_baselines.py \
     --camera_width 240 \
     --render_drop_freq 10 \
     --video_name '2layer_0.01ent_78ksteps_not_norm.mp4' \
+    --test True \
+    --test_episode 30 \
     --debug 'make_video'
-
