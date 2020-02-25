@@ -10,4 +10,4 @@ python bin_packing_baselines.py \
     --network mlp \
     --num_layers 2 \
     --ent_coef 0.01 \
-    --debug 'test'
+    --debug 'test_tensorboard'

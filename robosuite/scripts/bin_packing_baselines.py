@@ -126,7 +126,7 @@ def train(args):
 
 def configure_logger(log_path, **kwargs):
     if log_path is not None:
-        logger.configure(log_path)
+        logger.configure(log_path, **kwargs)
     else:
         logger.configure(**kwargs)
 
@@ -293,6 +293,7 @@ if __name__ == "__main__":
     parser.add_argument('--test_episode', type=int, default=30)
 
     ## others
+    parser.add_argument('--format_strs', type=list, default=['stdout', 'log', 'tensorboard'])
     parser.add_argument('--seed', default=None)
     parser.add_argument('--log', type=bool, default=True)
     parser.add_argument('--debug', type=str, default='test3')
@@ -319,7 +320,7 @@ if __name__ == "__main__":
     if args.log:
         if MPI is None or MPI.COMM_WORLD.Get_rank() == 0:
             rank = 0
-            configure_logger(args.save_dir)
+            configure_logger(args.save_dir, format_strs=args.format_strs)
         else:
             rank = MPI.COMM_WORLD.Get_rank()
             configure_logger(args.save_dir, format_strs=[])
