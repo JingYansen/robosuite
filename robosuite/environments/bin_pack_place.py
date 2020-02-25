@@ -59,6 +59,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
         render_drop_freq=0,
         obj_names=['Milk'] + ['Bread'] + ['Cereal'] * 2 + ['Can'] * 2,
+        random_take=False,
         keys='object-state',
         action_bound=(np.array([0.5, 0.15]), np.array([0.7, 0.6])),
     ):
@@ -137,12 +138,13 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         """
 
         # task settings
+        self.random_take = random_take
         self.obj_names = obj_names
         self.render_drop_freq = render_drop_freq
 
         self.single_object_mode = single_object_mode
         self.object_to_id = {"Milk": 0, "Bread": 1, "Cereal": 2, "Can": 3, "Banana": 4, "Bowl": 5}
-        self.obj_to_use = None
+        self.obj_to_take = -1
 
         # settings for table top
         self.table_full_size = table_full_size
@@ -278,7 +280,6 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         # make objects by names
         self._make_objects(self.obj_names)
 
-        # self.obj_to_use = (self.item_names[0] + "{}").format(0)
 
         lst = []
         for j in range(len(self.vis_inits)):
@@ -345,16 +346,19 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
     def take_an_object(self, action):
         ## random take an object
-        obj_idxs = np.nonzero(self.objects_not_take)[0]
-        if len(obj_idxs) is 0:
-            print('Warning: All objects have been taken.')
-            obj_idx = 0
+        if self.random_take:
+            obj_idxs = np.nonzero(self.objects_not_take)[0]
+            if len(obj_idxs) is 0:
+                print('Warning: All objects have been taken.')
+                self.obj_to_take = 0
+            else:
+                self.obj_to_take = np.random.choice(obj_idxs)
         else:
-            obj_idx = np.random.choice(obj_idxs)
+            self.obj_to_take = (self.objects_not_take != 0).argmax(axis=0)
 
-        self.objects_not_take[obj_idx] = 0
+        self.objects_not_take[self.obj_to_take] = 0
 
-        obj = self.object_names[obj_idx]
+        obj = self.object_names[self.obj_to_take]
         if len(action) > 2:
             self.teleport_object(obj, action[0], action[1], action[2])
         else:
@@ -620,31 +624,33 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             # remember the keys to collect into object info
             object_state_keys = []
 
-            # for conversion to relative gripper frame
-            gripper_pose = T.pose2mat((di["eef_pos"], di["eef_quat"]))
-            world_pose_in_gripper = T.pose_inv(gripper_pose)
-
             for i in range(len(self.item_names_org)):
 
                 obj_str = str(self.item_names_org[i])
-                obj_pos = np.array(self.sim.data.body_xpos[self.obj_body_id[obj_str]])
-                obj_quat = T.convert_quat(
-                    self.sim.data.body_xquat[self.obj_body_id[obj_str]], to="xyzw"
-                )
+
+                ## if unplaced
+                if self.objects_not_take[i]:
+                    obj_pos = np.zeros(3)
+                    obj_quat = np.zeros(4)
+                ## if placed
+                else:
+                    obj_pos = np.array(self.sim.data.body_xpos[self.obj_body_id[obj_str]])
+                    obj_quat = T.convert_quat(
+                        self.sim.data.body_xquat[self.obj_body_id[obj_str]], to="xyzw"
+                    )
+
                 di["{}_pos".format(obj_str)] = obj_pos
                 di["{}_quat".format(obj_str)] = obj_quat
 
-                # get relative pose of object in gripper frame
-                object_pose = T.pose2mat((obj_pos, obj_quat))
-                rel_pose = T.pose_in_A_to_pose_in_B(object_pose, world_pose_in_gripper)
-                rel_pos, rel_quat = T.mat2pose(rel_pose)
-                di["{}_to_eef_pos".format(obj_str)] = rel_pos
-                di["{}_to_eef_quat".format(obj_str)] = rel_quat
-
                 object_state_keys.append("{}_pos".format(obj_str))
                 object_state_keys.append("{}_quat".format(obj_str))
-                object_state_keys.append("{}_to_eef_pos".format(obj_str))
-                object_state_keys.append("{}_to_eef_quat".format(obj_str))
+
+            temp_idx = np.zeros(len(self.objects_not_take))
+            if self.obj_to_take >= 0:
+                temp_idx[self.obj_to_take] = 1
+
+            di["objs_taken"] = np.copy(temp_idx)
+            object_state_keys.append("objs_taken")
 
             di["object-state"] = np.concatenate([di[k] for k in object_state_keys])
 

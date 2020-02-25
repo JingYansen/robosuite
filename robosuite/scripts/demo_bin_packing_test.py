@@ -55,6 +55,18 @@ def adjust_camera_pos(env):
         import ipdb
         ipdb.set_trace()
 
+
+
+def run(env):
+
+    for _ in range(30):
+        action = env.action_space.sample()
+        obs, rew, done, info = env.step(action)
+
+        import ipdb
+        ipdb.set_trace()
+
+
 def test_random_take(env):
     for _ in range(10):
         env.reset()
@@ -79,7 +91,7 @@ if __name__ == "__main__":
 
     env = suite.make(
         'BinPackPlace',
-        has_renderer=True,
+        has_renderer=False,
         has_offscreen_renderer=False,
         ignore_done=True,
         use_camera_obs=False,
@@ -89,4 +101,4 @@ if __name__ == "__main__":
     )
 
 
-    test_random_take(env)
+    run(env)

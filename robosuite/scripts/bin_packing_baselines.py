@@ -57,6 +57,7 @@ def get_env_kwargs(args):
     env_kwargs['use_camera_obs'] = args.use_camera_obs
     env_kwargs['has_renderer'] = args.has_renderer
     env_kwargs['has_offscreen_renderer'] = args.has_offscreen_renderer
+    env_kwargs['random_take'] = args.random_take
 
     env_kwargs['keys'] = args.keys
     env_kwargs['camera_name'] = args.camera_name
@@ -68,6 +69,7 @@ def get_params(args):
 
     params['nsteps'] = args.nsteps
     params['nminibatches'] = args.nminibatches
+    params['noptepochs'] = args.noptepochs
     params['ent_coef'] = args.ent_coef
     params['save_interval'] = args.save_interval
     params['log_interval'] = args.log_interval
@@ -255,6 +257,7 @@ if __name__ == "__main__":
     parser.add_argument('--has_renderer', type=bool, default=False)
     parser.add_argument('--use_camera_obs', type=bool, default=False)
     parser.add_argument('--has_offscreen_renderer', type=bool, default=False)
+    parser.add_argument('--random_take', type=bool, default=False)
 
     parser.add_argument('--control_freq', type=int, default=1)
     parser.add_argument('--obj_nums', type=list, default=[1, 1, 2, 2])
@@ -276,6 +279,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_timesteps', type=int, default=200000)
     parser.add_argument('--nsteps', type=int, default=128)
     parser.add_argument('--nminibatches', type=int, default=8)
+    parser.add_argument('--noptepochs', type=int, default=10)
     parser.add_argument('--ent_coef', type=float, default=0.0)
     parser.add_argument('--log_interval', type=int, default=5)
     parser.add_argument('--save_interval', type=int, default=100)
