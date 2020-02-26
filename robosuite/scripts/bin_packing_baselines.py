@@ -169,9 +169,11 @@ def build_env(args):
 
 def make_video(model, env, args):
     DEMO_PATH = 'demo'
+    seed = np.random.randint(0, 100000)
+    frame_dir = 'frames' + str(seed)
     import subprocess
-    subprocess.call(['rm', '-rf', 'frames'])
-    subprocess.call(['mkdir', '-p', 'frames'])
+    subprocess.call(['rm', '-rf', frame_dir])
+    subprocess.call(['mkdir', '-p', frame_dir])
     subprocess.call(['mkdir', '-p', DEMO_PATH])
 
     DEMO_PATH = os.path.join(DEMO_PATH, args.video_name)
@@ -202,7 +204,7 @@ def make_video(model, env, args):
                 image_data = np.concatenate((image_data_bird, image_data_agent), 1)
 
                 img = Image.fromarray(image_data, 'RGB')
-                img.save('frames/frame-%.10d.png' % time_step_counter)
+                img.save(frame_dir + '/frame-%.10d.png' % time_step_counter)
                 time_step_counter += 1
 
             if done:
@@ -210,10 +212,10 @@ def make_video(model, env, args):
 
     resolve = str(args.camera_height * 2) + 'x' + str(args.camera_width)
     subprocess.call(
-        ['ffmpeg', '-framerate', '50', '-y', '-i', 'frames/frame-%010d.png', '-r', '30', '-pix_fmt', 'yuv420p',
+        ['ffmpeg', '-framerate', '50', '-y', '-i', frame_dir + '/frame-%010d.png', '-r', '30', '-pix_fmt', 'yuv420p',
          '-s', resolve, DEMO_PATH])
 
-    subprocess.call(['rm', '-rf', 'frames'])
+    subprocess.call(['rm', '-rf', frame_dir])
 
 
 def test(model, env, args):
