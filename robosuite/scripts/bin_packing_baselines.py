@@ -55,6 +55,7 @@ def get_env_kwargs(args):
     env_kwargs['camera_height'] = args.camera_height
     env_kwargs['camera_width'] = args.camera_width
     env_kwargs['use_camera_obs'] = args.use_camera_obs
+    env_kwargs['use_object_obs'] = args.use_object_obs
     env_kwargs['has_renderer'] = args.has_renderer
     env_kwargs['has_offscreen_renderer'] = args.has_offscreen_renderer
     env_kwargs['random_take'] = args.random_take
@@ -244,8 +245,29 @@ def test(model, env, args):
                 break
 
     avg_reward = total_rewards / (n_episode * num_env)
-    logger.log("Test ", n_episode, " episodes, average reward is: ", avg_reward)
-    logger.log("Test over.")
+
+    if args.log:
+        logger.log("Test ", n_episode, " episodes, average reward is: ", avg_reward)
+        logger.log("Test over.")
+    else:
+        print("Test ", n_episode, " episodes, average reward is: ", avg_reward)
+        print("Test over.")
+
+
+def get_info_dir(args):
+    info_dir = args.keys + '_' + args.alg + '_' + args.network + '_' + str(args.num_layers) + 'layer_' + \
+               str(args.lr) + 'lr_' + str(args.nsteps) + 'stpes_' + str(args.num_env) + 'async_' + str(
+        args.ent_coef) + 'explore_'
+
+    if args.random_take:
+        info_dir += '_random_'
+
+    if args.use_camera_obs:
+        info_dir += '_' + str(args.camera_width) + 'x' + str(args.camera_height)
+
+    info_dir += '_' + args.debug
+
+    return info_dir
 
 
 if __name__ == "__main__":
@@ -256,6 +278,7 @@ if __name__ == "__main__":
     ## env args
     parser.add_argument('--has_renderer', type=bool, default=False)
     parser.add_argument('--use_camera_obs', type=bool, default=False)
+    parser.add_argument('--use_object_obs', type=bool, default=False)
     parser.add_argument('--has_offscreen_renderer', type=bool, default=False)
     parser.add_argument('--random_take', type=bool, default=False)
 
@@ -311,9 +334,7 @@ if __name__ == "__main__":
 
     args.obj_types = ['Milk'] + ['Bread'] + ['Cereal'] + ['Can']
 
-    info_dir = args.keys + '_' + args.alg + '_' + args.network + '_' + str(args.num_layers) + 'layer_' +\
-               str(args.lr) + 'lr_' + str(args.nsteps) + 'stpes_' + str(args.num_env) + 'async_' + str(args.ent_coef) + 'explore_' +\
-               args.debug
+    info_dir = get_info_dir(args)
 
     args.save_dir = os.path.join(PATH, args.out_dir, info_dir)
     if not os.path.exists(args.save_dir):

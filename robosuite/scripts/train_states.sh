@@ -10,4 +10,5 @@ python bin_packing_baselines.py \
     --network mlp \
     --num_layers 2 \
     --ent_coef 0.01 \
+    --use_object_obs True \
     --debug 'fine_desighed'

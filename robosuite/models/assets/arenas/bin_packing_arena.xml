@@ -41,10 +41,10 @@
     <!-- front view -->
     <camera mode="fixed" name="frontview" pos="1.6 0.4 1.45" quat="0.56 0.43 0.43 0.56"/>
     <!-- bird view -->
-    <camera mode="fixed" name="birdview" pos="-0.2 0.4 3.0" quat="0.7071 0 0 0.7071"/>
+    <camera mode="fixed" name="birdview" pos="0.1 0.7 1.2" quat="0.7071 0 0 0.7071"/>
     <!-- agent view -->
     <camera mode="fixed" name="agentview" pos="1.0 0.4 1.75" quat="0.653 0.271 0.271 0.653"/>
     <!-- target view-->
-    <camera mode="fixed" name="targetview" pos="0.5 0.7 1.25" quat="0.653 0.271 0.271 0.653"/>
+    <camera mode="fixed" name="targetview" pos="0.38 0.7 1.15" quat="0.653 0.271 0.271 0.653"/>
   </worldbody>
 </mujoco>

@@ -2,12 +2,21 @@ from collections import OrderedDict
 import random
 import numpy as np
 import gym
+import os
+
+# import shutil
+# from tensorboardX import SummaryWriter
 
 import robosuite.utils.transform_utils as T
 from robosuite.utils.mjcf_utils import string_to_array
 from robosuite.environments.sawyer import SawyerEnv
 from gym.envs.mujoco import mujoco_env
 from gym import spaces
+
+try:
+    from mpi4py import MPI
+except ImportError:
+    MPI = None
 
 from robosuite.models.arenas import BinPackingArena
 from robosuite.models.objects import (
@@ -53,10 +62,13 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         horizon=1000,
         ignore_done=False,
         camera_name="targetview",
+        camera_names=["birdview", "targetview"],
         camera_height=128,
         camera_width=128,
         camera_depth=False,
 
+        video_height=256,
+        video_width=256,
         render_drop_freq=0,
         obj_names=['Milk'] + ['Bread'] + ['Cereal'] * 2 + ['Can'] * 2,
         random_take=False,
@@ -141,6 +153,9 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self.random_take = random_take
         self.obj_names = obj_names
         self.render_drop_freq = render_drop_freq
+        self.video_height = video_height
+        self.video_width = video_width
+        self.camera_names = camera_names
 
         self.single_object_mode = single_object_mode
         self.object_to_id = {"Milk": 0, "Bread": 1, "Cereal": 2, "Can": 3, "Banana": 4, "Bowl": 5}
@@ -409,9 +424,9 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
             if self.render_drop_freq:
                 if i % self.render_drop_freq == 0:
-                    info['birdview'].append(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview'))
+                    info['birdview'].append(self.sim.render(width=self.video_width, height=self.video_height, camera_name='birdview'))
                     # info['agentview'].append(np.rot90(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='agentview'), 2))
-                    info['targetview'].append(np.rot90(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='targetview'), 2))
+                    info['targetview'].append(np.rot90(self.sim.render(width=self.video_width, height=self.video_height, camera_name='targetview'), 2))
 
                 i += 1
 
@@ -607,16 +622,28 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         """
         di = super()._get_observation()
         if self.use_camera_obs:
-            camera_obs = self.sim.render(
-                camera_name=self.camera_name,
-                width=self.camera_width,
-                height=self.camera_height,
-                depth=self.camera_depth,
-            )
-            if self.camera_depth:
-                di["image"], di["depth"] = camera_obs
-            else:
-                di["image"] = camera_obs
+
+            bird_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview')
+            target_image = np.rot90(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='targetview'), 2)
+
+            # for name in self.camera_names:
+            #     camera_obs = self.sim.render(
+            #         camera_name=name,
+            #         width=self.camera_width,
+            #         height=self.camera_height,
+            #         depth=self.camera_depth,
+            #     )
+            #
+            #     if self.camera_depth:
+            #         image, depth = camera_obs
+            #     else:
+            #         image = camera_obs
+            #     if image_obs is None:
+            #         image_obs = image
+            #     else:
+            #         image_obs = np.concatenate((image_obs, image), 1)
+
+            di["image"] = np.concatenate((bird_image, target_image), 1)
 
         # low-level object information
         if self.use_object_obs:

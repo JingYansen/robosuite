@@ -101,4 +101,5 @@ if __name__ == "__main__":
     )
 
 
-    run(env)
+    # run(env)
+    adjust_camera_pos(env)
