@@ -2,7 +2,7 @@
 
 python bin_packing_baselines.py \
     --alg ppo2 \
-    --num_env 3 \
+    --num_env 8 \
     --num_timesteps 1000000 \
     --nsteps 256 \
     --save_interval 100 \

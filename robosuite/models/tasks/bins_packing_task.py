@@ -27,7 +27,7 @@ class BinPackingTask(Task):
         super().__init__()
 
         # temp: z-rotation
-        self.z_rotation = True
+        self.z_rotation = False
 
         self.object_metadata = []
         self.merge_arena(mujoco_arena)

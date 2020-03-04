@@ -182,13 +182,14 @@ def make_video(model, env, args):
 
     time_step_counter = 0
     n_episode = 2
+    slower = 5
     state = model.initial_state if hasattr(model, 'initial_state') else None
     dones = np.zeros((1,))
 
     for i_episode in range(n_episode):
         obs = env.reset()
 
-        for i in range(100):
+        for _ in range(100):
 
             if state is not None:
                 actions, _, state, _ = model.step(obs, S=state, M=dones)
@@ -204,8 +205,9 @@ def make_video(model, env, args):
                 image_data = np.concatenate((image_data_bird, image_data_agent), 1)
 
                 img = Image.fromarray(image_data, 'RGB')
-                img.save(frame_dir + '/frame-%.10d.png' % time_step_counter)
-                time_step_counter += 1
+                for __ in range(slower):
+                    img.save(frame_dir + '/frame-%.10d.png' % time_step_counter)
+                    time_step_counter += 1
 
             if done:
                 break
@@ -318,7 +320,7 @@ if __name__ == "__main__":
     parser.add_argument('--video_name', type=str, default='demo.mp4')
 
     ## test args
-    parser.add_argument('--test', type=bool, default=True)
+    parser.add_argument('--test', type=bool, default=False)
     parser.add_argument('--test_episode', type=int, default=30)
 
     ## others

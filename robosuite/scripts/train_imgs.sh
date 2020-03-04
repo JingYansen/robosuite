@@ -12,9 +12,7 @@ python bin_packing_baselines.py \
     --use_camera_obs True \
     --has_offscreen_renderer True \
     --ent_coef 0.01 \
-    --camera_height 128 \
-    --camera_width 128 \
-    --make_video True \
-    --render_drop_freq 10 \
-    --video_name '2view_128x128.mp4' \
+    --camera_height 64 \
+    --camera_width 64 \
+    --random_take True \
     --debug '2view'

@@ -14,7 +14,7 @@ DEMO_PATH = 'demo'
 if not os.path.exists(DEMO_PATH):
     os.makedirs(DEMO_PATH)
 
-DEMO_PATH += '/random_banana_bowl.mp4'
+DEMO_PATH += '/random.mp4'
 
 class human_policy:
     def __init__(self, low, high, delta=[0.061, 0.072]):
@@ -47,7 +47,28 @@ class human_policy:
         return np.array(action)
 
 
-def make_video(env, n_episode):
+def make_video(n_episode, slower=3):
+    low = np.array([0.57, 0.35])
+    high = np.array([0.63, 0.405])
+
+    render_drop_freq = 10
+
+    env = suite.make(
+        'BinPackPlace',
+        has_renderer=False,
+        has_offscreen_renderer=True,
+        ignore_done=False,
+        use_camera_obs=False,
+        control_freq=1,
+
+        camera_height=240,
+        camera_width=240,
+
+        render_drop_freq=render_drop_freq,
+        # obj_names=obj_names,
+        action_bound=(low, high),
+    )
+
     subprocess.call(['rm', '-rf', 'frames'])
     subprocess.call(['mkdir', '-p', 'frames'])
     subprocess.call(['mkdir', '-p', 'demo'])
@@ -57,7 +78,7 @@ def make_video(env, n_episode):
     for i_episode in range(n_episode):
         env.reset()
 
-        for i in range(100):
+        for _ in range(100):
 
             actions = env.action_space.sample()
 
@@ -68,15 +89,16 @@ def make_video(env, n_episode):
                 image_data = np.concatenate((image_data_bird, image_data_agent), 1)
 
                 img = Image.fromarray(image_data, 'RGB')
-                img.save('frames/frame-%.10d.png' % time_step_counter)
-                time_step_counter += 1
+                for __ in range(slower):
+                    img.save('frames/frame-%.10d.png' % time_step_counter)
+                    time_step_counter += 1
 
             if done:
                 break
 
     subprocess.call(
         ['ffmpeg', '-framerate', '50', '-y', '-i', 'frames/frame-%010d.png', '-r', '24', '-pix_fmt', 'yuv420p', '-s',
-         '640x240',
+         '480x240',
          DEMO_PATH])
 
     subprocess.call(['rm', '-rf', 'frames'])
@@ -109,38 +131,11 @@ def test(env, n_episode):
 
 if __name__ == "__main__":
 
-    # Notice how the environment is wrapped by the wrapper
-    low = np.array([0.57, 0.35])
-    high = np.array([0.63, 0.405])
-
-    # obj_list = ['Milk', 'Bread', 'Cereal', 'Can', 'Banana', 'Bowl']
-    # obj_num = [0, 0, 0, 0, 1, 1]
-    # obj_names = []
-    # for name, num in zip(obj_list, obj_num):
-    #     obj_names += [name] * num
-
-    render_drop_freq = 0
-
-    env = suite.make(
-        'BinPackPlace',
-        has_renderer=False,
-        has_offscreen_renderer=True,
-        ignore_done=False,
-        use_camera_obs=False,
-        control_freq=1,
-
-        camera_height=320,
-        camera_width=240,
-
-        render_drop_freq=render_drop_freq,
-        # obj_names=obj_names,
-        action_bound=(low, high),
-    )
-
     ## make video
     n_episode = 2
-    make_video(env, n_episode)
+    slower = 5
+    make_video(n_episode, slower)
 
-    ## test results
-    n_episode = 30 * 8
-    test(env, n_episode)
+    # ## test results
+    # n_episode = 30 * 8
+    # test(env, n_episode)

@@ -45,18 +45,17 @@ if __name__ == "__main__":
 
     has_renderer = True
 
-    env = MyGymWrapper(
-        suite.make(
-            'BinPackPlace',
-            has_renderer=has_renderer,
-            has_offscreen_renderer=False,
-            ignore_done=True,
-            use_camera_obs=False,
-            control_freq=1,
-            obj_names=obj_names,
-        ),
+    env = suite.make(
+        'BinPackPlace',
+        has_renderer=has_renderer,
+        has_offscreen_renderer=False,
+        ignore_done=True,
+        use_camera_obs=False,
+        control_freq=1,
+        obj_names=obj_names,
         action_bound=(low, high)
     )
+
 
     # env.viewer.set_camera(camera_id=1)
 

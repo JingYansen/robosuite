@@ -626,23 +626,6 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             bird_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview')
             target_image = np.rot90(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='targetview'), 2)
 
-            # for name in self.camera_names:
-            #     camera_obs = self.sim.render(
-            #         camera_name=name,
-            #         width=self.camera_width,
-            #         height=self.camera_height,
-            #         depth=self.camera_depth,
-            #     )
-            #
-            #     if self.camera_depth:
-            #         image, depth = camera_obs
-            #     else:
-            #         image = camera_obs
-            #     if image_obs is None:
-            #         image_obs = image
-            #     else:
-            #         image_obs = np.concatenate((image_obs, image), 1)
-
             di["image"] = np.concatenate((bird_image, target_image), 1)
 
         # low-level object information
