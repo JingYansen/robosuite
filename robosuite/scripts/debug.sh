@@ -1,18 +1,24 @@
 ## train with states
-
+set -ex
 python bin_packing_baselines.py \
     --alg ppo2 \
-    --num_env 8 \
-    --num_timesteps 1000000 \
+    --num_env 1 \
+    --num_timesteps 1200000 \
     --nsteps 256 \
-    --save_interval 100 \
-    --lr 1e-3 \
+    --noptepochs 20 \
+    --nminibatches 4 \
+    --save_interval 50 \
+    --lr_type 'linear' \
+    --max 1e-3 \
+    --min 3e-4 \
     --network mlp \
     --num_layers 2 \
-    --ent_coef 0.01 \
-    --random True \
+    --cliprange 0.2 \
+    --ent_coef 0.005 \
     --use_object_obs True \
-    --debug 'test'
+    --test True \
+    --log True \
+    --debug 'debug'
 
 #python bin_packing_baselines.py \
 #    --alg ppo2 \

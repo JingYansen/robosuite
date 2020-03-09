@@ -663,6 +663,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
                 object_state_keys.append("{}_pos".format(obj_str))
                 object_state_keys.append("{}_quat".format(obj_str))
 
+            ## get type one-hot vector
             # if self.random_take:
             temp_idx = np.zeros(len(self.object_to_id))
             if self.obj_to_take >= 0:
@@ -671,6 +672,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
                 temp_idx[obj_type] = 1
 
             di["objs_taken"] = np.copy(temp_idx)
+            ## get id one-hot vector
             # else:
             #     temp_idx = np.zeros(len(self.objects_not_take))
             #     if self.obj_to_take >= 0:

@@ -1,1 +1,1 @@
-tensorbaord --logdir=results/baselines --port=10086
+tensorbaord --logdir=results --port=10086

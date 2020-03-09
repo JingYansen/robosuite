@@ -5,8 +5,8 @@ python bin_packing_baselines.py \
     --num_env 8 \
     --num_timesteps 1200000 \
     --nsteps 256 \
-    --noptepochs 10 \
-    --nminibatches 8 \
+    --noptepochs 20 \
+    --nminibatches 4 \
     --save_interval 50 \
     --lr 3e-4 \
     --network mlp \
@@ -16,4 +16,4 @@ python bin_packing_baselines.py \
     --use_object_obs True \
     --test True \
     --log True \
-    --debug 'type_obs'
+    --debug 'baseline'

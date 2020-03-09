@@ -1,23 +1,19 @@
 import sys
 import os
-import time
 import multiprocessing
 import argparse
-import gym
 
 import os.path as osp
 import numpy as np
 import tensorflow as tf
-import robosuite as suite
 
 from baselines.common.tf_util import get_session
-from baselines.common.vec_env.vec_normalize import VecNormalize
 from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
 from baselines import logger
 from PIL import Image
 
 from robosuite.scripts.utils import make_vec_env
-from robosuite.wrappers import MyGymWrapper
+from robosuite.scripts.lr_schedule import get_lr_func
 from importlib import import_module
 
 try:
@@ -40,6 +36,16 @@ def get_alg_module(alg, submodule=None):
 
 def get_learn_function(alg):
     return get_alg_module(alg).learn
+
+
+def get_lr_kwargs(args):
+    lr_kwargs = {}
+
+    lr_kwargs['type'] = args.lr_type
+    lr_kwargs['max'] = args.max
+    lr_kwargs['min'] = args.min
+
+    return lr_kwargs
 
 
 def get_env_kwargs(args):
@@ -76,8 +82,10 @@ def get_params(args):
     params['save_interval'] = args.save_interval
     params['log_interval'] = args.log_interval
     params['save_interval'] = args.save_interval
-    params['lr'] = args.lr
     params['network'] = args.network
+
+    lr_kwargs = get_lr_kwargs(args)
+    params['lr'] = get_lr_func(**lr_kwargs)
 
     if osp.exists(args.load_path):
         params['load_path'] = args.load_path
@@ -266,21 +274,19 @@ def get_info_dir(args):
     else:
         info_dir = 'fix_'
 
-    infos = [args.keys, args.alg, args.network]
+    infos = [args.keys, args.alg, args.network, args.lr_type, args.max, args.min]
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['layer', 'lr', 'total', 'nsteps', 'env', 'clip', 'ent-coef', 'noptepochs', 'batch']
-    values = [args.num_layers, args.lr, args.num_timesteps, args.nsteps, args.num_env, args.cliprange, args.ent_coef, args.noptepochs, args.nminibatches]
+    keys = ['layer', 'total', 'nsteps', 'env', 'clip', 'ent-coef', 'noptepochs', 'batch']
+    values = [args.num_layers, args.num_timesteps, args.nsteps, args.num_env, args.cliprange, args.ent_coef, args.noptepochs, args.nminibatches]
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):
         info_dir += str(value) + key + '_'
 
     if args.use_camera_obs:
-        info_dir += '_' + str(args.camera_width) + 'x' + str(args.camera_height) + '_'
-
-    info_dir += args.debug
+        info_dir += '_' + str(args.camera_width) + 'x' + str(args.camera_height)
 
     return info_dir
 
@@ -307,7 +313,7 @@ if __name__ == "__main__":
     parser.add_argument('--camera_name', type=str, default='targetview')
 
     ## alg args
-    parser.add_argument('--out_dir', type=str, default='results/baselines')
+    parser.add_argument('--out_dir', type=str, default='results')
     parser.add_argument('--alg', type=str, default='ppo2')
     parser.add_argument('--num_env', type=int, default=4)
     parser.add_argument('--load_path', type=str, default='gg')
@@ -322,9 +328,13 @@ if __name__ == "__main__":
     parser.add_argument('--ent_coef', type=float, default=0.0)
     parser.add_argument('--log_interval', type=int, default=5)
     parser.add_argument('--save_interval', type=int, default=100)
-    parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--network', type=str, default='mlp')
     parser.add_argument('--num_layers', type=int, default=2)
+
+    ## lr args
+    parser.add_argument('--lr_type', type=str, default='const')
+    parser.add_argument('--max', type=float, default=1e-3)
+    parser.add_argument('--min', type=float, default=3e-4)
 
     ## video args
     parser.add_argument('--make_video', type=bool, default=False)
@@ -333,13 +343,13 @@ if __name__ == "__main__":
 
     ## test args
     parser.add_argument('--test', type=bool, default=False)
-    parser.add_argument('--test_episode', type=int, default=50)
+    parser.add_argument('--test_episode', type=int, default=100)
 
     ## others
     parser.add_argument('--format_strs', type=list, default=['stdout', 'log', 'tensorboard'])
     parser.add_argument('--seed', default=None)
     parser.add_argument('--log', type=bool, default=False)
-    parser.add_argument('--debug', type=str, default='none')
+    parser.add_argument('--debug', type=str, default='debug')
 
     args = parser.parse_args()
 
@@ -352,7 +362,7 @@ if __name__ == "__main__":
 
     info_dir = get_info_dir(args)
 
-    args.save_dir = os.path.join(PATH, args.out_dir, info_dir)
+    args.save_dir = os.path.join(PATH, args.out_dir, args.debug, info_dir)
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
 
