@@ -2,14 +2,18 @@
 set -ex
 python bin_packing_baselines.py \
     --alg ppo2 \
-    --num_env 16 \
-    --num_timesteps 1000000 \
+    --num_env 8 \
+    --num_timesteps 1200000 \
     --nsteps 256 \
+    --noptepochs 10 \
+    --nminibatches 8 \
     --save_interval 50 \
-    --lr 1e-3 \
+    --lr 3e-4 \
     --network mlp \
     --num_layers 2 \
-    --ent_coef 0.01 \
+    --cliprange 0.2 \
+    --ent_coef 0.005 \
     --use_object_obs True \
     --test True \
-    --debug 'fine_desighed_no_z_rotation'
+    --log True \
+    --debug 'type_obs'

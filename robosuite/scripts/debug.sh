@@ -10,8 +10,9 @@ python bin_packing_baselines.py \
     --network mlp \
     --num_layers 2 \
     --ent_coef 0.01 \
+    --random True \
     --use_object_obs True \
-    --debug 'debug_log_lasttime'
+    --debug 'test'
 
 #python bin_packing_baselines.py \
 #    --alg ppo2 \

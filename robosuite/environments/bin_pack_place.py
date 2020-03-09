@@ -71,6 +71,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         video_width=256,
         render_drop_freq=0,
         obj_names=['Milk'] + ['Bread'] + ['Cereal'] * 2 + ['Can'] * 2,
+        take_nums=6,
         random_take=False,
         keys='object-state',
         action_bound=(np.array([0.5, 0.15]), np.array([0.7, 0.6])),
@@ -152,6 +153,10 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         # task settings
         self.random_take = random_take
         self.obj_names = obj_names
+        self.take_nums = take_nums
+
+        assert self.take_nums <= len(self.obj_names)
+
         self.render_drop_freq = render_drop_freq
         self.video_height = video_height
         self.video_width = video_width
@@ -435,8 +440,11 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
         reward, done, _ = self._post_action(action)
 
-        # done
-        done = np.all(self.objects_not_take == 0)
+        ## done
+        ## 1. all objects are taken
+        # done = np.all(self.objects_not_take == 0)
+        ## 2. take @take_nums objects
+        done = (np.sum(self.objects_not_take != 1) >= self.take_nums)
 
         if done:
             print('Done!')
@@ -655,11 +663,21 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
                 object_state_keys.append("{}_pos".format(obj_str))
                 object_state_keys.append("{}_quat".format(obj_str))
 
-            temp_idx = np.zeros(len(self.objects_not_take))
+            # if self.random_take:
+            temp_idx = np.zeros(len(self.object_to_id))
             if self.obj_to_take >= 0:
-                temp_idx[self.obj_to_take] = 1
+                obj_to_take_name = self.obj_names[self.obj_to_take]
+                obj_type = self.object_to_id[obj_to_take_name]
+                temp_idx[obj_type] = 1
 
             di["objs_taken"] = np.copy(temp_idx)
+            # else:
+            #     temp_idx = np.zeros(len(self.objects_not_take))
+            #     if self.obj_to_take >= 0:
+            #         temp_idx[self.obj_to_take] = 1
+            #
+            #     di["objs_taken"] = np.copy(temp_idx)
+
             object_state_keys.append("objs_taken")
 
             di["object-state"] = np.concatenate([di[k] for k in object_state_keys])

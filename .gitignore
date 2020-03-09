@@ -118,3 +118,4 @@ mjkey.txt
 .idea
 
 .pytest_cache/
+/robosuite/scripts/results/

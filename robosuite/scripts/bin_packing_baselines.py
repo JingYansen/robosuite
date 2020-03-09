@@ -71,6 +71,7 @@ def get_params(args):
     params['nsteps'] = args.nsteps
     params['nminibatches'] = args.nminibatches
     params['noptepochs'] = args.noptepochs
+    params['cliprange'] = args.cliprange
     params['ent_coef'] = args.ent_coef
     params['save_interval'] = args.save_interval
     params['log_interval'] = args.log_interval
@@ -181,7 +182,7 @@ def make_video(model, env, args):
     env.render_drop_freq = args.render_drop_freq
 
     time_step_counter = 0
-    n_episode = 2
+    n_episode = 3
     slower = 5
     state = model.initial_state if hasattr(model, 'initial_state') else None
     dones = np.zeros((1,))
@@ -251,6 +252,7 @@ def test(model, env, args):
     avg_reward = total_rewards / (n_episode * num_env)
 
     if args.log:
+        logger.log("Path: ", args.save_dir)
         logger.log("Test ", n_episode, " episodes, average reward is: ", avg_reward)
         logger.log("Test over.")
     else:
@@ -259,17 +261,26 @@ def test(model, env, args):
 
 
 def get_info_dir(args):
-    info_dir = args.keys + '_' + args.alg + '_' + args.network + '_' + str(args.num_layers) + 'layer_' + \
-               str(args.lr) + 'lr_' + str(args.nsteps) + 'stpes_' + str(args.num_env) + 'async_' + str(
-        args.ent_coef) + 'explore_'
-
     if args.random_take:
-        info_dir += '_random_'
+        info_dir = 'random_'
+    else:
+        info_dir = 'fix_'
+
+    infos = [args.keys, args.alg, args.network]
+    for info in infos:
+        info_dir += str(info) + '_'
+
+    keys = ['layer', 'lr', 'total', 'nsteps', 'env', 'clip', 'ent-coef', 'noptepochs', 'batch']
+    values = [args.num_layers, args.lr, args.num_timesteps, args.nsteps, args.num_env, args.cliprange, args.ent_coef, args.noptepochs, args.nminibatches]
+    assert len(keys) == len(values)
+
+    for key, value in zip(keys, values):
+        info_dir += str(value) + key + '_'
 
     if args.use_camera_obs:
-        info_dir += '_' + str(args.camera_width) + 'x' + str(args.camera_height)
+        info_dir += '_' + str(args.camera_width) + 'x' + str(args.camera_height) + '_'
 
-    info_dir += '_' + args.debug
+    info_dir += args.debug
 
     return info_dir
 
@@ -307,6 +318,7 @@ if __name__ == "__main__":
     parser.add_argument('--nsteps', type=int, default=128)
     parser.add_argument('--nminibatches', type=int, default=8)
     parser.add_argument('--noptepochs', type=int, default=10)
+    parser.add_argument('--cliprange', type=float, default=0.2)
     parser.add_argument('--ent_coef', type=float, default=0.0)
     parser.add_argument('--log_interval', type=int, default=5)
     parser.add_argument('--save_interval', type=int, default=100)
@@ -321,13 +333,13 @@ if __name__ == "__main__":
 
     ## test args
     parser.add_argument('--test', type=bool, default=False)
-    parser.add_argument('--test_episode', type=int, default=30)
+    parser.add_argument('--test_episode', type=int, default=50)
 
     ## others
     parser.add_argument('--format_strs', type=list, default=['stdout', 'log', 'tensorboard'])
     parser.add_argument('--seed', default=None)
-    parser.add_argument('--log', type=bool, default=True)
-    parser.add_argument('--debug', type=str, default='test3')
+    parser.add_argument('--log', type=bool, default=False)
+    parser.add_argument('--debug', type=str, default='none')
 
     args = parser.parse_args()
 
