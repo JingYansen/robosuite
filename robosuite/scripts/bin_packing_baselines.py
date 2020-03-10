@@ -14,6 +14,7 @@ from PIL import Image
 
 from robosuite.scripts.utils import make_vec_env
 from robosuite.scripts.lr_schedule import get_lr_func
+from robosuite.models.networks import get_network
 from importlib import import_module
 
 try:
@@ -36,6 +37,16 @@ def get_alg_module(alg, submodule=None):
 
 def get_learn_function(alg):
     return get_alg_module(alg).learn
+
+
+def get_network_kwargs(args):
+    net_kwargs = {}
+
+    net_kwargs['type'] = args.network
+    if net_kwargs['type'] == 'mlp':
+        net_kwargs['num_layers'] = args.num_layers
+
+    return net_kwargs
 
 
 def get_lr_kwargs(args):
@@ -71,6 +82,7 @@ def get_env_kwargs(args):
 
     return env_kwargs
 
+
 def get_params(args):
     params = {}
 
@@ -82,8 +94,12 @@ def get_params(args):
     params['save_interval'] = args.save_interval
     params['log_interval'] = args.log_interval
     params['save_interval'] = args.save_interval
-    params['network'] = args.network
 
+    # self-defined network
+    net_kwargs = get_network_kwargs(args)
+    params['network'] = get_network(**net_kwargs)
+
+    # self-defined lr schedule
     lr_kwargs = get_lr_kwargs(args)
     params['lr'] = get_lr_func(**lr_kwargs)
 
@@ -94,24 +110,17 @@ def get_params(args):
 
     return params
 
-def get_network_params(args):
-    params = {}
-
-    if args.network is 'mlp':
-        params['num_layers'] = args.num_layers
-
-    return params
-
 
 def train(args):
     total_timesteps = int(args.num_timesteps)
     seed = args.seed
     args.env_id, args.env_type = 'BinPack-v0', 'mujoco'
 
-    ## get params
+    # get params
     learn = get_learn_function(args.alg)
     alg_kwargs = get_params(args)
-    extra_args = get_network_params(args)
+    # extra_args = get_network_params(args)
+    extra_args = {}
     alg_kwargs.update(extra_args)
 
     env = build_env(args)
@@ -144,7 +153,7 @@ def configure_logger(log_path, **kwargs):
 
 
 def build_env(args):
-    ## make env in robosuite
+    # make env in robosuite
     obj_names = []
     for i, name in zip(args.obj_nums, args.obj_types):
         obj_names = obj_names + [name] * i
@@ -152,7 +161,7 @@ def build_env(args):
     args.obj_names = obj_names
     logger.log('Total objects: ', args.obj_names)
 
-    ## make env in gym
+    # make env in gym
     env_kwargs = get_env_kwargs(args)
 
     ncpu = multiprocessing.cpu_count()
@@ -168,11 +177,9 @@ def build_env(args):
     get_session(config=config)
 
     flatten_dict_observations = args.alg not in {'her'}
-    env = make_vec_env(args.env_id, args.env_type, args.num_env or 1, seed, env_kwargs=env_kwargs, reward_scale=args.reward_scale,
+    env = make_vec_env(args.env_id, args.env_type, args.num_env or 1, seed, env_kwargs=env_kwargs,
+                       reward_scale=args.reward_scale,
                        flatten_dict_observations=flatten_dict_observations)
-
-    # env = VecNormalize(env, use_tf=True)
-
     return env
 
 
@@ -278,8 +285,9 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['layer', 'total', 'nsteps', 'env', 'clip', 'ent-coef', 'noptepochs', 'batch']
-    values = [args.num_layers, args.num_timesteps, args.nsteps, args.num_env, args.cliprange, args.ent_coef, args.noptepochs, args.nminibatches]
+    keys = ['total', 'nsteps', 'env', 'clip', 'ent-coef', 'noptepochs', 'batch']
+    values = [args.num_timesteps, args.nsteps, args.num_env, args.cliprange, args.ent_coef, args.noptepochs,
+              args.nminibatches]
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):
@@ -328,6 +336,8 @@ if __name__ == "__main__":
     parser.add_argument('--ent_coef', type=float, default=0.0)
     parser.add_argument('--log_interval', type=int, default=5)
     parser.add_argument('--save_interval', type=int, default=100)
+
+    ## network args
     parser.add_argument('--network', type=str, default='mlp')
     parser.add_argument('--num_layers', type=int, default=2)
 
@@ -365,6 +375,10 @@ if __name__ == "__main__":
     args.save_dir = os.path.join(PATH, args.out_dir, args.debug, info_dir)
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
+    else:
+        ans = input('Path with same params exists, overwirte or not?(yes/no)')
+        if ans != 'yes':
+            exit(0)
 
     args.save_path = os.path.join(args.save_dir, 'model.pth')
 

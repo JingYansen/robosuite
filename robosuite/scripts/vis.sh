@@ -1,1 +1,1 @@
-tensorbaord --logdir=results --port=10086
+tensorboard --logdir=results --port=10000
