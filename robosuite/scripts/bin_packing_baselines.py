@@ -14,7 +14,6 @@ from PIL import Image
 
 from robosuite.scripts.utils import make_vec_env
 from robosuite.scripts.lr_schedule import get_lr_func
-from robosuite.models.networks import get_network
 from importlib import import_module
 
 try:
@@ -37,16 +36,6 @@ def get_alg_module(alg, submodule=None):
 
 def get_learn_function(alg):
     return get_alg_module(alg).learn
-
-
-def get_network_kwargs(args):
-    net_kwargs = {}
-
-    net_kwargs['type'] = args.network
-    if net_kwargs['type'] == 'mlp':
-        net_kwargs['num_layers'] = args.num_layers
-
-    return net_kwargs
 
 
 def get_lr_kwargs(args):
@@ -82,7 +71,6 @@ def get_env_kwargs(args):
 
     return env_kwargs
 
-
 def get_params(args):
     params = {}
 
@@ -94,12 +82,8 @@ def get_params(args):
     params['save_interval'] = args.save_interval
     params['log_interval'] = args.log_interval
     params['save_interval'] = args.save_interval
+    params['network'] = args.network
 
-    # self-defined network
-    net_kwargs = get_network_kwargs(args)
-    params['network'] = get_network(**net_kwargs)
-
-    # self-defined lr schedule
     lr_kwargs = get_lr_kwargs(args)
     params['lr'] = get_lr_func(**lr_kwargs)
 
@@ -107,6 +91,14 @@ def get_params(args):
         params['load_path'] = args.load_path
     else:
         logger.log('Warning: path <' + args.load_path + '> not exists.')
+
+    return params
+
+def get_network_params(args):
+    params = {}
+
+    if args.network is 'mlp':
+        params['num_layers'] = args.num_layers
 
     return params
 
@@ -119,8 +111,7 @@ def train(args):
     # get params
     learn = get_learn_function(args.alg)
     alg_kwargs = get_params(args)
-    # extra_args = get_network_params(args)
-    extra_args = {}
+    extra_args = get_network_params(args)
     alg_kwargs.update(extra_args)
 
     env = build_env(args)
@@ -336,8 +327,6 @@ if __name__ == "__main__":
     parser.add_argument('--ent_coef', type=float, default=0.0)
     parser.add_argument('--log_interval', type=int, default=5)
     parser.add_argument('--save_interval', type=int, default=100)
-
-    ## network args
     parser.add_argument('--network', type=str, default='mlp')
     parser.add_argument('--num_layers', type=int, default=2)
 
@@ -375,10 +364,6 @@ if __name__ == "__main__":
     args.save_dir = os.path.join(PATH, args.out_dir, args.debug, info_dir)
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
-    else:
-        ans = input('Path with same params exists, overwirte or not?(yes/no)')
-        if ans != 'yes':
-            exit(0)
 
     args.save_path = os.path.join(args.save_dir, 'model.pth')
 
