@@ -2,17 +2,24 @@
 set -ex
 python bin_packing_baselines.py \
     --alg ppo2 \
-    --num_env 8 \
+    --num_env 16 \
     --num_timesteps 1000000 \
-    --nsteps 256 \
-    --save_interval 100 \
-    --lr 1e-3 \
-    --network 'cnn' \
+    --nsteps 128 \
+    --noptepochs 20 \
+    --nminibatches 4 \
+    --save_interval 50 \
+    --lr_type 'linear' \
+    --max 1e-3 \
+    --min 3e-4 \
+    --ent_coef 0.005 \
+    --network 'cnn2x' \
     --keys 'image' \
     --use_camera_obs True \
     --has_offscreen_renderer True \
-    --ent_coef 0.01 \
     --camera_height 64 \
     --camera_width 64 \
+    --test True \
+    --log True \
+    --obj_nums '3,3,3,3' \
     --random_take True \
-    --debug '2view'
+    --debug '12objects'

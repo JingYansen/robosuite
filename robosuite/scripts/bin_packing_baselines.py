@@ -66,7 +66,11 @@ def get_env_kwargs(args):
     env_kwargs['has_offscreen_renderer'] = args.has_offscreen_renderer
     env_kwargs['random_take'] = args.random_take
 
-    env_kwargs['keys'] = args.keys
+    if args.keys == 'state':
+        env_kwargs['keys'] = 'state'
+    elif args.keys == 'image':
+        env_kwargs['keys'] = ['image', 'obj_taken']
+
     env_kwargs['camera_name'] = args.camera_name
 
     return env_kwargs
@@ -146,8 +150,9 @@ def configure_logger(log_path, **kwargs):
 def build_env(args):
     # make env in robosuite
     obj_names = []
+    args.obj_nums = args.obj_nums.split(',')
     for i, name in zip(args.obj_nums, args.obj_types):
-        obj_names = obj_names + [name] * i
+        obj_names = obj_names + [name] * int(i)
 
     args.obj_names = obj_names
     logger.log('Total objects: ', args.obj_names)
@@ -303,12 +308,12 @@ if __name__ == "__main__":
     parser.add_argument('--random_take', type=bool, default=False)
 
     parser.add_argument('--control_freq', type=int, default=1)
-    parser.add_argument('--obj_nums', type=list, default=[1, 1, 2, 2])
+    parser.add_argument('--obj_nums', type=str, default='1,1,2,2')
     parser.add_argument('--obj_names', type=list, default=[])
     parser.add_argument('--camera_height', type=int, default=128)
     parser.add_argument('--camera_width', type=int, default=128)
 
-    parser.add_argument('--keys', type=str, default='object-state')
+    parser.add_argument('--keys', type=str, default='state', choices=['state', 'image'])
     parser.add_argument('--camera_name', type=str, default='targetview')
 
     ## alg args
@@ -364,6 +369,10 @@ if __name__ == "__main__":
     args.save_dir = os.path.join(PATH, args.out_dir, args.debug, info_dir)
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
+    else:
+        ans = input('Path with same params exists, overwirte or not?(yes/no)')
+        if ans != 'yes':
+            exit(0)
 
     args.save_path = os.path.join(args.save_dir, 'model.pth')
 

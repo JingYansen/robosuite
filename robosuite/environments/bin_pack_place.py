@@ -73,7 +73,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         obj_names=['Milk'] + ['Bread'] + ['Cereal'] * 2 + ['Can'] * 2,
         take_nums=6,
         random_take=False,
-        keys='object-state',
+        keys='state',
         action_bound=(np.array([0.5, 0.15]), np.array([0.7, 0.6])),
     ):
         """
@@ -215,7 +215,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
         if keys is None:
             assert self.use_object_obs, "Object observations need to be enabled."
-            keys = ["robot-state", "object-state"]
+            keys = ["image", "state"]
         self.keys = keys
 
         # set up observation and action spaces
@@ -245,7 +245,13 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
                 if verbose:
                     print("adding key: {}".format(key))
                 ob_lst.append(obs_dict[key])
-        return np.concatenate(ob_lst)
+
+        if self.keys == 'state':
+            return np.concatenate(ob_lst)
+        else:
+            image, tp = ob_lst
+            image = image.reshape(-1)
+            return np.concatenate([image, tp])
 
     def _name2obj(self, name):
         assert name in self.object_to_id.keys()
@@ -620,8 +626,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         Returns an OrderedDict containing observations [(name_string, np.array), ...].
         
         Important keys:
-            robot-state: contains robot-centric information.
-            object-state: requires @self.use_object_obs to be True.
+            state: requires @self.use_object_obs to be True.
                 contains object-centric information.
             image: requires @self.use_camera_obs to be True.
                 contains a rendered frame from the simulation.
@@ -629,12 +634,32 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
                 contains a rendered depth map from the simulation
         """
         di = super()._get_observation()
+
         if self.use_camera_obs:
 
             bird_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview')
             target_image = np.rot90(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='targetview'), 2)
 
             di["image"] = np.concatenate((bird_image, target_image), 1)
+            # di['bird_image'] = bird_image
+            # di['target_image'] = target_image
+
+        ## get type one-hot vector
+        if self.random_take:
+            temp_idx = np.zeros(len(self.object_to_id))
+            if self.obj_to_take >= 0:
+                obj_to_take_name = self.obj_names[self.obj_to_take]
+                obj_type = self.object_to_id[obj_to_take_name]
+                temp_idx[obj_type] = 1
+
+            di["obj_taken"] = np.copy(temp_idx)
+        ## get id one-hot vector
+        else:
+            temp_idx = np.zeros(len(self.objects_not_take))
+            if self.obj_to_take >= 0:
+                temp_idx[self.obj_to_take] = 1
+
+            di["obj_taken"] = np.copy(temp_idx)
 
         # low-level object information
         if self.use_object_obs:
@@ -663,26 +688,9 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
                 object_state_keys.append("{}_pos".format(obj_str))
                 object_state_keys.append("{}_quat".format(obj_str))
 
-            ## get type one-hot vector
-            if self.random_take:
-                temp_idx = np.zeros(len(self.object_to_id))
-                if self.obj_to_take >= 0:
-                    obj_to_take_name = self.obj_names[self.obj_to_take]
-                    obj_type = self.object_to_id[obj_to_take_name]
-                    temp_idx[obj_type] = 1
+            object_state_keys.append("obj_taken")
 
-                di["objs_taken"] = np.copy(temp_idx)
-            ## get id one-hot vector
-            else:
-                temp_idx = np.zeros(len(self.objects_not_take))
-                if self.obj_to_take >= 0:
-                    temp_idx[self.obj_to_take] = 1
-
-                di["objs_taken"] = np.copy(temp_idx)
-
-            object_state_keys.append("objs_taken")
-
-            di["object-state"] = np.concatenate([di[k] for k in object_state_keys])
+            di["state"] = np.concatenate([di[k] for k in object_state_keys])
 
         return di
 

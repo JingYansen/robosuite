@@ -8,14 +8,19 @@ python bin_packing_baselines.py \
     --num_timesteps 0 \
     --network mlp \
     --num_layers 2 \
-    --load_path 'results/baselines/object-state_ppo2_mlp_2layer_0.0003lr_256nsteps_8env_0.005ent-coef_Falserand_no_z_rotation/model.pth' \
+    --keys 'state' \
+    --lr_type 'linear' \
+    --max 3e-4 \
+    --min 3e-4 \
+    --load_path 'results/baselines/object-state_ppo2_mlp_2layer_0.0003lr_1500000total_256nsteps_8env_0.2clip_0.005ent-coef_True_rand_10noptepochs_8batch_baseline/model.pth' \
     --use_object_obs True \
     --has_offscreen_renderer True \
     --camera_height 320 \
     --camera_width 240 \
     --make_video True \
     --render_drop_freq 10 \
-    --video_name 'baseline_3e-4.mp4' \
+    --video_name 'random_3e-4_258nsteps_10_8.mp4' \
+    --random True \
     --debug 'make_video'
 
 #python bin_packing_baselines.py \
