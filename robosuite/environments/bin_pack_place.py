@@ -44,7 +44,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self,
         gripper_type="TwoFingerGripper",
         table_full_size=(0.39, 0.49, 0.82),
-        table_target_size=(0.08, 0.08, 0.12),
+        table_target_size=(0.085, 0.085, 0.12),
         table_friction=(1, 0.005, 0.0001),
         use_camera_obs=True,
         use_object_obs=True,
@@ -71,6 +71,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         video_width=256,
         render_drop_freq=0,
         obj_names=['Milk'] + ['Bread'] + ['Cereal'] * 2 + ['Can'] * 2,
+        take_orders = [],
         take_nums=6,
         random_take=False,
         keys='state',
@@ -154,6 +155,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self.random_take = random_take
         self.obj_names = obj_names
         self.take_nums = take_nums
+        self.take_orders = take_orders
 
         assert self.take_nums <= len(self.obj_names)
 
@@ -371,17 +373,26 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
 
     def take_an_object(self, action):
-        ## random take an object
-        if self.random_take:
-            obj_idxs = np.nonzero(self.objects_not_take)[0]
-            if len(obj_idxs) is 0:
-                print('Warning: All objects have been taken.')
-                self.obj_to_take = 0
-            else:
-                self.obj_to_take = np.random.choice(obj_idxs)
+        import ipdb
+        ipdb.set_trace()
+        ## given obj to take
+        if len(self.take_orders) > 0:
+            next_obj = self.take_orders.pop(0)
+            self.obj_to_take = self.object_names.index(next_obj)
         else:
-            self.obj_to_take = (self.objects_not_take != 0).argmax(axis=0)
+            ## random take an object
+            if self.random_take:
+                obj_idxs = np.nonzero(self.objects_not_take)[0]
+                if len(obj_idxs) is 0:
+                    print('Warning: All objects have been taken.')
+                    self.obj_to_take = 0
+                else:
+                    self.obj_to_take = np.random.choice(obj_idxs)
+            ## fix order to take
+            else:
+                self.obj_to_take = (self.objects_not_take != 0).argmax(axis=0)
 
+        assert self.objects_not_take[self.obj_to_take] == 1
         self.objects_not_take[self.obj_to_take] = 0
 
         obj = self.object_names[self.obj_to_take]

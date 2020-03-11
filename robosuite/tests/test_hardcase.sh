@@ -1,10 +1,10 @@
 ## train with states
 set -ex
-python bin_packing_baselines.py \
+python test_hard_case_policy.py \
     --log False \
     --make_video True \
     --alg ppo2 \
-    --num_env 8 \
+    --num_env 1 \
     --num_timesteps 0 \
     --network mlp \
     --num_layers 2 \
@@ -12,16 +12,19 @@ python bin_packing_baselines.py \
     --lr_type 'linear' \
     --max 3e-4 \
     --min 3e-4 \
-    --load_path 'results/baselines/object-state_ppo2_mlp_2layer_0.0003lr_1500000total_256nsteps_8env_0.2clip_0.005ent-coef_True_rand_10noptepochs_8batch_baseline/model.pth' \
+    --ent_coef 0.005 \
+    --load_path 'results/16objects/random_state_ppo2_mlp_linear_0.0005_0.0005_1000000total_128nsteps_16env_0.2clip_0.005ent-coef_40noptepochs_2batch_/model.pth' \
     --use_object_obs True \
     --has_offscreen_renderer True \
     --camera_height 320 \
     --camera_width 240 \
     --make_video True \
     --render_drop_freq 10 \
-    --video_name 'random_3e-4_258nsteps_10_8.mp4' \
-    --random True \
+    --obj_nums '3,3,3,3' \
+    --video_name 'hardcase.mp4' \
+    --random_take True \
     --debug 'make_video'
+
 
 #python bin_packing_baselines.py \
 #    --log False \

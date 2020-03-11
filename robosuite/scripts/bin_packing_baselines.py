@@ -53,11 +53,7 @@ def get_env_kwargs(args):
 
     env_kwargs['render_drop_freq'] = args.render_drop_freq
     env_kwargs['control_freq'] = args.control_freq
-
-    ## Something strange here:
-    ## if set obj_names, error will occur.
-    # env_kwargs['obj_names'] = args.obj_names
-
+    env_kwargs['obj_names'] = args.obj_names
     env_kwargs['camera_height'] = args.camera_height
     env_kwargs['camera_width'] = args.camera_width
     env_kwargs['use_camera_obs'] = args.use_camera_obs

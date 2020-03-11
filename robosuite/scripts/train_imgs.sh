@@ -2,7 +2,7 @@
 set -ex
 python bin_packing_baselines.py \
     --alg ppo2 \
-    --num_env 16 \
+    --num_env 8 \
     --num_timesteps 1000000 \
     --nsteps 128 \
     --noptepochs 20 \
@@ -20,6 +20,6 @@ python bin_packing_baselines.py \
     --camera_width 64 \
     --test True \
     --log True \
-    --obj_nums '3,3,3,3' \
+    --obj_nums '1,1,2,2' \
     --random_take True \
-    --debug '12objects'
+    --debug '6objects'
