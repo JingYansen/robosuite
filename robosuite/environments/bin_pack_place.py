@@ -373,8 +373,6 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
 
     def take_an_object(self, action):
-        import ipdb
-        ipdb.set_trace()
         ## given obj to take
         if len(self.take_orders) > 0:
             next_obj = self.take_orders.pop(0)
