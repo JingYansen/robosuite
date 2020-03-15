@@ -411,8 +411,10 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.sim.forward()
 
     def _pre_action(self, action):
-        beg_dim = self.sim.model.get_joint_qpos_addr('Milk1')[0]
-        self.sim.data.qfrc_applied[beg_dim+2:beg_dim+7] += self.sim.data.qfrc_bias[beg_dim+2:beg_dim+7]
+        gripper_dim = self.sim.model.get_joint_qpos_addr(self.object_names[0])[0]
+
+        beg_dim = gripper_dim + self.object_names.index(self.target_object) * 6
+        self.sim.data.qfrc_applied[beg_dim+2:beg_dim+6] += self.sim.data.qfrc_bias[beg_dim+2:beg_dim+6]
 
     def _post_action(self, action):
         """
