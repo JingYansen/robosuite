@@ -49,9 +49,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             use_camera_obs=True,
             use_object_obs=True,
             reward_shaping=False,
-            placement_initializer=None,
             single_object_mode=0,
-            object_type=None,
             gripper_visualization=False,
             use_indicator_object=False,
             has_renderer=False,
@@ -62,7 +60,6 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             horizon=1000,
             ignore_done=False,
             camera_name="targetview",
-            camera_names=["birdview", "targetview"],
             camera_height=128,
             camera_width=128,
             camera_depth=False,
@@ -70,10 +67,18 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             video_height=256,
             video_width=256,
             render_drop_freq=0,
-            obj_names=['Milk'] + ['Bread'] + ['Cereal'] * 2 + ['Can'] * 2,
-            take_orders = [],
-            take_nums=6,
-            random_take=False,
+            hard_case = {
+                'obj_names': ['Can', 'Can', 'Milk', 'Milk', 'Cereal'],
+                'obj_poses': [
+                    np.array([0.57, 0.405]),
+                    np.array([0.63, 0.405]),
+                    np.array([0.558, 0.35]),
+                    np.array([0.642, 0.35]),
+                    np.array([0.60, 0.36, 1]),
+                ],
+                'target_object': 'Cereal1'
+            },
+            total_steps=200,
             keys='image',
             action_bound=(np.array([0.5, 0.15]), np.array([0.7, 0.6])),
     ):
@@ -152,21 +157,21 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         """
 
         # task settings
-        self.random_take = random_take
-        self.obj_names = obj_names
-        self.take_nums = take_nums
-        self.take_orders = take_orders
+        self.obj_names = hard_case['obj_names']
+        self.obj_poses = hard_case['obj_poses']
+        self.target_object = hard_case['target_object']
 
-        assert self.take_nums <= len(self.obj_names)
+        assert len(self.obj_names) == len(self.obj_poses)
+
+        self.total_steps = total_steps
+        self.cur_step = 0
 
         self.render_drop_freq = render_drop_freq
         self.video_height = video_height
         self.video_width = video_width
-        self.camera_names = camera_names
 
         self.single_object_mode = single_object_mode
         self.object_to_id = {"Milk": 0, "Bread": 1, "Cereal": 2, "Can": 3, "Banana": 4, "Bowl": 5}
-        self.obj_to_take = -1
 
         # settings for table top
         self.table_full_size = table_full_size
@@ -178,6 +183,15 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
+        self.use_object_obs = use_object_obs
+
+        # reward configuration
+        self.reward_shaping = reward_shaping
+
+        if keys is None:
+            assert self.use_object_obs, "Object observations need to be enabled."
+            keys = ["image"]
+        self.keys = keys
 
         super().__init__(
             gripper_type=gripper_type,
@@ -197,11 +211,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             camera_depth=camera_depth,
         )
 
-        # reward configuration
-        self.reward_shaping = reward_shaping
-
         # information of objects
-        self.object_names = list(self.mujoco_objects.keys())
         self.object_site_ids = [
             self.sim.model.site_name2id(ob_name) for ob_name in self.object_names
         ]
@@ -215,10 +225,8 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self.sim.model._geom_name2id[k] for k in self.collision_check_geom_names
         ]
 
-        if keys is None:
-            assert self.use_object_obs, "Object observations need to be enabled."
-            keys = ["image", "state"]
-        self.keys = keys
+        # init objects position
+        self._init_pos()
 
         # set up observation and action spaces
         flat_ob = self._flatten_obs(super().reset(), verbose=True)
@@ -266,14 +274,14 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         elif name is 'Bowl':
             return BowlObject, BowlVisualObject
 
-    def _make_objects(self, names):
+    def _make_objects(self):
         self.item_names = []
         self.ob_inits = []
         self.vis_inits = []
 
         idx = [0] * len(self.object_to_id)
 
-        for name in names:
+        for name in self.obj_names:
             obj, vis_obj = self._name2obj(name)
 
             ix = self.object_to_id[name]
@@ -284,6 +292,17 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self.vis_inits.append(vis_obj)
 
         self.item_names_org = list(self.item_names)
+
+    def _init_pos(self):
+        for name, pos in zip(self.object_names, self.obj_poses):
+            if len(pos) == 3:
+                z = pos[2]
+            else:
+                z = 0.9
+            self.teleport_object(name, pos[0], pos[1], z)
+
+            if name == self.target_object:
+                self.target_init_pos = pos
 
     def _load_model(self):
         super()._load_model()
@@ -300,9 +319,8 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         # The sawyer robot has a pedestal, we want to align it with the table
         self.mujoco_arena.set_origin([.5, -0.3, 0])
 
-        # make objects by names
-        self._make_objects(self.obj_names)
-
+        # make objects
+        self._make_objects()
 
         lst = []
         for j in range(len(self.vis_inits)):
@@ -315,6 +333,8 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             lst.append((str(self.item_names[i]), ob))
 
         self.mujoco_objects = OrderedDict(lst)
+        self.object_names = list(self.mujoco_objects.keys())
+
         self.n_objects = len(self.mujoco_objects)
 
         # task includes arena, robot, and objects of interest
@@ -324,8 +344,6 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self.mujoco_objects,
             self.visual_objects,
         )
-        self.model.place_objects()
-        # self.model.place_visual()
 
         self.bin_pos = string_to_array(self.model.bin2_body.get("pos"))
         self.bin_size = self.table_target_size
@@ -348,7 +366,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
     def remove_object(self, obj):
         self.teleport_object(obj, x=10, y=10)
 
-    def teleport_object(self, obj, x, y, z=1.1):
+    def teleport_object(self, obj, x, y, z=0.9):
         """
         Teleport an object to a certain position (x, y, z).
         """
@@ -365,34 +383,6 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         self.sim.set_state(sim_state)
         self.sim.forward()
-
-
-    def take_an_object(self, action):
-        ## given obj to take
-        if len(self.take_orders) > 0:
-            next_obj = self.take_orders.pop(0)
-            self.obj_to_take = self.object_names.index(next_obj)
-        else:
-            ## random take an object
-            if self.random_take:
-                obj_idxs = np.nonzero(self.objects_not_take)[0]
-                if len(obj_idxs) is 0:
-                    print('Warning: All objects have been taken.')
-                    self.obj_to_take = 0
-                else:
-                    self.obj_to_take = np.random.choice(obj_idxs)
-            ## fix order to take
-            else:
-                self.obj_to_take = (self.objects_not_take != 0).argmax(axis=0)
-
-        assert self.objects_not_take[self.obj_to_take] == 1
-        self.objects_not_take[self.obj_to_take] = 0
-
-        obj = self.object_names[self.obj_to_take]
-        if len(action) > 2:
-            self.teleport_object(obj, action[0], action[1], action[2])
-        else:
-            self.teleport_object(obj, action[0], action[1])
 
     def _pre_action(self, action):
         # gravity compensation
@@ -420,41 +410,18 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         if self.done:
             raise ValueError("executing action in terminated episode")
 
-        # take an obj
-        self.take_an_object(action)
-
-        self.timestep += 1
+        self.cur_step += 1
         self._pre_action(action)
         end_time = self.cur_time + self.control_timestep
 
-        info = {}
-
-        if self.render_drop_freq:
-            i = 0
-            info['birdview'] = []
-            # info['agentview'] = []
-            info['targetview'] = []
-
         while self.cur_time < end_time:
-
-            if self.render_drop_freq:
-                if i % self.render_drop_freq == 0:
-                    info['birdview'].append(self.sim.render(width=self.video_width, height=self.video_height, camera_name='birdview'))
-                    # info['agentview'].append(np.rot90(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='agentview'), 2))
-                    info['targetview'].append(np.rot90(self.sim.render(width=self.video_width, height=self.video_height, camera_name='targetview'), 2))
-
-                i += 1
-
             self.sim.step()
             self.cur_time += self.model_timestep
 
-        reward, done, _ = self._post_action(action)
+        reward, done, info = self._post_action(action)
 
-        ## done
-        ## 1. all objects are taken
-        # done = np.all(self.objects_not_take == 0)
-        ## 2. take @take_nums objects
-        done = (np.sum(self.objects_not_take != 1) >= self.take_nums)
+        # done
+        done = (self.cur_step >= self.total_steps)
 
         if done:
             print('Done!')
@@ -492,7 +459,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         super()._reset_internal()
 
         # reset positions of objects, and move objects out of the scene depending on the mode
-        self.model.place_objects()
+        self._init_pos()
 
     def reward(self, action=None):
         # compute sparse rewards
@@ -642,59 +609,10 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         if self.use_camera_obs:
 
             bird_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview')
-            target_image = np.rot90(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='targetview'), 2)
+            # target_image = np.rot90(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='targetview'), 2)
+            target_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='targetview')
 
             di["image"] = np.concatenate((bird_image, target_image), 1)
-            # di['bird_image'] = bird_image
-            # di['target_image'] = target_image
-
-        ## get type one-hot vector
-        # if self.random_take:
-        #     temp_idx = np.zeros(len(self.object_to_id))
-        #     if self.obj_to_take >= 0:
-        #         obj_to_take_name = self.obj_names[self.obj_to_take]
-        #         obj_type = self.object_to_id[obj_to_take_name]
-        #         temp_idx[obj_type] = 1
-        #
-        #     di["obj_taken"] = np.copy(temp_idx)
-        # ## get id one-hot vector
-        # else:
-        #     temp_idx = np.zeros(len(self.objects_not_take))
-        #     if self.obj_to_take >= 0:
-        #         temp_idx[self.obj_to_take] = 1
-        #
-        #     di["obj_taken"] = np.copy(temp_idx)
-
-        # low-level object information
-        # if self.use_object_obs:
-        #
-        #     # remember the keys to collect into object info
-        #     object_state_keys = []
-        #
-        #     for i in range(len(self.item_names_org)):
-        #
-        #         obj_str = str(self.item_names_org[i])
-        #
-        #         ## if unplaced
-        #         if self.objects_not_take[i]:
-        #             obj_pos = np.zeros(3)
-        #             obj_quat = np.zeros(4)
-        #         ## if placed
-        #         else:
-        #             obj_pos = np.array(self.sim.data.body_xpos[self.obj_body_id[obj_str]])
-        #             obj_quat = T.convert_quat(
-        #                 self.sim.data.body_xquat[self.obj_body_id[obj_str]], to="xyzw"
-        #             )
-        #
-        #         di["{}_pos".format(obj_str)] = obj_pos
-        #         di["{}_quat".format(obj_str)] = obj_quat
-        #
-        #         object_state_keys.append("{}_pos".format(obj_str))
-        #         object_state_keys.append("{}_quat".format(obj_str))
-        #
-        #     object_state_keys.append("obj_taken")
-        #
-        #     di["state"] = np.concatenate([di[k] for k in object_state_keys])
 
         return di
 

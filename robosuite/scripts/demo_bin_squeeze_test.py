@@ -36,6 +36,13 @@ def test_render_time(env):
     print('Time step: ', ts_step.mean())
 
 
+def test_env_init(env):
+    obs = env.reset()
+
+    imgs = Image.fromarray(obs)
+    imgs.show()
+
+
 def adjust_camera_pos(env):
     env.reset()
 
@@ -98,4 +105,4 @@ if __name__ == "__main__":
 
 
     # run(env)
-    adjust_camera_pos(env)
+    test_env_init(env)
