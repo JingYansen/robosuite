@@ -1,7 +1,6 @@
 import random
 import numpy as np
 import robosuite as suite
-from robosuite.wrappers import MyGymWrapper
 from baselines.ppo2 import ppo2
 
 import os
@@ -14,7 +13,7 @@ DEMO_PATH = 'temp'
 if not os.path.exists(DEMO_PATH):
     os.makedirs(DEMO_PATH)
 
-DEMO_PATH += '/test_hard_case_demo.mp4'
+DEMO_PATH += '/test_demo.mp4'
 
 def make_video(n_episode, slower=3):
     obj_names = (['Milk'] * 3 + ['Bread'] * 3 + ['Cereal'] * 3 + ['Can'] * 3)
@@ -26,11 +25,11 @@ def make_video(n_episode, slower=3):
     render_drop_freq = 10
 
     env = suite.make(
-        'BinPackPlace',
+        'BinSqueeze',
         has_renderer=False,
         has_offscreen_renderer=True,
         ignore_done=False,
-        use_camera_obs=False,
+        use_camera_obs=True,
         control_freq=1,
 
         camera_height=240,
@@ -46,24 +45,22 @@ def make_video(n_episode, slower=3):
     subprocess.call(['mkdir', '-p', 'frames'])
     time_step_counter = 0
 
-    pos_arr = [
-        np.array([0.57, 0.405, 0.91]),
-        np.array([0.63, 0.405, 0.91]),
-
-        np.array([0.558, 0.35, 0.88]),
-        np.array([0.642, 0.35, 0.88]),
-        np.array([0.60, 0.35, 1])
+    objects_palced = [
+        np.array([0.57, 0.405]),
+        np.array([0.63, 0.405]),
+        np.array([0.558, 0.35]),
+        np.array([0.642, 0.35]),
+        # 'Cereal': np.array([0.60, 0.35, 1]),
     ]
 
     ## make video
     for i_episode in range(n_episode):
         env.reset()
 
-        env.set_next_obj_to_take('Cereal1')
         for _ in range(100):
 
-            if _ < len(pos_arr):
-                actions = pos_arr[_]
+            if _ < len(objects_palced):
+                actions = objects_palced[_]
             else:
                 actions = env.action_space.sample()
 
@@ -94,5 +91,5 @@ if __name__ == "__main__":
 
     ## make video
     n_episode = 1
-    slower = 3
+    slower = 1
     make_video(n_episode, slower)

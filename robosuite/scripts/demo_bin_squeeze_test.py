@@ -43,18 +43,13 @@ def adjust_camera_pos(env):
     for _ in range(30):
         action = env.action_space.sample()
 
-        env.step(action)
+        obs, rew, done, info = env.step(action)
 
-        # camera = env.mujoco_arena.worldbody.find("./camera[@name='targetview']")
-        # camera.set('pos', pos)
-
-        imgs = env.sim.render(width=128, height=128, camera_name='targetview')
-        imgs = Image.fromarray(imgs)
+        imgs = Image.fromarray(obs)
         imgs.show()
 
         import ipdb
         ipdb.set_trace()
-
 
 
 def run(env):
@@ -90,12 +85,13 @@ if __name__ == "__main__":
     obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
 
     env = suite.make(
-        'BinPackPlace',
+        'BinSqueeze',
         has_renderer=False,
-        has_offscreen_renderer=False,
+        has_offscreen_renderer=True,
         ignore_done=True,
-        use_camera_obs=False,
+        use_camera_obs=True,
         control_freq=1,
+
         # obj_names=obj_names,
         action_bound=(low, high)
     )
