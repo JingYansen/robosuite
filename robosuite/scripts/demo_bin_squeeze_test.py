@@ -43,6 +43,50 @@ def test_env_init(env):
     imgs.show()
 
 
+def test_step(env):
+    obs = env.reset()
+
+    action = env.action_space.sample()
+    env.step(action)
+
+
+def test_qpos_meaning(env):
+    # create a video writer with imageio
+    # writer = imageio.get_writer(video_path, fps=20)
+
+    obs = env.reset()
+    imgs = Image.fromarray(obs)
+    imgs.show()
+
+    action = np.array([0.2, 0.3])
+    obs, rew, done, info = env.step(action)
+    imgs = Image.fromarray(obs)
+    imgs.show()
+
+
+def test_video(env, video_path='demo/test.mp4'):
+    obs = env.reset()
+
+    import imageio
+    writer = imageio.get_writer(video_path, fps=20)
+
+    for i in range(1):
+
+        # run a uniformly random agent
+        action = np.array([0.2, 0.3])
+        obs, reward, done, info = env.step(action)
+
+        frames = info["image"]
+        for frame in frames:
+            writer.append_data(frame)
+        print("Saving frame #{}".format(i))
+
+        if done:
+            break
+
+    writer.close()
+
+
 def adjust_camera_pos(env):
     env.reset()
 
@@ -86,10 +130,13 @@ def test_random_take(env):
 
 if __name__ == "__main__":
 
-    # Notice how the environment is wrapped by the wrapper
-    low = np.array([0.57, 0.35])
-    high = np.array([0.63, 0.405])
-    obj_names = (['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Can'] * 2) * 2
+    hard_case = {
+        'obj_names': ['Milk'],
+        'obj_poses': [
+            np.array([0.6, 0.36, 1]),
+        ],
+        'target_object': 'Milk1'
+    }
 
     env = suite.make(
         'BinSqueeze',
@@ -98,11 +145,11 @@ if __name__ == "__main__":
         ignore_done=True,
         use_camera_obs=True,
         control_freq=1,
-
-        # obj_names=obj_names,
-        action_bound=(low, high)
+        render_drop_freq=4,
+        action_pos_index=[4, 5],
+        hard_case=hard_case,
     )
 
 
     # run(env)
-    test_env_init(env)
+    test_video(env)

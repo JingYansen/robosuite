@@ -74,13 +74,13 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
                     np.array([0.63, 0.405]),
                     np.array([0.558, 0.35]),
                     np.array([0.642, 0.35]),
-                    np.array([0.60, 0.36, 1]),
+                    np.array([0.60, 0.36, 0.95]),
                 ],
                 'target_object': 'Cereal1'
             },
             total_steps=200,
             keys='image',
-            action_bound=(np.array([0.5, 0.15]), np.array([0.7, 0.6])),
+            action_pos_index=[0, 1, 2, 3, 4, 5, 6],
     ):
         """
         Args:
@@ -154,14 +154,21 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             camera_width (int): width of camera frame.
 
             camera_depth (bool): True if rendering RGB-D, and RGB otherwise.
+
+            action_pos_index:
+                (x, y, z, u, v, w ,t)
+                (0, 1, 2, 3, 4, 5, 6)
+                eg: [2, 5] -> action space: (z, w)
         """
 
         # task settings
         self.obj_names = hard_case['obj_names']
         self.obj_poses = hard_case['obj_poses']
         self.target_object = hard_case['target_object']
+        self.action_pos_index = action_pos_index
 
         assert len(self.obj_names) == len(self.obj_poses)
+        assert len(self.action_pos_index) <= 7
 
         self.total_steps = total_steps
         self.cur_step = 0
@@ -235,7 +242,8 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         low = -high
         self.observation_space = spaces.Box(low=low, high=high)
 
-        low, high = action_bound
+        high = np.ones(len(self.action_pos_index))
+        low = -high.copy()
         self.action_space = spaces.Box(low=low, high=high)
 
     def reset(self):
@@ -384,18 +392,27 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.sim.set_state(sim_state)
         self.sim.forward()
 
-    def _pre_action(self, action):
-        # gravity compensation
-        self.sim.data.qfrc_applied[
-            self._ref_joint_vel_indexes
-        ] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
+    def set_qpos(self, obj, qpos):
+        """
+        set qpos of object
+        :param obj:
+        :param qpos: (x, y, z, u, v, w, t)
+        :return:
+        """
+        assert obj in self.mujoco_objects.keys()
+        sim_state = self.sim.get_state()
 
-        if self.use_indicator_object:
-            self.sim.data.qfrc_applied[
-            self._ref_indicator_vel_low : self._ref_indicator_vel_high
-            ] = self.sim.data.qfrc_bias[
-                self._ref_indicator_vel_low : self._ref_indicator_vel_high
-                ]
+        # set pos
+        beg_dim = self.sim.model.get_joint_qpos_addr(obj)[0]
+        dims = self.action_pos_index.copy() + beg_dim
+        sim_state.qpos[dims] = qpos.copy()
+
+        self.sim.set_state(sim_state)
+        self.sim.forward()
+
+    def _pre_action(self, action):
+        beg_dim = self.sim.model.get_joint_qpos_addr('Milk1')[0]
+        self.sim.data.qfrc_applied[beg_dim+2:beg_dim+7] += self.sim.data.qfrc_bias[beg_dim+2:beg_dim+7]
 
     def _post_action(self, action):
         """
@@ -410,15 +427,34 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         if self.done:
             raise ValueError("executing action in terminated episode")
 
+        # teleport target object by (x, y, z, u, v, w, t)
+        self.set_qpos(self.target_object, action)
+
         self.cur_step += 1
         self._pre_action(action)
         end_time = self.cur_time + self.control_timestep
 
+        info = {}
+
+        if self.render_drop_freq:
+            i = 0
+            info['image'] = []
+
         while self.cur_time < end_time:
+
+            if self.render_drop_freq:
+                if i % self.render_drop_freq == 0:
+                    bird_image = self.sim.render(width=self.video_width, height=self.video_height, camera_name='birdview')
+                    target_image = self.sim.render(width=self.video_width, height=self.video_height, camera_name='targetview')
+
+                    info['image'].append(np.concatenate((bird_image, target_image), 1))
+
+                i += 1
+
             self.sim.step()
             self.cur_time += self.model_timestep
 
-        reward, done, info = self._post_action(action)
+        reward, done, _ = self._post_action(action)
 
         # done
         done = (self.cur_step >= self.total_steps)
@@ -482,95 +518,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         Returns staged rewards based on current physical states.
         Stages consist of reaching, grasping, lifting, and hovering.
         """
-
-        reach_mult = 0.1
-        grasp_mult = 0.35
-        lift_mult = 0.5
-        hover_mult = 0.7
-
-        # filter out objects that are already in the correct bins
-        objs_to_reach = []
-        geoms_to_grasp = []
-        target_bin_placements = []
-        for i in range(len(self.ob_inits)):
-            if self.objects_in_bins[i]:
-                continue
-            obj_str = str(self.item_names[i])
-            objs_to_reach.append(self.obj_body_id[obj_str])
-            geoms_to_grasp.append(self.obj_geom_id[obj_str])
-            target_bin_placements.append(self.target_bin_placements[i])
-        target_bin_placements = np.array(target_bin_placements)
-
-        ### reaching reward governed by distance to closest object ###
-        r_reach = 0.
-        if len(objs_to_reach):
-            # get reaching reward via minimum distance to a target object
-            target_object_pos = self.sim.data.body_xpos[objs_to_reach]
-            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-            dists = np.linalg.norm(
-                target_object_pos - gripper_site_pos.reshape(1, -1), axis=1
-            )
-            r_reach = (1 - np.tanh(10.0 * min(dists))) * reach_mult
-
-        ### grasping reward for touching any objects of interest ###
-        touch_left_finger = False
-        touch_right_finger = False
-        for i in range(self.sim.data.ncon):
-            c = self.sim.data.contact[i]
-            if c.geom1 in geoms_to_grasp:
-                bin_id = geoms_to_grasp.index(c.geom1)
-                if c.geom2 in self.l_finger_geom_ids:
-                    touch_left_finger = True
-                if c.geom2 in self.r_finger_geom_ids:
-                    touch_right_finger = True
-            elif c.geom2 in geoms_to_grasp:
-                bin_id = geoms_to_grasp.index(c.geom2)
-                if c.geom1 in self.l_finger_geom_ids:
-                    touch_left_finger = True
-                if c.geom1 in self.r_finger_geom_ids:
-                    touch_right_finger = True
-        has_grasp = touch_left_finger and touch_right_finger
-        r_grasp = int(has_grasp) * grasp_mult
-
-        ### lifting reward for picking up an object ###
-        r_lift = 0.
-        if len(objs_to_reach) and r_grasp > 0.:
-            z_target = self.bin_pos[2] + 0.25
-            object_z_locs = self.sim.data.body_xpos[objs_to_reach][:, 2]
-            z_dists = np.maximum(z_target - object_z_locs, 0.)
-            r_lift = grasp_mult + (1 - np.tanh(15.0 * min(z_dists))) * (
-                    lift_mult - grasp_mult
-            )
-
-        ### hover reward for getting object above bin ###
-        r_hover = 0.
-        if len(objs_to_reach):
-            # segment objects into left of the bins and above the bins
-            object_xy_locs = self.sim.data.body_xpos[objs_to_reach][:, :2]
-            y_check = (
-                    np.abs(object_xy_locs[:, 1] - target_bin_placements[:, 1])
-                    < self.bin_size[1] / 4.
-            )
-            x_check = (
-                    np.abs(object_xy_locs[:, 0] - target_bin_placements[:, 0])
-                    < self.bin_size[0] / 4.
-            )
-            objects_above_bins = np.logical_and(x_check, y_check)
-            objects_not_above_bins = np.logical_not(objects_above_bins)
-            dists = np.linalg.norm(
-                target_bin_placements[:, :2] - object_xy_locs, axis=1
-            )
-            # objects to the left get r_lift added to hover reward, those on the right get max(r_lift) added (to encourage dropping)
-            r_hover_all = np.zeros(len(objs_to_reach))
-            r_hover_all[objects_above_bins] = lift_mult + (
-                    1 - np.tanh(10.0 * dists[objects_above_bins])
-            ) * (hover_mult - lift_mult)
-            r_hover_all[objects_not_above_bins] = r_lift + (
-                    1 - np.tanh(10.0 * dists[objects_not_above_bins])
-            ) * (hover_mult - lift_mult)
-            r_hover = np.max(r_hover_all)
-
-        return r_reach, r_grasp, r_lift, r_hover
+        pass
 
     def not_in_bin(self, obj_pos):
 
