@@ -73,7 +73,7 @@ def test_video(env, video_path='demo/test.mp4'):
     for i in range(1):
 
         # run a uniformly random agent
-        action = np.array([0.2, 0.3])
+        action = np.array([0])
         obs, reward, done, info = env.step(action)
 
         frames = info["image"]
@@ -130,13 +130,17 @@ def test_random_take(env):
 
 if __name__ == "__main__":
 
-    # hard_case = {
-    #     'obj_names': ['Milk'],
-    #     'obj_poses': [
-    #         np.array([0.6, 0.36, 1]),
-    #     ],
-    #     'target_object': 'Milk1'
-    # }
+    hard_case = {
+        'obj_names': ['Can', 'Can'],
+        'obj_poses': [
+            np.array([-0.03, 0.03]),
+            np.array([0.03, 0.03]),
+            # np.array([-0.03, 0]),
+            # np.array([0.03, 0]),
+            # np.array([0, 0, 0.5]),
+        ],
+        'target_object': 'Can1'
+    }
 
     env = suite.make(
         'BinSqueeze',
@@ -146,7 +150,7 @@ if __name__ == "__main__":
         use_camera_obs=True,
         control_freq=1,
         render_drop_freq=4,
-        action_pos_index=[4, 5],
+        action_pos_index=[0],
         # hard_case=hard_case,
     )
 

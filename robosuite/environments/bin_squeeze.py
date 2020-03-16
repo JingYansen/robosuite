@@ -70,11 +70,11 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             hard_case = {
                 'obj_names': ['Can', 'Can', 'Milk', 'Milk', 'Cereal'],
                 'obj_poses': [
-                    np.array([0.57, 0.405]),
-                    np.array([0.63, 0.405]),
-                    np.array([0.558, 0.35]),
-                    np.array([0.642, 0.35]),
-                    np.array([0.60, 0.36, 0.95]),
+                    np.array([-0.03, 0.03, 0]),
+                    np.array([0.03, 0.03, 0]),
+                    np.array([-0.03, -0.03, 0]),
+                    np.array([0.03, -0.03, 0]),
+                    np.array([0, 0, 0.131]),
                 ],
                 'target_object': 'Cereal1'
             },
@@ -232,9 +232,6 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self.sim.model._geom_name2id[k] for k in self.collision_check_geom_names
         ]
 
-        # init objects position
-        self._init_pos()
-
         # set up observation and action spaces
         flat_ob = self._flatten_obs(super().reset(), verbose=True)
         self.obs_dim = flat_ob.shape
@@ -301,17 +298,6 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         self.item_names_org = list(self.item_names)
 
-    def _init_pos(self):
-        for name, pos in zip(self.object_names, self.obj_poses):
-            if len(pos) == 3:
-                z = pos[2]
-            else:
-                z = 0.9
-            self.teleport_object(name, pos[0], pos[1], z)
-
-            if name == self.target_object:
-                self.target_init_pos = pos
-
     def _load_model(self):
         super()._load_model()
         self.mujoco_robot.set_base_xpos([0, 0, 0])
@@ -351,7 +337,9 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self.mujoco_robot,
             self.mujoco_objects,
             self.visual_objects,
+            self.obj_poses
         )
+        self.model.place_objects()
 
         self.bin_pos = string_to_array(self.model.bin2_body.get("pos"))
         self.bin_size = self.table_target_size
@@ -392,6 +380,10 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.sim.set_state(sim_state)
         self.sim.forward()
 
+    def get_tar_obj_pos(self):
+        beg_dim, end_dim = self.sim.model.get_joint_qpos_addr(self.target_object)
+        return self.sim.get_state().qpos[beg_dim : end_dim].copy()
+
     def set_qpos(self, obj, qpos):
         """
         set qpos of object
@@ -403,9 +395,18 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         sim_state = self.sim.get_state()
 
         # set pos
-        beg_dim = self.sim.model.get_joint_qpos_addr(obj)[0]
-        dims = self.action_pos_index.copy() + beg_dim
-        sim_state.qpos[dims] = qpos.copy()
+        pos_index = self.action_pos_index.copy()
+        beg_dim, end_dim = self.sim.model.get_joint_qpos_addr(obj)
+
+        # change cur pos
+        self.target_cur_pos[pos_index] += qpos.copy()
+
+        # set pos index in sim
+        sim_state.qpos[beg_dim : end_dim] = self.target_cur_pos.copy()
+
+        # set vel is useless
+        # beg_dim, end_dim = self.sim.model.get_joint_qvel_addr(obj)
+        # sim_state.qvel[beg_dim : end_dim] = 0
 
         self.sim.set_state(sim_state)
         self.sim.forward()
@@ -430,6 +431,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             raise ValueError("executing action in terminated episode")
 
         # teleport target object by (x, y, z, u, v, w, t)
+        self.target_cur_pos = self.get_tar_obj_pos()
         self.set_qpos(self.target_object, action)
 
         self.cur_step += 1
@@ -497,7 +499,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         super()._reset_internal()
 
         # reset positions of objects, and move objects out of the scene depending on the mode
-        self._init_pos()
+        self.model.place_objects()
 
     def reward(self, action=None):
         # compute sparse rewards
