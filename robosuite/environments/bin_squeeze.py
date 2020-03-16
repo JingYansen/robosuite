@@ -604,10 +604,10 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         if self.use_camera_obs:
 
-            bird_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview')
-            # target_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='targetview')
+            # bird_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview')
+            target_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='targetview')
             # di["image"] = np.concatenate((bird_image, target_image), 1)
-            di['image'] = bird_image
+            di['image'] = target_image
 
         return di
 
