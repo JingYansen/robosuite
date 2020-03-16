@@ -56,16 +56,13 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             has_offscreen_renderer=True,
             render_collision_mesh=False,
             render_visual_mesh=True,
-            control_freq=10,
+            control_freq=20,
             horizon=1000,
             ignore_done=False,
             camera_name="targetview",
-            camera_height=128,
-            camera_width=128,
+            camera_height=64,
+            camera_width=64,
             camera_depth=False,
-
-            video_height=256,
-            video_width=256,
             render_drop_freq=0,
             hard_case = {
                 'obj_names': ['Can', 'Can', 'Milk', 'Milk', 'Cereal'],
@@ -82,7 +79,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             step_size=0.002,
             orientation_scale=0.1,
             z_force_ratio=0.8,
-            z_limit=0.15,
+            z_limit=0.14,
             keys='image',
             action_pos_index=np.array([0, 1, 2, 3, 4, 5, 6]),
     ):
@@ -183,8 +180,6 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.cur_step = 0
 
         self.render_drop_freq = render_drop_freq
-        self.video_height = video_height
-        self.video_width = video_width
 
         self.single_object_mode = single_object_mode
         self.object_to_id = {"Milk": 0, "Bread": 1, "Cereal": 2, "Can": 3, "Banana": 4, "Bowl": 5}
@@ -198,7 +193,6 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.gripper_visualization = gripper_visualization
 
         # whether to use ground-truth object states
-        self.use_object_obs = use_object_obs
         self.use_object_obs = use_object_obs
 
         # reward configuration
@@ -536,6 +530,8 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         # reset positions of objects, and move objects out of the scene depending on the mode
         self.model.place_objects()
+        # reset cur step
+        self.cur_step = 0
 
     def reward(self, action=None):
         # get z pos
