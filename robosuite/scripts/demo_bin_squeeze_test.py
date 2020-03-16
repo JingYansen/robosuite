@@ -70,15 +70,13 @@ def test_video(env, video_path='demo/test.mp4'):
     import imageio
     writer = imageio.get_writer(video_path, fps=20)
 
-    for i in range(1):
+    for i in range(200):
 
         # run a uniformly random agent
-        action = np.array([0])
+        action = np.array([-0.002, 0.003])
         obs, reward, done, info = env.step(action)
 
-        frames = info["image"]
-        for frame in frames:
-            writer.append_data(frame)
+        writer.append_data(obs)
         print("Saving frame #{}".format(i))
 
         if done:
@@ -148,9 +146,7 @@ if __name__ == "__main__":
         has_offscreen_renderer=True,
         ignore_done=True,
         use_camera_obs=True,
-        control_freq=1,
-        render_drop_freq=4,
-        action_pos_index=[0],
+        action_pos_index=[2, 5],
         # hard_case=hard_case,
     )
 

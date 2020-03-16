@@ -44,7 +44,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self,
             gripper_type="TwoFingerGripper",
             table_full_size=(0.39, 0.49, 0.82),
-            table_target_size=(0.085, 0.085, 0.12),
+            table_target_size=(0.105, 0.085, 0.12),
             table_friction=(1, 0.005, 0.0001),
             use_camera_obs=True,
             use_object_obs=True,
@@ -56,7 +56,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             has_offscreen_renderer=True,
             render_collision_mesh=False,
             render_visual_mesh=True,
-            control_freq=1,
+            control_freq=10,
             horizon=1000,
             ignore_done=False,
             camera_name="targetview",
@@ -74,7 +74,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
                     np.array([0.03, 0.03, 0]),
                     np.array([-0.03, -0.03, 0]),
                     np.array([0.03, -0.03, 0]),
-                    np.array([0, 0, 0.131]),
+                    np.array([0, -0.03, 0.131]),
                 ],
                 'target_object': 'Cereal1'
             },
@@ -165,6 +165,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.obj_names = hard_case['obj_names']
         self.obj_poses = hard_case['obj_poses']
         self.target_object = hard_case['target_object']
+        self.target_init_z_pos = self.obj_poses[-1][2]
         self.action_pos_index = action_pos_index
 
         assert len(self.obj_names) == len(self.obj_poses)
@@ -404,68 +405,64 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         # set pos index in sim
         sim_state.qpos[beg_dim : end_dim] = self.target_cur_pos.copy()
 
-        # set vel is useless
-        # beg_dim, end_dim = self.sim.model.get_joint_qvel_addr(obj)
-        # sim_state.qvel[beg_dim : end_dim] = 0
+        # set vel
+        beg_dim, end_dim = self.sim.model.get_joint_qvel_addr(obj)
+        sim_state.qvel[beg_dim : end_dim] = 0
 
         self.sim.set_state(sim_state)
         self.sim.forward()
 
     def _pre_action(self, action):
         gripper_dim = self.sim.model.get_joint_qpos_addr(self.object_names[0])[0]
-
+        #
         beg_dim = gripper_dim + self.object_names.index(self.target_object) * 6
-        self.sim.data.qfrc_applied[beg_dim+2:beg_dim+6] += self.sim.data.qfrc_bias[beg_dim+2:beg_dim+6]
+        self.sim.data.qfrc_applied[beg_dim+2] = self.sim.data.qfrc_bias[beg_dim+2]
+        # self.sim.data.qfrc_applied[beg_dim+2:beg_dim+6] = self.sim.data.qfrc_bias[beg_dim+2:beg_dim+6]
 
     def _post_action(self, action):
-        """
-        (Optional) does gripper visualization after actions.
-        """
-        ret = super()._post_action(action)
-        self._gripper_visualization()
-        return ret
+        # remove vel
+        sim_state = self.sim.get_state()
+        beg_dim, end_dim = self.sim.model.get_joint_qvel_addr(self.target_object)
+        sim_state.qvel[beg_dim : end_dim] = 0
+
+        self.sim.set_state(sim_state)
+        self.sim.forward()
+
+        # calculate reward
+        reward = self.reward(action)
+
+        # done
+        self.cur_step += 1
+        done = (self.cur_step >= self.total_steps)
+        if done:
+            print('Done!')
+
+        # extra info
+        info = {}
+
+        return reward, done, info
 
     def step(self, action):
         """Takes a step in simulation with control command @action."""
         if self.done:
             raise ValueError("executing action in terminated episode")
 
-        # teleport target object by (x, y, z, u, v, w, t)
+        ## pre action: remove gravity and other forces.
+        self._pre_action(action)
+
+        ## teleport target object by (x, y, z, u, v, w, t)
         self.target_cur_pos = self.get_tar_obj_pos()
         self.set_qpos(self.target_object, action)
 
-        self.cur_step += 1
-        self._pre_action(action)
         end_time = self.cur_time + self.control_timestep
-
-        info = {}
-
-        if self.render_drop_freq:
-            i = 0
-            info['image'] = []
-
         while self.cur_time < end_time:
-
-            if self.render_drop_freq:
-                if i % self.render_drop_freq == 0:
-                    bird_image = self.sim.render(width=self.video_width, height=self.video_height, camera_name='birdview')
-                    target_image = self.sim.render(width=self.video_width, height=self.video_height, camera_name='targetview')
-
-                    info['image'].append(np.concatenate((bird_image, target_image), 1))
-
-                i += 1
-
             self.sim.step()
             self.cur_time += self.model_timestep
 
-        reward, done, _ = self._post_action(action)
+        ## post action: calculate reward
+        reward, done, info = self._post_action(action)
 
-        # done
-        done = (self.cur_step >= self.total_steps)
-
-        if done:
-            print('Done!')
-
+        ## obs
         ob_dict = self._get_observation()
 
         return self._flatten_obs(ob_dict), reward, done, info
@@ -502,18 +499,24 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.model.place_objects()
 
     def reward(self, action=None):
-        # compute sparse rewards
-        last_num = np.sum(self.objects_in_bins)
-        self._check_success()
-        reward = np.sum(self.objects_in_bins) - last_num
+        # get z pos
+        target_pos = self.get_tar_obj_pos()
+        z_pos = target_pos[2]
 
+        # not in bin
+        if self.not_in_bin(target_pos[0:3]):
+            reward = -100
+        else:
+            # get obj mjcf
+            target_obj_mjcf = self.mujoco_objects[self.target_object]
+            bottom_offset = target_obj_mjcf.get_bottom_offset()
 
-        # add in shaped rewards
-        if self.reward_shaping:
-            staged_rewards = self.staged_rewards()
-            reward += max(staged_rewards)
+            # calculate delta
+            offset = z_pos - (self.model.bin2_offset[2] - bottom_offset[2])
+            delta = (self.target_init_z_pos - offset) / self.target_init_z_pos
 
-        # if reward != 0:
+            reward = delta ** 2
+
         print('Reward: ', reward)
         return reward
 
@@ -539,7 +542,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
                 and obj_pos[0] > bin_x_low
                 and obj_pos[1] < bin_y_high
                 and obj_pos[1] > bin_y_low
-                and obj_pos[2] < self.bin_pos[2] + self.bin_size[2]
+                # and obj_pos[2] < self.bin_pos[2] + self.bin_size[2]
         ):
             res = False
         return res
