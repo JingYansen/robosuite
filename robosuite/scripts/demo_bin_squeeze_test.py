@@ -64,16 +64,16 @@ def test_qpos_meaning(env):
     imgs.show()
 
 
-def test_video(env, video_path='demo/test.mp4'):
+def test_video(env, video_path='demo/test/test_random.mp4'):
     obs = env.reset()
 
     import imageio
     writer = imageio.get_writer(video_path, fps=20)
 
-    for i in range(200):
-
+    for i in range(10000):
         # run a uniformly random agent
-        action = np.array([-0.002, 0.003])
+        # action = np.array([-1, 0.1])
+        action = env.action_space.sample()
         obs, reward, done, info = env.step(action)
 
         writer.append_data(obs)
@@ -146,7 +146,7 @@ if __name__ == "__main__":
         has_offscreen_renderer=True,
         ignore_done=True,
         use_camera_obs=True,
-        action_pos_index=[2, 5],
+        action_pos_index=np.array([2, 5]),
         # hard_case=hard_case,
     )
 

@@ -180,27 +180,19 @@ def build_env(args):
 
 def make_video(model, env, args):
     DEMO_PATH = 'demo'
-    seed = np.random.randint(0, 100000)
-    frame_dir = 'frames' + str(seed)
-    import subprocess
-    subprocess.call(['rm', '-rf', frame_dir])
-    subprocess.call(['mkdir', '-p', frame_dir])
-    subprocess.call(['mkdir', '-p', DEMO_PATH])
-
     DEMO_PATH = os.path.join(DEMO_PATH, args.video_name)
 
-    env.render_drop_freq = args.render_drop_freq
+    import imageio
+    writer = imageio.get_writer(DEMO_PATH, fps=20)
 
-    time_step_counter = 0
     n_episode = 3
-    slower = 5
     state = model.initial_state if hasattr(model, 'initial_state') else None
     dones = np.zeros((1,))
 
     for i_episode in range(n_episode):
         obs = env.reset()
 
-        for _ in range(100):
+        for _ in range(1000):
 
             if state is not None:
                 actions, _, state, _ = model.step(obs, S=state, M=dones)
@@ -208,27 +200,13 @@ def make_video(model, env, args):
                 actions, _, _, _ = model.step(obs)
 
             obs, rew, done, info = env.step(actions)
-            info = info[0]
-            done = done[0]
-
-            for i in range(len(info['birdview'])):
-                image_data_bird, image_data_agent = info['birdview'][i], info['targetview'][i]
-                image_data = np.concatenate((image_data_bird, image_data_agent), 1)
-
-                img = Image.fromarray(image_data, 'RGB')
-                for __ in range(slower):
-                    img.save(frame_dir + '/frame-%.10d.png' % time_step_counter)
-                    time_step_counter += 1
+            writer.append_data(obs)
 
             if done:
                 break
 
-    resolve = str(args.camera_height * 2) + 'x' + str(args.camera_width)
-    subprocess.call(
-        ['ffmpeg', '-framerate', '50', '-y', '-i', frame_dir + '/frame-%010d.png', '-r', '30', '-pix_fmt', 'yuv420p',
-         '-s', resolve, DEMO_PATH])
-
-    subprocess.call(['rm', '-rf', frame_dir])
+    writer.close()
+    print('Make video over.')
 
 
 def test(model, env, args):
@@ -340,12 +318,11 @@ if __name__ == "__main__":
     parser.add_argument('--min', type=float, default=3e-4)
 
     ## video args
-    parser.add_argument('--make_video', type=bool, default=False)
-    parser.add_argument('--render_drop_freq', type=int, default=0)
+    parser.add_argument('--make_video', type=bool, default=True)
     parser.add_argument('--video_name', type=str, default='demo.mp4')
 
     ## test args
-    parser.add_argument('--test', type=bool, default=False)
+    parser.add_argument('--test', type=bool, default=True)
     parser.add_argument('--test_episode', type=int, default=100)
 
     ## others
