@@ -184,7 +184,7 @@ def make_video(model, env, args):
                 actions, _, _, _ = model.step(obs)
 
             obs, rew, done, info = env.step(actions)
-            writer.append_data(obs)
+            writer.append_data(obs[0])
 
             if done:
                 break
