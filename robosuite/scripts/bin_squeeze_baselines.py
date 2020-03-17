@@ -164,8 +164,7 @@ def build_env(args):
 
 
 def make_video(model, env, args):
-    DEMO_PATH = 'demo'
-    DEMO_PATH = os.path.join(DEMO_PATH, args.video_name)
+    DEMO_PATH = os.path.join(args.save_dir, args.video_name)
 
     import imageio
     writer = imageio.get_writer(DEMO_PATH, fps=20)

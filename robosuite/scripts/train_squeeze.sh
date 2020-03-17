@@ -12,4 +12,4 @@ python bin_squeeze_baselines.py \
     --min 1e-3 \
     --network 'cnn' \
     --log True \
-    --debug 'debug'
+    --debug 'zw_only'
