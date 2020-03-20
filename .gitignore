@@ -1,5 +1,6 @@
 robosuite/scripts/demo
 robosuite/scripts/frames
+robosuite/scripts/data
 robosuite/scripts/results*
 *temp/
 

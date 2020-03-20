@@ -13,6 +13,7 @@ from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
 from baselines import logger
 from PIL import Image
 
+from robosuite.utils.hard_case import get_hard_cases
 from robosuite.scripts.utils import make_vec_env
 from robosuite.scripts.lr_schedule import get_lr_func
 from importlib import import_module
@@ -62,7 +63,12 @@ def get_env_kwargs(args):
     env_kwargs['total_steps'] = args.total_steps
     env_kwargs['step_size'] = args.step_size
     env_kwargs['orientation_scale'] = args.orientation_scale
-    env_kwargs['action_pos_index'] = np.array(args.action_pos_index)
+    action_pos_index = args.action_pos_index.split(',')
+    action_pos_index = [int(i) for i in action_pos_index]
+    env_kwargs['action_pos_index'] = np.array(action_pos_index)
+
+    hard_case_train, hard_case_test = get_hard_cases()
+    env_kwargs['obj_poses'] = hard_case_train
 
     env_kwargs['keys'] = args.keys
 
@@ -269,7 +275,7 @@ if __name__ == "__main__":
     parser.add_argument('--total_steps', type=int, default=200)
     parser.add_argument('--step_size', type=float, default=0.002)
     parser.add_argument('--orientation_scale', type=float, default=0.1)
-    parser.add_argument('--action_pos_index', type=list, default=[1,2,5])
+    parser.add_argument('--action_pos_index', type=str, default='0,1,2,4,5,6')
 
     parser.add_argument('--keys', type=str, default='image', choices=['image'])
 

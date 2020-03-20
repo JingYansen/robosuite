@@ -8,8 +8,8 @@ python bin_squeeze_baselines.py \
     --noptepochs 20 \
     --nminibatches 4 \
     --lr_type 'linear' \
-    --max 1e-3 \
-    --min 1e-3 \
+    --max 3e-4 \
+    --min 3e-4 \
     --network 'cnn' \
     --log True \
     --debug 'debug'
