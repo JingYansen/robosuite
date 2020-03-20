@@ -1,1 +1,1 @@
-tensorboard --logdir=results --port=10000
+tensorboard --logdir=results_squeeze --port=10000

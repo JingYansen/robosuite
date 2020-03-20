@@ -71,7 +71,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
                     np.array([0.03, 0.03, 0]),
                     np.array([-0.03, -0.03, 0]),
                     np.array([0.03, -0.03, 0]),
-                    np.array([0, -0.03, 0.131]),
+                    np.array([0, 0, 0.135]),
                 ],
                 'target_object': 'Cereal1'
             },
@@ -583,7 +583,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
                 and obj_pos[0] > bin_x_low
                 and obj_pos[1] < bin_y_high
                 and obj_pos[1] > bin_y_low
-                # and obj_pos[2] < self.bin_pos[2] + self.bin_size[2]
+                # and obj_pos[2] < self.bin_pos[2] + self.bin_size[2]r
         ):
             res = False
         return res
@@ -603,11 +603,12 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         di = super()._get_observation()
 
         if self.use_camera_obs:
+            front_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='frontview')
+            side_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='sideview')
+            bird_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview')
 
-            # bird_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview')
-            target_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='targetview')
-            # di["image"] = np.concatenate((bird_image, target_image), 1)
-            di['image'] = target_image
+            di["image"] = np.concatenate((front_image, side_image, bird_image), 1)
+            # di['image'] = target_image
 
         return di
 

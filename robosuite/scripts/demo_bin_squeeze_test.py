@@ -89,7 +89,7 @@ def adjust_camera_pos(env):
     env.reset()
 
     pos = np.array([1, 1, 1])
-    for _ in range(30):
+    for _ in range(1):
         action = env.action_space.sample()
 
         obs, rew, done, info = env.step(action)
@@ -97,8 +97,8 @@ def adjust_camera_pos(env):
         imgs = Image.fromarray(obs)
         imgs.show()
 
-        import ipdb
-        ipdb.set_trace()
+        # import ipdb
+        # ipdb.set_trace()
 
 
 def run(env):
@@ -153,4 +153,5 @@ if __name__ == "__main__":
 
 
     # run(env)
-    test_video(env)
+    # test_video(env)
+    adjust_camera_pos(env)

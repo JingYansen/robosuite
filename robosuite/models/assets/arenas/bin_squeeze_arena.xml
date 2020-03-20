@@ -39,12 +39,21 @@
     <light diffuse=".8 .8 .8" dir="0 -.15 -1" directional="false" pos="1 1 4.0" specular="0.3 0.3 0.3" castshadow="false"/>
     <light diffuse=".8 .8 .8" dir="0 -.15 -1" directional="false" pos="-3. -3. 4.0" specular="0.3 0.3 0.3" castshadow="false"/>
     <!-- front view -->
-    <camera mode="fixed" name="frontview" pos="1.6 0.4 1.45" quat="0.56 0.43 0.43 0.56"/>
+<!--    <camera mode="fixed" name="frontview" pos="1.6 0.4 1.45" quat="0.56 0.43 0.43 0.56"/>-->
     <!-- bird view -->
-    <camera mode="fixed" name="birdview" pos="0.1 0.68 1.2" quat="0.7071 0 0 0.7071"/>
+<!--    <camera mode="fixed" name="birdview" pos="0.1 0.68 1.2" quat="0.7071 0 0 0.7071"/>-->
     <!-- agent view -->
-    <camera mode="fixed" name="agentview" pos="1.0 0.4 1.75" quat="0.653 0.271 0.271 0.653"/>
+<!--    <camera mode="fixed" name="agentview" pos="1.0 0.4 1.75" quat="0.653 0.271 0.271 0.653"/>-->
     <!-- target view-->
-    <camera mode="fixed" name="targetview" pos= "0.1 0.53 1.1" quat="0 0 -0.3 1"/>
+<!--    <camera mode="fixed" name="frontview" pos="0.5 0.6 1.25" quat="0.7071 0 0 0.7071"/>-->
+
+    <camera mode="fixed" name="frontview" pos="-0.1 0.68 1.15" quat="0.9999 -0.3 -0.3 1"/>
+    <camera mode="fixed" name="sideview" pos= "0.1 0.53 1.15" quat="0 0 -0.3 1"/>
+    <camera mode="fixed" name="birdview" pos="0.1 0.68 1.15" quat="0.7071 0 0 0.7071"/>
+
+
+
+
+
   </worldbody>
 </mujoco>

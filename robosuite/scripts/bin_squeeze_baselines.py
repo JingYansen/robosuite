@@ -186,7 +186,7 @@ def make_video(model, env, args):
             obs, rew, done, info = env.step(actions)
             writer.append_data(obs[0])
 
-            if done:
+            if done[0]:
                 break
 
     writer.close()
@@ -269,7 +269,7 @@ if __name__ == "__main__":
     parser.add_argument('--total_steps', type=int, default=200)
     parser.add_argument('--step_size', type=float, default=0.002)
     parser.add_argument('--orientation_scale', type=float, default=0.1)
-    parser.add_argument('--action_pos_index', type=list, default=[2,5])
+    parser.add_argument('--action_pos_index', type=list, default=[1,2,5])
 
     parser.add_argument('--keys', type=str, default='image', choices=['image'])
 
