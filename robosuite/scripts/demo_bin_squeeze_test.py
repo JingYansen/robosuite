@@ -64,23 +64,27 @@ def test_qpos_meaning(env):
     imgs.show()
 
 
-def test_video(env, video_path='demo/test/test_cq20.mp4'):
-    obs = env.reset()
+def test_video(env, video_path='demo/test/random.mp4'):
 
     import imageio
     writer = imageio.get_writer(video_path, fps=20)
 
-    for i in range(10000):
-        # run a uniformly random agent
-        action = np.array([-1, 0.1])
-        # action = env.action_space.sample()
-        obs, reward, done, info = env.step(action)
 
-        writer.append_data(obs)
-        print("Saving frame #{}".format(i))
+    episodes = 1
+    action = np.array([-0.01, 0.1])
+    for _ in range(episodes):
+        env.reset()
+        for i in range(120):
+            # run a uniformly random agent
+            action[0] += 0.0001
+            # action = env.action_space.sample()
+            obs, reward, done, info = env.step(action)
 
-        if done:
-            break
+            writer.append_data(obs)
+            print("Saving frame #{}".format(i))
+
+            if done:
+                break
 
     writer.close()
 
@@ -128,17 +132,9 @@ def test_random_take(env):
 
 if __name__ == "__main__":
 
-    hard_case = {
-        'obj_names': ['Can', 'Can'],
-        'obj_poses': [
-            np.array([-0.03, 0.03]),
-            np.array([0.03, 0.03]),
-            # np.array([-0.03, 0]),
-            # np.array([0.03, 0]),
-            # np.array([0, 0, 0.5]),
-        ],
-        'target_object': 'Can1'
-    }
+    from robosuite.scripts.lib.hard_case import get_hard_cases
+
+    case_train, case_test = get_hard_cases()
 
     env = suite.make(
         'BinSqueeze',
@@ -147,11 +143,14 @@ if __name__ == "__main__":
         ignore_done=True,
         use_camera_obs=True,
         control_freq=20,
+        camera_height=128,
+        camera_width=128,
+        obj_poses=case_train,
         action_pos_index=np.array([2, 5]),
         # hard_case=hard_case,
     )
 
 
     # run(env)
-    # test_video(env)
-    adjust_camera_pos(env)
+    test_video(env)
+    # adjust_camera_pos(env)

@@ -8,7 +8,7 @@ class BinSqueezeArena(Arena):
     """Workspace that contains two bins placed side by side."""
 
     def __init__(
-        self, table_full_size=(0.39, 0.49, 0.82), table_friction=(1, 0.005, 0.0001)
+        self, table_full_size=(0.39, 0.49, 0.82), table_target_size=(0.105, 0.085, 0.12), table_friction=(1, 0.005, 0.0001)
     ):
         """
         Args:
@@ -18,6 +18,7 @@ class BinSqueezeArena(Arena):
         super().__init__(xml_path_completion("arenas/bin_squeeze_arena.xml"))
 
         self.table_full_size = np.array(table_full_size)
+        self.table_target_size = np.array(table_target_size)
         self.table_half_size = self.table_full_size / 2
         self.table_friction = table_friction
 

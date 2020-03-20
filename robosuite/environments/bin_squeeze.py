@@ -64,22 +64,20 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             camera_width=64,
             camera_depth=False,
             render_drop_freq=0,
-            hard_case = {
-                'obj_names': ['Can', 'Can', 'Milk', 'Milk', 'Cereal'],
-                'obj_poses': [
-                    np.array([-0.03, 0.03, 0]),
-                    np.array([0.03, 0.03, 0]),
-                    np.array([-0.03, -0.03, 0]),
-                    np.array([0.03, -0.03, 0]),
-                    np.array([0, 0, 0.135]),
-                ],
-                'target_object': 'Cereal1'
-            },
+            obj_names=['Can', 'Can', 'Milk', 'Milk', 'Cereal'],
+            obj_poses = np.array([np.array([
+                np.array([-0.04, 0.035, 0]),
+                np.array([0.04, 0.035, 0]),
+                np.array([-0.04, -0.035, 0]),
+                np.array([0.04, -0.035, 0]),
+                np.array([0, 0, 0.135])
+            ])]),
+            target_object='Cereal1',
             total_steps=200,
             step_size=0.002,
             orientation_scale=0.1,
-            z_force_ratio=0.8,
-            z_limit=0.14,
+            z_force_ratio=0.2,
+            z_limit=0.15,
             keys='image',
             action_pos_index=np.array([0, 1, 2, 3, 4, 5, 6]),
     ):
@@ -163,13 +161,12 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         """
 
         # task settings
-        self.obj_names = hard_case['obj_names']
-        self.obj_poses = hard_case['obj_poses']
-        self.target_object = hard_case['target_object']
-        self.target_init_z_pos = self.obj_poses[-1][2]
+        self.obj_names = obj_names
+        self.obj_poses = obj_poses
+        self.target_object = target_object
         self.action_pos_index = action_pos_index
 
-        assert len(self.obj_names) == len(self.obj_poses)
+        assert len(self.obj_names) == len(self.obj_poses[0])
         assert len(self.action_pos_index) <= 7
 
         self.total_steps = total_steps
@@ -446,7 +443,16 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         gripper_dim = self.sim.model.get_joint_qpos_addr(self.object_names[0])[0]
         beg_dim = gripper_dim + self.object_names.index(self.target_object) * 6
         ## set force
-        self.sim.data.qfrc_applied[beg_dim+2] = self.sim.data.qfrc_bias[beg_dim+2] * self.z_force_ratio
+        sig = np.sign(action[self.action_pos_index == 2])
+        ## down
+        if sig == -1:
+            ratio = 1 - self.z_force_ratio
+        elif sig == 1:
+            ratio = 1 + self.z_force_ratio
+        else:
+            ratio = 1
+
+        self.sim.data.qfrc_applied[beg_dim+2] = self.sim.data.qfrc_bias[beg_dim+2] * ratio
         # self.sim.data.qfrc_applied[beg_dim+2:beg_dim+6] = self.sim.data.qfrc_bias[beg_dim+2:beg_dim+6]
 
     def _post_action(self, action):

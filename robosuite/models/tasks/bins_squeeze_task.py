@@ -52,6 +52,7 @@ class BinSqueezeTask(Task):
         self.bin2_offset[1] = 0.68 - 0.3
 
         self.bin_size = mujoco_arena.table_full_size
+        self.bin2_size = mujoco_arena.table_target_size
         self.bin2_body = mujoco_arena.bin2_body
         self.merge(mujoco_arena)
 
@@ -94,7 +95,20 @@ class BinSqueezeTask(Task):
         """Places objects randomly until no collisions or max iterations hit."""
         index = 0
 
-        for (_, obj_mjcf), pos in zip(self.mujoco_objects.items(), self.obj_poses):
+        ## random choose hard case
+        obj_poses = self.obj_poses[np.random.choice(len(self.obj_poses))]
+
+        ## inner random for each objects (except for target obj)
+        target_pos = obj_poses[-1]
+        obj_poses = obj_poses[: -1]
+
+        np.random.shuffle(obj_poses)
+        obj_poses = obj_poses.tolist()
+        obj_poses.append(target_pos.tolist())
+        obj_poses = np.array(obj_poses)
+
+        ## init place
+        for (_, obj_mjcf), pos in zip(self.mujoco_objects.items(), obj_poses):
             bottom_offset = obj_mjcf.get_bottom_offset()
 
             object_xy = np.array([pos[0], pos[1], pos[2]])
