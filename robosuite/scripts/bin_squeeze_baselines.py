@@ -13,7 +13,7 @@ from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
 from baselines import logger
 from PIL import Image
 
-from robosuite.utils.hard_case import get_hard_cases
+from robosuite.scripts.hard_case import get_hard_cases
 from robosuite.scripts.utils import make_vec_env
 from robosuite.scripts.lr_schedule import get_lr_func
 from importlib import import_module

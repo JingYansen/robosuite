@@ -132,7 +132,7 @@ def test_random_take(env):
 
 if __name__ == "__main__":
 
-    from robosuite.utils.hard_case import get_hard_cases
+    from robosuite.scripts.hard_case import get_hard_cases
 
     case_train, case_test = get_hard_cases()
 
