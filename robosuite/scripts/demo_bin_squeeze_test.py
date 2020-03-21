@@ -70,14 +70,14 @@ def test_video(env, video_path='demo/test/random.mp4'):
     writer = imageio.get_writer(video_path, fps=20)
 
 
-    episodes = 1
+    episodes = 10
     action = np.array([-0.01, 0.1])
     for _ in range(episodes):
         env.reset()
-        for i in range(120):
+        for i in range(20):
             # run a uniformly random agent
-            action[0] += 0.0001
-            # action = env.action_space.sample()
+            # action[0] += 0.0001
+            action = env.action_space.sample()
             obs, reward, done, info = env.step(action)
 
             writer.append_data(obs)
@@ -147,7 +147,6 @@ if __name__ == "__main__":
         camera_width=128,
         obj_poses=case_train,
         action_pos_index=np.array([2, 5]),
-        # hard_case=hard_case,
     )
 
 

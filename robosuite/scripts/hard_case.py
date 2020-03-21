@@ -34,8 +34,8 @@ def get_hard_cases(path='data', trainFile='hard_case_train.npy', testFile='hard_
 
         return poses
 
-    xs = [0.01, 0.015, 0.02, 0.025, 0.03, 0.035, 0.04]
-    ys = [0.01, 0.015, 0.02, 0.025, 0.03, 0.035]
+    xs = [0.02, 0.025, 0.03, 0.035, 0.04]
+    ys = [0.02, 0.025, 0.03, 0.035]
 
     for x in xs:
         for y in ys:
