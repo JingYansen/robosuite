@@ -99,13 +99,13 @@ class BinSqueezeTask(Task):
         obj_poses = self.obj_poses[np.random.choice(len(self.obj_poses))]
 
         ## inner random for each objects (except for target obj)
-        target_pos = obj_poses[-1]
-        obj_poses = obj_poses[: -1]
-
-        np.random.shuffle(obj_poses)
-        obj_poses = obj_poses.tolist()
-        obj_poses.append(target_pos.tolist())
-        obj_poses = np.array(obj_poses)
+        # target_pos = obj_poses[-1]
+        # obj_poses = obj_poses[: -1]
+        #
+        # np.random.shuffle(obj_poses)
+        # obj_poses = obj_poses.tolist()
+        # obj_poses.append(target_pos.tolist())
+        # obj_poses = np.array(obj_poses)
 
         ## init place
         for (_, obj_mjcf), pos in zip(self.mujoco_objects.items(), obj_poses):

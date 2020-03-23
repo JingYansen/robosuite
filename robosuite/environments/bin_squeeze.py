@@ -66,11 +66,11 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             render_drop_freq=0,
             obj_names=['Can', 'Can', 'Milk', 'Milk', 'Cereal'],
             obj_poses = np.array([np.array([
-                np.array([-0.04, 0.035, 0]),
-                np.array([0.04, 0.035, 0]),
-                np.array([-0.04, -0.035, 0]),
-                np.array([0.04, -0.035, 0]),
-                np.array([0, 0, 0.135])
+                np.array([-0.03, 0.03, 0]),
+                np.array([0.03, 0.03, 0]),
+                np.array([-0.03, -0.03, 0]),
+                np.array([0.03, -0.03, 0]),
+                np.array([0, 0, 0.131])
             ])]),
             target_object='Cereal1',
             total_steps=200,
@@ -469,7 +469,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         # done
         self.cur_step += 1
-        done = (self.cur_step >= self.total_steps) or (reward == 10)
+        done = (self.cur_step >= self.total_steps) or (reward == 10) or (reward == -10)
         if done:
             print('Done!')
 

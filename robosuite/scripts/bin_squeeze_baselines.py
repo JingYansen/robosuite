@@ -8,36 +8,17 @@ import os.path as osp
 import numpy as np
 import tensorflow as tf
 
-from baselines.common.tf_util import get_session
-from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
-from baselines import logger
-from PIL import Image
+from stable_baselines.common.policies import CnnPolicy
+from stable_baselines.common import make_vec_env
+from stable_baselines import PPO2
+from stable_baselines import logger
 
-from robosuite.scripts.hard_case import get_hard_cases
-from robosuite.scripts.utils import make_vec_env
 from robosuite.scripts.lr_schedule import get_lr_func
-from importlib import import_module
 
 try:
     from mpi4py import MPI
 except ImportError:
     MPI = None
-
-
-def get_alg_module(alg, submodule=None):
-    submodule = submodule or alg
-    try:
-        # first try to import the alg module from baselines
-        alg_module = import_module('.'.join(['baselines', alg, submodule]))
-    except ImportError:
-        # then from rl_algs
-        alg_module = import_module('.'.join(['rl_' + 'algs', alg, submodule]))
-
-    return alg_module
-
-
-def get_learn_function(alg):
-    return get_alg_module(alg).learn
 
 
 def get_lr_kwargs(args):
@@ -67,8 +48,8 @@ def get_env_kwargs(args):
     action_pos_index = [int(i) for i in action_pos_index]
     env_kwargs['action_pos_index'] = np.array(action_pos_index)
 
-    hard_case_train, hard_case_test = get_hard_cases()
-    env_kwargs['obj_poses'] = hard_case_train
+    # hard_case_train, hard_case_test = get_hard_cases()
+    # env_kwargs['obj_poses'] = hard_case_train
 
     env_kwargs['keys'] = args.keys
 
@@ -77,18 +58,16 @@ def get_env_kwargs(args):
 def get_params(args):
     params = {}
 
-    params['nsteps'] = args.nsteps
+    params['n_steps'] = args.nsteps
     params['nminibatches'] = args.nminibatches
     params['noptepochs'] = args.noptepochs
     params['cliprange'] = args.cliprange
     params['ent_coef'] = args.ent_coef
-    params['save_interval'] = args.save_interval
-    params['log_interval'] = args.log_interval
-    params['save_interval'] = args.save_interval
-    params['network'] = args.network
 
     lr_kwargs = get_lr_kwargs(args)
-    params['lr'] = get_lr_func(**lr_kwargs)
+    params['learning_rate'] = get_lr_func(**lr_kwargs)
+
+    # params['tensorboard_log'] = osp.join(args.save_dir, 'vis')
 
     if osp.exists(args.load_path):
         params['load_path'] = args.load_path
@@ -97,42 +76,22 @@ def get_params(args):
 
     return params
 
-def get_network_params(args):
-    params = {}
-
-    if args.network is 'mlp':
-        params['num_layers'] = args.num_layers
-
-    return params
-
 
 def train(args):
     total_timesteps = int(args.num_timesteps)
     seed = args.seed
-    args.env_id, args.env_type = 'BinSqueeze-v0', 'mujoco'
+    args.env_id, args.env_type = 'BinPack-v0', 'mujoco'
 
     # get params
-    learn = get_learn_function(args.alg)
     alg_kwargs = get_params(args)
-    extra_args = get_network_params(args)
-    alg_kwargs.update(extra_args)
 
     env = build_env(args)
 
-    if args.save_video_interval != 0:
-        env = VecVideoRecorder(env, osp.join(logger.get_dir(), "videos"),
-                               record_video_trigger=lambda x: x % args.save_video_interval == 0,
-                               video_length=args.save_video_length)
-
-    alg_kwargs['network'] = args.network
-
-    print('Training {} on {}:{} with arguments \n{}'.format(args.alg, args.env_type, args.env_id, alg_kwargs))
-
-    model = learn(
-        env=env,
-        seed=seed,
+    model = PPO2(CnnPolicy, env, verbose=1, **alg_kwargs)
+    model.learn(
         total_timesteps=total_timesteps,
-        **alg_kwargs
+        log_interval=args.log_interval,
+        save_interval=args.save_interval
     )
 
     logger.log('Trained Over.')
@@ -147,25 +106,10 @@ def configure_logger(log_path, **kwargs):
 
 
 def build_env(args):
-    # make env
+    # make env in gym
     env_kwargs = get_env_kwargs(args)
 
-    ncpu = multiprocessing.cpu_count()
-    if sys.platform == 'darwin': ncpu //= 2
-    nenv = args.num_env or ncpu
-
-    seed = args.seed
-
-    config = tf.ConfigProto(allow_soft_placement=True,
-                            intra_op_parallelism_threads=1,
-                            inter_op_parallelism_threads=1)
-    config.gpu_options.allow_growth = True
-    get_session(config=config)
-
-    flatten_dict_observations = args.alg not in {'her'}
-    env = make_vec_env(args.env_id, args.env_type, args.num_env or 1, seed, env_kwargs=env_kwargs,
-                       reward_scale=args.reward_scale,
-                       flatten_dict_observations=flatten_dict_observations)
+    env = make_vec_env('BinSqueeze-v0', n_envs=args.num_env, env_kwargs=env_kwargs)
     return env
 
 
@@ -334,6 +278,7 @@ if __name__ == "__main__":
     args.save_path = os.path.join(args.save_dir, 'model.pth')
 
     if args.log:
+        print('rank: ', MPI.COMM_WORLD.Get_rank())
         if MPI is None or MPI.COMM_WORLD.Get_rank() == 0:
             rank = 0
             configure_logger(args.save_dir, format_strs=args.format_strs)

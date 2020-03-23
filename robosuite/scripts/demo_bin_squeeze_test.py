@@ -70,11 +70,11 @@ def test_video(env, video_path='demo/test/random.mp4'):
     writer = imageio.get_writer(video_path, fps=20)
 
 
-    episodes = 10
+    episodes = 2
     action = np.array([-0.01, 0.1])
     for _ in range(episodes):
         env.reset()
-        for i in range(20):
+        for i in range(2000):
             # run a uniformly random agent
             # action[0] += 0.0001
             action = env.action_space.sample()
@@ -145,8 +145,6 @@ if __name__ == "__main__":
         control_freq=20,
         camera_height=128,
         camera_width=128,
-        obj_poses=case_train,
-        action_pos_index=np.array([2, 5]),
     )
 
 
