@@ -12,4 +12,4 @@ python bin_squeeze_baselines.py \
     --min 3e-4 \
     --network 'cnn' \
     --log True \
-    --debug '3view_6dim_easy_task'
+    --debug 'randomly_init'
