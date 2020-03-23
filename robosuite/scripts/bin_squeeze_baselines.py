@@ -69,11 +69,6 @@ def get_params(args):
 
     # params['tensorboard_log'] = osp.join(args.save_dir, 'vis')
 
-    if osp.exists(args.load_path):
-        params['load_path'] = args.load_path
-    else:
-        logger.log('Warning: path <' + args.load_path + '> not exists.')
-
     return params
 
 
@@ -113,30 +108,26 @@ def build_env(args):
     return env
 
 
-def make_video(model, env, args):
+def make_video(model_path, env, args):
+    model = PPO2.load(model_path)
     DEMO_PATH = os.path.join(args.save_dir, args.video_name)
 
     import imageio
     writer = imageio.get_writer(DEMO_PATH, fps=20)
 
     n_episode = 3
-    state = model.initial_state if hasattr(model, 'initial_state') else None
-    dones = np.zeros((1,))
 
     for i_episode in range(n_episode):
         obs = env.reset()
 
         for _ in range(1000):
 
-            if state is not None:
-                actions, _, state, _ = model.step(obs, S=state, M=dones)
-            else:
-                actions, _, _, _ = model.step(obs)
+            action, _states = model.predict(obs)
 
-            obs, rew, done, info = env.step(actions)
+            obs, rewards, dones, info = env.step(action)
             writer.append_data(obs[0])
 
-            if done[0]:
+            if dones[0]:
                 break
 
     writer.close()
@@ -238,7 +229,7 @@ if __name__ == "__main__":
     parser.add_argument('--cliprange', type=float, default=0.2)
     parser.add_argument('--ent_coef', type=float, default=0.005)
     parser.add_argument('--log_interval', type=int, default=5)
-    parser.add_argument('--save_interval', type=int, default=50)
+    parser.add_argument('--save_interval', type=int, default=20)
     parser.add_argument('--network', type=str, default='cnn')
 
     ## lr args
@@ -300,4 +291,8 @@ if __name__ == "__main__":
         test(model, env, args)
 
     if args.make_video:
-        make_video(model, env, args)
+        if osp.exists(args.load_path):
+            model_path = args.load_path
+        else:
+            model_path = args.save_path
+        make_video(model_path, env, args)
