@@ -44,7 +44,8 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self,
             gripper_type="TwoFingerGripper",
             table_full_size=(0.39, 0.49, 0.82),
-            table_target_size=(0.105, 0.085, 0.12),
+            # table_target_size=(0.105, 0.085, 0.12),
+            table_target_size=(0.12, 0.1, 0.12),
             table_friction=(1, 0.005, 0.0001),
             use_camera_obs=True,
             use_object_obs=True,
@@ -64,15 +65,17 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             camera_width=64,
             camera_depth=False,
             render_drop_freq=0,
-            obj_names=['Can', 'Can', 'Milk', 'Milk', 'Cereal'],
-            obj_poses = np.array([np.array([
-                np.array([-0.03, 0.03, 0]),
-                np.array([0.03, 0.03, 0]),
-                np.array([-0.03, -0.03, 0]),
-                np.array([0.03, -0.03, 0]),
-                np.array([0, 0, 0.131])
-            ])]),
-            target_object='Cereal1',
+            obj_names=['Can'] * 2 + ['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Cereal'],
+            place_num=4,
+            initialize_bound=np.array([0.03, 0.02]),
+            obj_poses=np.array([
+                np.array([-0.025, 0.02, 0]),
+                np.array([0.025, 0.02, 0]),
+                np.array([-0.025, -0.02, 0]),
+                np.array([0.025, -0.02, 0])
+            ]),
+            target_object='Cereal3',
+            target_init_pos=np.array([0, 0, 0.131]),
             total_steps=200,
             step_size=0.002,
             orientation_scale=0.1,
@@ -164,10 +167,15 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.obj_names = obj_names
         self.obj_poses = obj_poses
         self.target_object = target_object
+        self.target_init_pos = target_init_pos
+        self.place_num = place_num
+        self.initialize_bound = initialize_bound
         self.action_pos_index = action_pos_index
+        self.initialize_objects = False
 
-        assert len(self.obj_names) == len(self.obj_poses[0])
         assert len(self.action_pos_index) <= 7
+        assert self.place_num == len(self.obj_poses)
+        assert self.place_num < len(self.obj_names)
 
         self.total_steps = total_steps
         self.step_size = step_size
@@ -339,7 +347,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self.visual_objects,
             self.obj_poses
         )
-        self.model.place_objects()
+        # self.model.place_objects()
 
         self.bin_pos = string_to_array(self.model.bin2_body.get("pos"))
         self.bin_size = self.table_target_size
@@ -362,7 +370,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
     def remove_object(self, obj):
         self.teleport_object(obj, x=10, y=10)
 
-    def teleport_object(self, obj, x, y, z=0.9):
+    def teleport_object(self, obj, x, y, z=0.95, uvwt=None):
         """
         Teleport an object to a certain position (x, y, z).
         """
@@ -377,18 +385,71 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         sim_state.qpos[y_dim] = y
         sim_state.qpos[z_dim] = z
 
+        if uvwt:
+            assert len(uvwt) == 4
+            beg_dim = z_dim + 1
+            for i, val in enumerate(uvwt):
+                sim_state.qpos[beg_dim+i] = val
+
         self.sim.set_state(sim_state)
         self.sim.forward()
+
+    def get_abs_pos(self, obj, relative_pos):
+        bottom_offset = self.mujoco_objects[obj].get_bottom_offset()
+        pos = self.model.bin2_offset - bottom_offset + relative_pos
+
+        return pos
+
+    def prepare_objects(self):
+        object_names = self.object_names[: -1].copy()
+        np.random.shuffle(object_names)
+
+        object_z = 0.08
+        delta = 0.003
+        for i in range(self.place_num):
+            obj = object_names[i]
+
+            E_pos = self.obj_poses[i]
+
+            object_x = np.random.uniform(high=E_pos[0] + delta, low=E_pos[0] - delta)
+            object_y = np.random.uniform(high=E_pos[1] + delta, low=E_pos[1] - delta)
+            object_xy = np.array([object_x, object_y, object_z])
+
+            pos = self.get_abs_pos(obj, object_xy)
+            # quat = self.model.sample_quat()
+            quat = None
+            self.teleport_object(obj, pos[0], pos[1], pos[2], uvwt=quat)
+
+            # from PIL import Image
+            # Image.fromarray(self._flatten_obs(self._get_observation())).show()
+            # import ipdb
+            # ipdb.set_trace()
+
+            self._pre_action(None)
+            for _ in range(50):
+                self.sim.step()
+            self._post_action(None)
+
+        self._pre_action(None)
+        for _ in range(100):
+            self.sim.step()
+        self._post_action(None)
+
+        target_obj = self.target_object
+        pos = self.get_abs_pos(target_obj, self.target_init_pos)
+        self.teleport_object(target_obj, pos[0], pos[1], pos[2])
+
+        self.initialize_objects = True
 
     def get_tar_obj_pos(self):
         beg_dim, end_dim = self.sim.model.get_joint_qpos_addr(self.target_object)
         return self.sim.get_state().qpos[beg_dim : end_dim].copy()
 
-    def set_obj_state(self, obj, qpos):
+    def step_obj_by_delta(self, obj, delta_pos):
         """
-        set qpos of object
+        change qpos of obj by delta
         :param obj:
-        :param qpos: (x, y, z, u, v, w, t)
+        :param delta_pos: (x, y, z, u, v, w, t)
         :return:
         """
         assert obj in self.mujoco_objects.keys()
@@ -399,7 +460,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         beg_dim, end_dim = self.sim.model.get_joint_qpos_addr(obj)
 
         # change cur pos
-        self.target_cur_pos[pos_index] += qpos.copy()
+        self.target_cur_pos[pos_index] += delta_pos.copy()
 
         # set pos index in sim
         sim_state.qpos[beg_dim : end_dim] = self.target_cur_pos.copy()
@@ -440,6 +501,13 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         return action
 
     def _pre_action(self, action):
+        if action is None:
+            # gravity compensation
+            self.sim.data.qfrc_applied[
+                self._ref_joint_vel_indexes
+            ] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
+            return
+
         gripper_dim = self.sim.model.get_joint_qpos_addr(self.object_names[0])[0]
         beg_dim = gripper_dim + self.object_names.index(self.target_object) * 6
         ## set force
@@ -456,6 +524,13 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         # self.sim.data.qfrc_applied[beg_dim+2:beg_dim+6] = self.sim.data.qfrc_bias[beg_dim+2:beg_dim+6]
 
     def _post_action(self, action):
+        if action is None:
+            sim_state = self.sim.get_state()
+            sim_state.qvel[:] = 0
+            self.sim.set_state(sim_state)
+            self.sim.forward()
+            return
+
         # remove vel
         sim_state = self.sim.get_state()
         beg_dim, end_dim = self.sim.model.get_joint_qvel_addr(self.target_object)
@@ -483,6 +558,10 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         if self.done:
             raise ValueError("executing action in terminated episode")
 
+        ## prepare
+        if not self.initialize_objects:
+            self.prepare_objects()
+
         ## pre action: remove gravity and other forces.
         self._pre_action(action)
 
@@ -491,7 +570,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         ## teleport target object by (x, y, z, u, v, w, t)
         action = self._norm_action(action)
-        self.set_obj_state(self.target_object, action)
+        self.step_obj_by_delta(self.target_object, action)
 
         end_time = self.cur_time + self.control_timestep
         while self.cur_time < end_time:
@@ -535,9 +614,13 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         super()._reset_internal()
 
         # reset positions of objects, and move objects out of the scene depending on the mode
-        self.model.place_objects()
+        # self.model.place_objects()
+
         # reset cur step
         self.cur_step = 0
+        self.initialize_objects = False
+        for obj in self.object_names:
+            self.remove_object(obj)
 
     def reward(self, action=None):
         # get z pos
@@ -583,8 +666,9 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         bin_y_high = bin_y_low + self.bin_size[1]
 
         res = True
+        delta = 0.01
         if (
-                obj_pos[2] > self.bin_pos[2]
+                obj_pos[2] > self.bin_pos[2] - delta
                 and obj_pos[0] < bin_x_high
                 and obj_pos[0] > bin_x_low
                 and obj_pos[1] < bin_y_high

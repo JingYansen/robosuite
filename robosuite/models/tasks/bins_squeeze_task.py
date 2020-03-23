@@ -28,6 +28,7 @@ class BinSqueezeTask(Task):
 
         # temp: z-rotation
         self.z_rotation = False
+        self.random_quat = True
 
         self.object_metadata = []
         self.merge_arena(mujoco_arena)
@@ -86,6 +87,12 @@ class BinSqueezeTask(Task):
 
     def sample_quat(self):
         """Samples quaternions of random rotations along the z-axis."""
+        if self.random_quat:
+            rot_angle = np.random.uniform(high=2 * np.pi, low=0)
+            v_angle = np.random.uniform(high=2 * np.pi, low=0)
+            w_angle = np.random.uniform(high=2 * np.pi, low=0)
+            return [np.cos(rot_angle / 2), np.sin(v_angle / 2), np.sign(w_angle / 2), np.sin(rot_angle / 2)]
+
         if self.z_rotation:
             rot_angle = np.random.uniform(high=2 * np.pi, low=0)
             return [np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)]
@@ -93,6 +100,7 @@ class BinSqueezeTask(Task):
 
     def place_objects(self):
         """Places objects randomly until no collisions or max iterations hit."""
+        print("*****Place******")
         index = 0
 
         ## random choose hard case
