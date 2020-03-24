@@ -2,8 +2,8 @@
 set -ex
 python bin_squeeze_baselines.py \
     --alg ppo2 \
-    --num_env 16 \
-    --num_timesteps 1200000 \
+    --num_env 24 \
+    --num_timesteps 1000000 \
     --nsteps 1024 \
     --noptepochs 20 \
     --nminibatches 4 \

@@ -639,7 +639,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             epsilon = 1e-4
 
             if z_pos_to_bin >= self.z_limit:
-                reward = -1
+                reward = -10
             elif z_pos_to_bin <= epsilon:
                 reward = 10
             else:
