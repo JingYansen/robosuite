@@ -44,8 +44,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self,
             gripper_type="TwoFingerGripper",
             table_full_size=(0.39, 0.49, 0.82),
-            # table_target_size=(0.105, 0.085, 0.12),
-            table_target_size=(0.12, 0.1, 0.12),
+            table_target_size=(0.105, 0.085, 0.12),
             table_friction=(1, 0.005, 0.0001),
             use_camera_obs=True,
             use_object_obs=True,
@@ -666,13 +665,16 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         bin_y_high = bin_y_low + self.bin_size[1]
 
         res = True
-        delta = 0.01
+        delta_x = 0.05
+        delta_y = 0.05
+        delta_z = 0.01
+
         if (
-                obj_pos[2] > self.bin_pos[2] - delta
-                and obj_pos[0] < bin_x_high
-                and obj_pos[0] > bin_x_low
-                and obj_pos[1] < bin_y_high
-                and obj_pos[1] > bin_y_low
+                obj_pos[2] > self.bin_pos[2] - delta_z
+                and obj_pos[0] < bin_x_high + delta_x
+                and obj_pos[0] > bin_x_low - delta_x
+                and obj_pos[1] < bin_y_high + delta_y
+                and obj_pos[1] > bin_y_low - delta_y
                 # and obj_pos[2] < self.bin_pos[2] + self.bin_size[2]r
         ):
             res = False

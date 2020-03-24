@@ -115,7 +115,7 @@ def make_video(model_path, env, args):
     import imageio
     writer = imageio.get_writer(DEMO_PATH, fps=20)
 
-    n_episode = 3
+    n_episode = 5
 
     for i_episode in range(n_episode):
         obs = env.reset()

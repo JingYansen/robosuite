@@ -64,7 +64,7 @@ def test_qpos_meaning(env):
     imgs.show()
 
 
-def test_video(env, video_path='demo/test/down_policy.mp4'):
+def test_video(env, video_path='demo/test/1.mp4'):
 
     import imageio
     writer = imageio.get_writer(video_path, fps=20)
@@ -76,9 +76,9 @@ def test_video(env, video_path='demo/test/down_policy.mp4'):
         for i in range(300):
             # run a uniformly random agent
             action = env.action_space.sample()
-            action[0] = 0
+            action[0] = 0.01
             action[1] = 0
-            action[2] = -1
+            action[2] = 0
 
             obs, reward, done, info = env.step(action)
 

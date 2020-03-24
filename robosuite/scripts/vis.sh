@@ -1,1 +1,1 @@
-tensorboard --logdir=results_squeeze --port=10000
+tensorboard --logdir=results_squeeze/3view_6dim_easy_task --port=10001
