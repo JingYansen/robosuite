@@ -44,9 +44,6 @@ def get_env_kwargs(args):
     env_kwargs['total_steps'] = args.total_steps
     env_kwargs['step_size'] = args.step_size
     env_kwargs['orientation_scale'] = args.orientation_scale
-    action_pos_index = args.action_pos_index.split(',')
-    action_pos_index = [int(i) for i in action_pos_index]
-    env_kwargs['action_pos_index'] = np.array(action_pos_index)
 
     # hard_case_train, hard_case_test = get_hard_cases()
     # env_kwargs['obj_poses'] = hard_case_train
@@ -132,6 +129,7 @@ def make_video(model_path, env, args):
 
     writer.close()
     print('Make video over.')
+    print('Video path: ', DEMO_PATH)
 
 
 def test(model, env, args):
@@ -210,7 +208,6 @@ if __name__ == "__main__":
     parser.add_argument('--total_steps', type=int, default=200)
     parser.add_argument('--step_size', type=float, default=0.002)
     parser.add_argument('--orientation_scale', type=float, default=0.1)
-    parser.add_argument('--action_pos_index', type=str, default='0,1,2,4,5,6')
 
     parser.add_argument('--keys', type=str, default='image', choices=['image'])
 
