@@ -572,7 +572,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         # done
         self.cur_step += 1
-        done = (self.cur_step >= self.total_steps) or (reward == 10) or (reward == -10)
+        done = (self.cur_step >= self.total_steps) or (np.abs(reward) >= 10)
         if done:
             print('Done!')
 
@@ -661,7 +661,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         # not in bin
         if self.not_in_bin(target_pos[0:3]):
-            reward = -10
+            reward = -10 - (self.total_steps - self.cur_step)
         else:
             # get obj mjcf
             target_obj_mjcf = self.mujoco_objects[self.target_object]
@@ -671,10 +671,8 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             z_pos_to_bin = z_pos - (self.model.bin2_offset[2] - bottom_offset[2])
             epsilon = 1e-4
 
-            if z_pos_to_bin >= self.z_limit:
-                reward = -10
-            elif z_pos_to_bin <= epsilon:
-                reward = 10
+            if z_pos_to_bin >= self.z_limit or z_pos_to_bin <= epsilon:
+                reward = -10 - (self.total_steps - self.cur_step)
             else:
                 delta = (self.z_limit - z_pos_to_bin) / self.z_limit
                 reward = delta ** 2 - 1

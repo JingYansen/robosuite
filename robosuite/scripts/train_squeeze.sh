@@ -12,4 +12,4 @@ python bin_squeeze_baselines.py \
     --min 3e-4 \
     --network 'cnn' \
     --log True \
-    --debug 'random_init_over'
+    --debug 'random_reward_fix'
