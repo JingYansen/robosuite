@@ -180,7 +180,7 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'env', 'noptepochs', 'batch', 'shapeRw' 'depth']
+    keys = ['total', 'nsteps', 'env', 'noptepochs', 'batch', 'shapeRw', 'depth']
     values = [args.num_timesteps, args.nsteps, args.num_env, args.noptepochs, args.nminibatches, args.reward_shaping, args.camera_depth]
     assert len(keys) == len(values)
 
