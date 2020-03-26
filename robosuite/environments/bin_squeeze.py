@@ -458,13 +458,18 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         beg_dim, end_dim = self.sim.model.get_joint_qpos_addr(obj)
 
         # change cur pos
-        # import ipdb
-        # ipdb.set_trace()
 
         self.target_cur_pos[0:2] += action[0:2].copy()
 
-        theta = np.arccos(self.target_cur_pos[3]) * 2
-        X, Y, Z = action[4:7]
+        theta = np.arccos(self.target_cur_pos[3].copy()) * 2
+        S = np.sin(theta / 2)
+        if S == 0:
+            X, Y, Z = 0., 0., 0.
+        else:
+            X, Y, Z = self.target_cur_pos[4:7].copy() / S
+
+        delta_X, delta_Y, delta_Z = action[4:7].copy()
+        new_X, new_Y, new_Z = self._normalize(np.array([X + delta_X, Y + delta_Y, Z + delta_Z]))
 
         new_theta = theta + action[3].copy()
         if new_theta >= 2 * np.pi and action[3] > 0:
@@ -475,7 +480,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         new_C = np.cos(new_theta / 2)
         new_S = np.sin(new_theta / 2)
 
-        self.target_cur_pos[3:7] = np.array([new_C, X * new_S, Y * new_S, Z * new_S])
+        self.target_cur_pos[3:7] = np.array([new_C, new_X * new_S, new_Y * new_S, new_Z * new_S])
 
         # set pos index in sim
         sim_state.qpos[beg_dim : end_dim] = self.target_cur_pos.copy()
@@ -487,16 +492,17 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.sim.set_state(sim_state)
         self.sim.forward()
 
-    def _norm_action(self, old_action):
-        def normalize(x):
-            if len(x) > 1:
-                x_norm = np.linalg.norm(x)
-                if x_norm > 0:
-                    x = x / x_norm
-            else:
-                x = np.sign(x)
+    def _normalize(self, x):
+        if len(x) > 1:
+            x_norm = np.linalg.norm(x)
+            if x_norm > 0:
+                x = x / x_norm
+        else:
+            x = np.sign(x)
 
-            return x
+        return x
+
+    def _norm_action(self, old_action):
 
         def sigmoid_norm(x):
             x = 1. / (1 + np.exp(-x)) - 0.5
@@ -506,14 +512,14 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         ## normalize coord
         coordinates = old_action[0:3].copy()
-        action[0:3] = normalize(coordinates) * self.step_size
+        action[0:3] = self._normalize(coordinates) * self.step_size
 
         ## normalize orientation
         theta = old_action[3].copy()
         action[3] = sigmoid_norm(theta) * 2 * np.pi * self.orientation_scale
 
         xyz = old_action[4:7].copy()
-        action[4:7] = normalize(xyz)
+        action[4:7] = self._normalize(xyz) * self.orientation_scale
 
         return action
 
