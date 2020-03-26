@@ -64,7 +64,7 @@ def test_qpos_meaning(env):
     imgs.show()
 
 
-def test_video(env, video_path='demo/test/specific_inv.mp4'):
+def test_video(env, video_path='demo/test/down_back.mp4'):
 
     import imageio
     writer = imageio.get_writer(video_path, fps=20)
@@ -72,16 +72,25 @@ def test_video(env, video_path='demo/test/specific_inv.mp4'):
     episodes = 1
     # action = env.action_space.sample()
     # action[0:3] = np.array([1., 0., 0.])
-    action = np.array([0., 0., 0., -1., 1, 1, 0])
+    action = np.array([1., 0., 0., 0., 0., 0., 0.])
+    down = np.array([0.1, 0., -1.])
     for _ in range(episodes):
         env.reset()
-        for i in range(100):
+        for i in range(200):
             # run a uniformly random agent
             # if (i + 1) % 2 == 0:
             #     action = -action
 
-            if i == 50:
-                action = -action
+            if i < 50:
+                action[0:3] = down.copy()
+            elif i == 50:
+                action = np.array([1., 0., 0., 0., 0., 0., 0.])
+            else:
+                if i % 40 == 0:
+                    action[0:2] = -action[0:2]
+                if i % 50 == 0:
+                    action[3:7] = -action[3:7]
+            # action[3:7] = np.random.random(4)
 
             obs, reward, done, info = env.step(action)
 

@@ -76,10 +76,10 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             target_object='Cereal3',
             target_init_pos=np.array([0, 0, 0.131]),
             total_steps=200,
-            step_size=0.002,
-            orientation_scale=0.05,
-            z_force_ratio=0.2,
-            z_limit=0.15,
+            step_size=0.003,
+            orientation_scale=0.08,
+            force_ratios=[3, 3, 0.3],
+            z_limit=0.17,
             keys='image',
             test_cases=[]
     ):
@@ -179,7 +179,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.total_steps = total_steps
         self.step_size = step_size
         self.orientation_scale = orientation_scale
-        self.z_force_ratio = z_force_ratio
+        self.force_ratios = force_ratios
         self.z_limit = z_limit
         self.cur_step = 0
 
@@ -534,16 +534,21 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         gripper_dim = self.sim.model.get_joint_qpos_addr(self.object_names[0])[0]
         beg_dim = gripper_dim + self.object_names.index(self.target_object) * 6
         ## set force
-        sig = np.sign(action[self.action_pos_index == 2])
-        ## down
-        if sig == -1:
-            ratio = 1 - self.z_force_ratio
-        elif sig == 1:
-            ratio = 1 + self.z_force_ratio
-        else:
-            ratio = 1
+        sigs = np.sign(action[0:3])
+        # for i in range(len(sigs)):
+        #     ## down
+        #     if sigs[i] == -1:
+        #         ratio = 1. - self.force_ratios[i]
+        #     elif sigs[i] == 1:
+        #         ratio = 1. + self.force_ratios[i]
+        #     else:
+        #         ratio = 1.
+        #     sigs[i] = ratio
 
-        self.sim.data.qfrc_applied[beg_dim+2] = self.sim.data.qfrc_bias[beg_dim+2] * ratio
+        # self.sim.data.qfrc_applied[beg_dim+2] = self.sim.data.qfrc_bias[beg_dim+2] * (1 + self.force_ratios[2] * sigs[2])
+        # self.sim.data.qfrc_applied[beg_dim:beg_dim+2] = self.sim.data.qfrc_bias[beg_dim:beg_dim+2] + (self.force_ratios[0:2] * sigs[0:2] * 0.001)
+
+        self.sim.data.qfrc_applied[beg_dim:beg_dim+3] = self.sim.data.qfrc_bias[beg_dim:beg_dim+3] * ( 1 + self.force_ratios * sigs)
         # self.sim.data.qfrc_applied[beg_dim+2:beg_dim+6] = self.sim.data.qfrc_bias[beg_dim+2:beg_dim+6]
 
     def _post_action(self, action):
