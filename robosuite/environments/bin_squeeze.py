@@ -661,7 +661,10 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         # not in bin
         if self.not_in_bin(target_pos[0:3]):
-            reward = -10 - (self.total_steps - self.cur_step)
+            if self.reward_shaping:
+                reward = -10 - (self.total_steps - self.cur_step)
+            else:
+                reward = -10
         else:
             # get obj mjcf
             target_obj_mjcf = self.mujoco_objects[self.target_object]
@@ -672,7 +675,10 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             epsilon = 1e-4
 
             if z_pos_to_bin >= self.z_limit or z_pos_to_bin <= epsilon:
-                reward = -10 - (self.total_steps - self.cur_step)
+                if self.reward_shaping:
+                    reward = -10 - (self.total_steps - self.cur_step)
+                else:
+                    reward = -10
             else:
                 delta = (self.z_limit - z_pos_to_bin) / self.z_limit
                 reward = delta ** 2 - 1
@@ -726,12 +732,23 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         di = super()._get_observation()
 
         if self.use_camera_obs:
-            front_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='frontview')
-            side_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='sideview')
-            bird_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview')
+            if self.camera_depth:
+                front_image, front_depth = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='frontview', depth=self.camera_depth)
+                side_image, side_depth = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='sideview', depth=self.camera_depth)
+                bird_image, bird_depth = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview', depth=self.camera_depth)
+                image = np.concatenate((front_image, side_image, bird_image), 1)
+                depth = np.concatenate((front_depth, side_depth, bird_depth), 1)
+                depth = np.uint8(depth * 255)
 
-            di["image"] = np.concatenate((front_image, side_image, bird_image), 1)
-            # di['image'] = target_image
+                depth_shape = depth.shape
+                depth = depth.reshape(depth_shape[0], depth_shape[1], 1)
+
+                di["image"] = np.concatenate((image, depth), 2)
+            else:
+                front_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='frontview')
+                side_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='sideview')
+                bird_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview')
+                di["image"] = np.concatenate((front_image, side_image, bird_image), 1)
 
         return di
 

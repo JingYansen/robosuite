@@ -40,6 +40,8 @@ def get_env_kwargs(args):
     env_kwargs['use_camera_obs'] = args.use_camera_obs
     env_kwargs['has_renderer'] = args.has_renderer
     env_kwargs['has_offscreen_renderer'] = args.has_offscreen_renderer
+    env_kwargs['camera_depth'] = args.camera_depth
+    env_kwargs['reward_shaping'] = args.reward_shaping
 
     env_kwargs['total_steps'] = args.total_steps
     env_kwargs['step_size'] = args.step_size
@@ -178,8 +180,8 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'env', 'noptepochs', 'batch']
-    values = [args.num_timesteps, args.nsteps, args.num_env, args.noptepochs, args.nminibatches]
+    keys = ['total', 'nsteps', 'env', 'noptepochs', 'batch', 'shapeRw' 'depth']
+    values = [args.num_timesteps, args.nsteps, args.num_env, args.noptepochs, args.nminibatches, args.reward_shaping, args.camera_depth]
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):
@@ -200,6 +202,8 @@ if __name__ == "__main__":
     parser.add_argument('--has_renderer', type=bool, default=False)
     parser.add_argument('--use_camera_obs', type=bool, default=True)
     parser.add_argument('--has_offscreen_renderer', type=bool, default=True)
+    parser.add_argument('--camera_depth', type=bool, default=False)
+    parser.add_argument('--reward_shaping', type=bool, default=False)
 
     parser.add_argument('--control_freq', type=int, default=20)
     parser.add_argument('--camera_height', type=int, default=64)
