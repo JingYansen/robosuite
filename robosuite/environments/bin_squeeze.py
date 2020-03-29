@@ -513,13 +513,14 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         v1 = vec1.copy()
         v2 = vec2.copy()
 
-        v1 = self._normalize(v1)
-        v2 = self._normalize(v2)
+        len_v1 = np.linalg.norm(v1)
+        len_v2 = np.linalg.norm(v2)
 
-        if np.linalg.norm(v1) == 0 or np.linalg.norm(v2) == 0:
+        if len_v1 == 0 or len_v2 == 0:
             return 0
 
-        cos_angle = v1.dot(v2)
+        cos_angle = v1.dot(v2) / (len_v1 * len_v2)
+        cos_angle = np.clip(cos_angle, -1, 1)
         angle = np.arccos(cos_angle)
         angle = angle * 360 / 2 / np.pi
 
@@ -688,7 +689,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         # energy
         energy = self.energy_tradeoff * (info['angle'] / 180 + info['theta'])
-        assert energy <= self.energy_tradeoff * 2
+        assert energy <= self.energy_tradeoff * 2 and energy >= 0
 
         # not in bin
         if self.not_in_bin(target_pos[0:3]):

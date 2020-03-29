@@ -11,6 +11,7 @@ python bin_squeeze_baselines.py \
     --max 3e-4 \
     --min 3e-4 \
     --network 'cnn' \
-    -- energy_tradeoff 0.0 \
+    --energy_tradeoff 0.05 \
+    --reward_shaping True \
     --log True \
     --debug 'randomly_init'
