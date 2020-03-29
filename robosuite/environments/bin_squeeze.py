@@ -78,6 +78,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             total_steps=200,
             step_size=0.003,
             orientation_scale=0.08,
+            energy_tradeoff=0.02,
             force_ratios=[3, 3, 0.3],
             z_limit=0.17,
             keys='image',
@@ -179,6 +180,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.total_steps = total_steps
         self.step_size = step_size
         self.orientation_scale = orientation_scale
+        self.energy_tradeoff = energy_tradeoff
         self.force_ratios = force_ratios
         self.z_limit = z_limit
         self.cur_step = 0
@@ -469,6 +471,8 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             X, Y, Z = self.target_cur_pos[4:7].copy() / S
 
         delta_X, delta_Y, delta_Z = action[4:7].copy()
+        angle = self._angle(np.array([X, Y, Z]), np.array([delta_X, delta_Y, delta_Z]))
+
         new_X, new_Y, new_Z = self._normalize(np.array([X + delta_X, Y + delta_Y, Z + delta_Z]))
 
         new_theta = theta + action[3].copy()
@@ -492,6 +496,9 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.sim.set_state(sim_state)
         self.sim.forward()
 
+        info = {'angle': angle}
+        return info
+
     def _normalize(self, x):
         if len(x) > 1:
             x_norm = np.linalg.norm(x)
@@ -501,6 +508,22 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             x = np.sign(x)
 
         return x
+
+    def _angle(self, vec1, vec2):
+        v1 = vec1.copy()
+        v2 = vec2.copy()
+
+        v1 = self._normalize(v1)
+        v2 = self._normalize(v2)
+
+        if np.linalg.norm(v1) == 0 or np.linalg.norm(v2) == 0:
+            return 0
+
+        cos_angle = v1.dot(v2)
+        angle = np.arccos(cos_angle)
+        angle = angle * 360 / 2 / np.pi
+
+        return angle
 
     def _norm_action(self, old_action):
 
@@ -551,7 +574,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.sim.data.qfrc_applied[beg_dim:beg_dim+3] = self.sim.data.qfrc_bias[beg_dim:beg_dim+3] * ( 1 + self.force_ratios * sigs)
         # self.sim.data.qfrc_applied[beg_dim+2:beg_dim+6] = self.sim.data.qfrc_bias[beg_dim+2:beg_dim+6]
 
-    def _post_action(self, action):
+    def _post_action(self, action, info={}):
         if action is None:
             sim_state = self.sim.get_state()
             sim_state.qvel[:] = 0
@@ -568,16 +591,13 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.sim.forward()
 
         # calculate reward
-        reward = self.reward(action)
+        reward = self.reward(action, info)
 
         # done
         self.cur_step += 1
         done = (self.cur_step >= self.total_steps) or (np.abs(reward) >= 10)
         if done:
             print('Done!')
-
-        # extra info
-        info = {}
 
         return reward, done, info
 
@@ -586,11 +606,14 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         if self.done:
             raise ValueError("executing action in terminated episode")
 
+        info = {}
+
         ## prepare
         if not self.initialize_objects:
             self.prepare_objects()
 
         ## pre action: remove gravity and other forces.
+        info.update({'theta': action[3].copy(), 'old_action': action.copy()})
         self._pre_action(action)
 
         ## get cur pos
@@ -598,15 +621,19 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         ## teleport target object by (x, y, z, u, v, w, t)
         action = self._norm_action(action)
-        self.step_obj_by_action(self.target_object, action)
+        info.update({'norm_action': action.copy()})
 
+        temp_info = self.step_obj_by_action(self.target_object, action)
+        info.update(temp_info)
+
+        ## mujoco step
         end_time = self.cur_time + self.control_timestep
         while self.cur_time < end_time:
             self.sim.step()
             self.cur_time += self.model_timestep
 
         ## post action: calculate reward
-        reward, done, info = self._post_action(action)
+        reward, done, _ = self._post_action(action, info)
 
         ## obs
         ob_dict = self._get_observation()
@@ -654,10 +681,14 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self.model.place_objects()
             self.initialize_objects = True
 
-    def reward(self, action=None):
+    def reward(self, action=None, info={}):
         # get z pos
         target_pos = self.get_tar_obj_pos()
         z_pos = target_pos[2]
+
+        # energy
+        energy = self.energy_tradeoff * (info['angle'] / 180 + info['theta'])
+        assert energy <= self.energy_tradeoff * 2
 
         # not in bin
         if self.not_in_bin(target_pos[0:3]):
@@ -674,15 +705,21 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             z_pos_to_bin = z_pos - (self.model.bin2_offset[2] - bottom_offset[2])
             epsilon = 1e-4
 
-            if z_pos_to_bin >= self.z_limit or z_pos_to_bin <= epsilon:
+            # out of z
+            if z_pos_to_bin >= self.z_limit:
                 if self.reward_shaping:
                     reward = -10 - (self.total_steps - self.cur_step)
                 else:
                     reward = -10
+            # success
+            elif  z_pos_to_bin <= epsilon:
+                reward = 10 + 2
+            # above
             else:
                 delta = (self.z_limit - z_pos_to_bin) / self.z_limit
                 reward = delta ** 2 - 1
 
+        reward -= energy
         print('Reward: ', reward)
         return reward
 

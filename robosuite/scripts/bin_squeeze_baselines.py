@@ -46,6 +46,7 @@ def get_env_kwargs(args):
     env_kwargs['total_steps'] = args.total_steps
     env_kwargs['step_size'] = args.step_size
     env_kwargs['orientation_scale'] = args.orientation_scale
+    env_kwargs['energy_tradeoff'] = args.energy_tradeoff
 
     # hard_case_train, hard_case_test = get_hard_cases()
     # env_kwargs['obj_poses'] = hard_case_train
@@ -122,6 +123,7 @@ def make_video(model_path, env, args):
         for _ in range(1000):
 
             action, _states = model.predict(obs)
+            print('action: ', action)
 
             obs, rewards, dones, info = env.step(action)
             writer.append_data(obs[0])
@@ -180,8 +182,8 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'env', 'noptepochs', 'batch', 'shapeRw', 'depth']
-    values = [args.num_timesteps, args.nsteps, args.num_env, args.noptepochs, args.nminibatches, args.reward_shaping, args.camera_depth]
+    keys = ['total', 'nsteps', 'env', 'noptepochs', 'batch', 'shapeRw', 'depth', 'energy']
+    values = [args.num_timesteps, args.nsteps, args.num_env, args.noptepochs, args.nminibatches, args.reward_shaping, args.camera_depth, args.energy_tradeoff]
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):
@@ -212,6 +214,7 @@ if __name__ == "__main__":
     parser.add_argument('--total_steps', type=int, default=200)
     parser.add_argument('--step_size', type=float, default=0.002)
     parser.add_argument('--orientation_scale', type=float, default=0.1)
+    parser.add_argument('--energy_tradeoff', type=float, default=0.02)
 
     parser.add_argument('--keys', type=str, default='image', choices=['image'])
 
@@ -229,7 +232,7 @@ if __name__ == "__main__":
     parser.add_argument('--noptepochs', type=int, default=20)
     parser.add_argument('--cliprange', type=float, default=0.2)
     parser.add_argument('--ent_coef', type=float, default=0.005)
-    parser.add_argument('--log_interval', type=int, default=5)
+    parser.add_argument('--log_interval', type=int, default=2)
     parser.add_argument('--save_interval', type=int, default=20)
     parser.add_argument('--network', type=str, default='cnn')
 
