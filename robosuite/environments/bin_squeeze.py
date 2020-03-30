@@ -633,7 +633,15 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self.cur_time += self.model_timestep
 
         ## post action: calculate reward
-        reward, done, _ = self._post_action(action, info)
+        reward, done, info = self._post_action(action, info)
+        if done:
+            info['num_steps'] = self.cur_step
+            if reward >= 10:
+                info['num_steps_succ'] = self.cur_step
+                info['succ'] = 1
+            else:
+                info['num_steps_fail'] = self.cur_step
+                info['succ'] = 0
 
         ## obs
         ob_dict = self._get_observation()
