@@ -14,4 +14,4 @@ python bin_squeeze_baselines.py \
     --energy_tradeoff 0.2 \
     --reward_shaping True \
     --log True \
-    --debug 'randomly_init'
+    --debug 'energy'
