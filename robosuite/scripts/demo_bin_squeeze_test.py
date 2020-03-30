@@ -64,35 +64,46 @@ def test_qpos_meaning(env):
     imgs.show()
 
 
-def test_video(env, video_path='demo/test/down_back.mp4'):
+def test_video(env, video_path='demo/test/test.mp4'):
 
     import imageio
     writer = imageio.get_writer(video_path, fps=20)
 
-    episodes = 1
+    episodes = 4
     # action = env.action_space.sample()
     # action[0:3] = np.array([1., 0., 0.])
     action = np.array([1., 0., 0., 0., 0., 0., 0.])
     down = np.array([0.1, 0., -1.])
     for _ in range(episodes):
         env.reset()
-        for i in range(200):
+        for i in range(50):
             # run a uniformly random agent
-            # if (i + 1) % 2 == 0:
-            #     action = -action
+            action = env.action_space.sample()
 
-            if i < 50:
-                action[0:3] = down.copy()
-            elif i == 50:
-                action = np.array([1., 0., 0., 0., 0., 0., 0.])
-            else:
-                if i % 40 == 0:
-                    action[0:2] = -action[0:2]
-                if i % 50 == 0:
-                    action[3:7] = -action[3:7]
-            # action[3:7] = np.random.random(4)
+            # human policy
+            # if i < 50:
+            #     action[0:3] = down.copy()
+            # elif i == 50:
+            #     action = np.array([1., 0., 0., 0., 0., 0., 0.])
+            # else:
+            #     if i % 40 == 0:
+            #         action[0:2] = -action[0:2]
+            #     if i % 50 == 0:
+            #         action[3:7] = -action[3:7]
 
             obs, reward, done, info = env.step(action)
+
+            # contains depth
+            if obs.shape[-1] == 4:
+                image = obs[:, :, :-1]
+                depth = obs[:, :, -1]
+
+                import cv2
+                depth_shape = depth.shape
+                depth = depth.reshape(depth_shape[0], depth_shape[1], 1)
+                depth = cv2.cvtColor(depth, cv2.COLOR_GRAY2BGR)
+
+                obs = np.concatenate((image, depth), 0)
 
             writer.append_data(obs)
             print("Saving frame #{}".format(i))
@@ -159,6 +170,7 @@ if __name__ == "__main__":
         control_freq=20,
         camera_height=128,
         camera_width=128,
+        camera_depth=True,
     )
 
 

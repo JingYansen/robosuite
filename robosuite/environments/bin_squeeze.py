@@ -688,10 +688,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         # energy
         energy = self.energy_tradeoff * (info['angle'] / 180 + info['theta'])
-        if not(energy <= self.energy_tradeoff * 2 and energy >= 0):
-            import ipdb
-            ipdb.set_trace()
-            assert energy <= self.energy_tradeoff * 2 and energy >= 0
+        assert energy <= self.energy_tradeoff * 2 and energy >= 0
 
         # not in bin
         if self.not_in_bin(target_pos[0:3]):
@@ -778,6 +775,12 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
                 bird_image, bird_depth = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview', depth=self.camera_depth)
                 image = np.concatenate((front_image, side_image, bird_image), 1)
                 depth = np.concatenate((front_depth, side_depth, bird_depth), 1)
+
+                # norm
+                depth_max = 0.99
+                depth_min = 0.85
+                depth = (depth - depth_min) / (depth_max - depth_min)
+                depth = np.clip(depth, 0, 1)
                 depth = np.uint8(depth * 255)
 
                 depth_shape = depth.shape

@@ -126,7 +126,21 @@ def make_video(model_path, env, args):
             print('action: ', action)
 
             obs, rewards, dones, info = env.step(action)
-            writer.append_data(obs[0])
+
+            obs = obs[0]
+            # contains depth
+            if obs.shape[-1] == 4:
+                image = obs[:, :, :-1]
+                depth = obs[:, :, -1]
+
+                import cv2
+                depth_shape = depth.shape
+                depth = depth.reshape(depth_shape[0], depth_shape[1], 1)
+                depth = cv2.cvtColor(depth, cv2.COLOR_GRAY2BGR)
+
+                obs = np.concatenate((image, depth), 0)
+
+            writer.append_data(obs)
 
             if dones[0]:
                 break
