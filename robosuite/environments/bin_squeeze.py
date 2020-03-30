@@ -509,6 +509,10 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         return x
 
+    def _sigmoid(self, x, b=0.):
+        x = 1. / (1 + np.exp(-x)) - b
+        return x
+
     def _angle(self, vec1, vec2):
         v1 = vec1.copy()
         v2 = vec2.copy()
@@ -527,11 +531,6 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         return angle
 
     def _norm_action(self, old_action):
-
-        def sigmoid_norm(x):
-            x = 1. / (1 + np.exp(-x)) - 0.5
-            return x
-
         action = old_action.copy()
 
         ## normalize coord
@@ -540,7 +539,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         ## normalize orientation
         theta = old_action[3].copy()
-        action[3] = sigmoid_norm(theta) * 2 * np.pi * self.orientation_scale
+        action[3] = self._sigmoid(theta, 0.5) * 2 * np.pi * self.orientation_scale
 
         xyz = old_action[4:7].copy()
         action[4:7] = self._normalize(xyz) * self.orientation_scale
@@ -614,7 +613,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self.prepare_objects()
 
         ## pre action: remove gravity and other forces.
-        info.update({'theta': action[3].copy(), 'old_action': action.copy()})
+        info.update({'theta': self._sigmoid(action[3].copy()), 'old_action': action.copy()})
         self._pre_action(action)
 
         ## get cur pos
@@ -689,7 +688,10 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         # energy
         energy = self.energy_tradeoff * (info['angle'] / 180 + info['theta'])
-        assert energy <= self.energy_tradeoff * 2 and energy >= 0
+        if not(energy <= self.energy_tradeoff * 2 and energy >= 0):
+            import ipdb
+            ipdb.set_trace()
+            assert energy <= self.energy_tradeoff * 2 and energy >= 0
 
         # not in bin
         if self.not_in_bin(target_pos[0:3]):
