@@ -174,8 +174,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.initialize_objects = False
         self.action_pos_index = np.array([0, 1, 2, 3, 4, 5, 6])
 
-        assert self.place_num == len(self.obj_poses)
-        assert self.place_num < len(self.obj_names)
+        assert self.place_num <= len(self.obj_names)
 
         self.total_steps = total_steps
         self.step_size = step_size
