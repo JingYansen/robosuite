@@ -42,6 +42,7 @@ def get_env_kwargs(args):
     env_kwargs['has_offscreen_renderer'] = args.has_offscreen_renderer
     env_kwargs['camera_depth'] = args.camera_depth
     env_kwargs['neg_ratio'] = args.neg_ratio
+    env_kwargs['place_num'] = args.place_num
 
     env_kwargs['total_steps'] = args.total_steps
     env_kwargs['step_size'] = args.step_size
@@ -196,8 +197,8 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'env', 'noptepochs', 'batch', 'neg', 'depth', 'energy']
-    values = [args.num_timesteps, args.nsteps, args.num_env, args.noptepochs, args.nminibatches, args.neg_ratio, args.camera_depth, args.energy_tradeoff]
+    keys = ['total', 'nsteps', 'env', 'noptepochs', 'batch', 'init', 'neg', 'depth', 'energy']
+    values = [args.num_timesteps, args.nsteps, args.num_env, args.noptepochs, args.nminibatches, args.place_num, args.neg_ratio, args.camera_depth, args.energy_tradeoff]
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):
@@ -229,6 +230,7 @@ if __name__ == "__main__":
     parser.add_argument('--step_size', type=float, default=0.002)
     parser.add_argument('--orientation_scale', type=float, default=0.1)
     parser.add_argument('--energy_tradeoff', type=float, default=0)
+    parser.add_argument('--place_num', type=int, default=4)
 
     parser.add_argument('--keys', type=str, default='image', choices=['image'])
 

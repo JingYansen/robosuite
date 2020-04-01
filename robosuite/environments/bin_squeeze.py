@@ -407,7 +407,10 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         object_z = 0.08
         delta = 0.003
-        for i in range(self.place_num):
+        indices = range(len(self.obj_poses))
+        random.shuffle(indices)
+
+        for i, _ in zip(indices, range(self.place_num)):
             obj = object_names[i]
 
             E_pos = self.obj_poses[i]

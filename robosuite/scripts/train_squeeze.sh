@@ -13,5 +13,6 @@ python bin_squeeze_baselines.py \
     --network 'cnn' \
     --energy_tradeoff 0 \
     --camera_depth True \
+    --place_num 3 \
     --log True \
-    --debug 'version-0.3'
+    --debug 'version-0.4'
