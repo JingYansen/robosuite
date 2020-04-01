@@ -48,7 +48,6 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             table_friction=(1, 0.005, 0.0001),
             use_camera_obs=True,
             use_object_obs=True,
-            reward_shaping=False,
             single_object_mode=0,
             gripper_visualization=False,
             use_indicator_object=False,
@@ -79,6 +78,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             step_size=0.003,
             orientation_scale=0.08,
             energy_tradeoff=0.02,
+            neg_ratio=10,
             force_ratios=[3, 3, 0.3],
             z_limit=0.17,
             keys='image',
@@ -202,7 +202,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.use_object_obs = use_object_obs
 
         # reward configuration
-        self.reward_shaping = reward_shaping
+        self.neg_ratio = neg_ratio
 
         if keys is None:
             assert self.use_object_obs, "Object observations need to be enabled."
@@ -698,12 +698,10 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         energy = self.energy_tradeoff * (info['angle'] / 180 + info['theta'])
         assert energy <= self.energy_tradeoff * 2 and energy >= 0
 
+
         # not in bin
         if self.not_in_bin(target_pos[0:3]):
-            if self.reward_shaping:
-                reward = -10 - (self.total_steps - self.cur_step)
-            else:
-                reward = -10
+            reward = -10 - self.neg_ratio * (self.total_steps - self.cur_step)
         else:
             # get obj mjcf
             target_obj_mjcf = self.mujoco_objects[self.target_object]
@@ -715,10 +713,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
             # out of z
             if z_pos_to_bin >= self.z_limit:
-                if self.reward_shaping:
-                    reward = -10 - (self.total_steps - self.cur_step)
-                else:
-                    reward = -10
+                reward = -10 - self.neg_ratio * (self.total_steps - self.cur_step)
             # success
             elif  z_pos_to_bin <= epsilon:
                 reward = 10 + 2

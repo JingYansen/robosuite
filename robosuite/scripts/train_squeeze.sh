@@ -11,8 +11,7 @@ python bin_squeeze_baselines.py \
     --max 3e-4 \
     --min 3e-4 \
     --network 'cnn' \
-    --energy_tradeoff 0.02 \
-    --reward_shaping True \
+    --energy_tradeoff 0 \
     --camera_depth True \
     --log True \
-    --debug 'version-0.2'
+    --debug 'version-0.3'
