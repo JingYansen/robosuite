@@ -228,7 +228,7 @@ if __name__ == "__main__":
     parser.add_argument('--total_steps', type=int, default=200)
     parser.add_argument('--step_size', type=float, default=0.002)
     parser.add_argument('--orientation_scale', type=float, default=0.1)
-    parser.add_argument('--energy_tradeoff', type=float, default=0.02)
+    parser.add_argument('--energy_tradeoff', type=float, default=0)
 
     parser.add_argument('--keys', type=str, default='image', choices=['image'])
 
