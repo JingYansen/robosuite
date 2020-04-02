@@ -12,6 +12,7 @@ from robosuite.utils.mjcf_utils import string_to_array
 from robosuite.environments.sawyer import SawyerEnv
 from gym.envs.mujoco import mujoco_env
 from gym import spaces
+from random import choice
 
 try:
     from mpi4py import MPI
@@ -75,14 +76,22 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             target_object='Cereal3',
             target_init_pos=np.array([0, 0, 0.131]),
             total_steps=200,
-            step_size=0.003,
+            step_size=0.001,
             orientation_scale=0.08,
-            energy_tradeoff=0.02,
+            energy_tradeoff=0,
             neg_ratio=10,
-            force_ratios=[3, 3, 0.3],
+            force_ratios=[2, 2, 0.4],
             z_limit=0.17,
             keys='image',
-            test_cases=[]
+            test_cases=[{
+                'obj_names': ['Can1', 'Can2', 'Milk1', 'Milk2'],
+                'obj_poses': [
+                    np.array([-0.03, 0.03, 0]),
+                    np.array([0.03, 0.03, 0]),
+                    np.array([-0.03, -0.03, 0]),
+                    np.array([0.03, -0.03, 0])
+                ],
+            }],
     ):
         """
         Args:
@@ -385,7 +394,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         sim_state.qpos[y_dim] = y
         sim_state.qpos[z_dim] = z
 
-        if uvwt:
+        if uvwt is not None:
             assert len(uvwt) == 4
             beg_dim = z_dim + 1
             for i, val in enumerate(uvwt):
@@ -401,37 +410,47 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         return pos
 
     def prepare_objects(self):
-        object_names = self.object_names[: -1].copy()
-        np.random.shuffle(object_names)
+        if not self.test_cases:
+            object_names = self.object_names[: -1].copy()
+            np.random.shuffle(object_names)
 
-        object_z = 0.08
-        delta = 0.003
-        indices = np.arange(len(self.obj_poses))
-        np.random.shuffle(indices)
+            object_z = 0.08
+            delta = 0.01
+            indices = np.arange(len(self.obj_poses))
+            np.random.shuffle(indices)
 
-        for i, _ in zip(indices, range(self.place_num)):
-            obj = object_names[i]
+            for i, _ in zip(indices, range(self.place_num)):
+                obj = object_names[i]
 
-            E_pos = self.obj_poses[i]
+                E_pos = self.obj_poses[i]
 
-            object_x = np.random.uniform(high=E_pos[0] + delta, low=E_pos[0] - delta)
-            object_y = np.random.uniform(high=E_pos[1] + delta, low=E_pos[1] - delta)
-            object_xy = np.array([object_x, object_y, object_z])
+                object_x = np.random.uniform(high=E_pos[0] + delta, low=E_pos[0] - delta)
+                object_y = np.random.uniform(high=E_pos[1] + delta, low=E_pos[1] - delta)
+                object_xy = np.array([object_x, object_y, object_z])
 
-            pos = self.get_abs_pos(obj, object_xy)
-            # quat = self.model.sample_quat()
-            quat = None
-            self.teleport_object(obj, pos[0], pos[1], pos[2], uvwt=quat)
+                pos = self.get_abs_pos(obj, object_xy)
+                # quat = self.model.sample_quat()
+                quat = None
+                self.teleport_object(obj, pos[0], pos[1], pos[2], uvwt=quat)
 
-            # from PIL import Image
-            # Image.fromarray(self._flatten_obs(self._get_observation())).show()
-            # import ipdb
-            # ipdb.set_trace()
+                self._pre_action(None)
+                for _ in range(50):
+                    self.sim.step()
+                self._post_action(None)
+        else:
+            test_case = choice(self.test_cases)
+            obj_names = test_case['obj_names']
+            obj_poses = test_case['obj_poses']
 
-            self._pre_action(None)
-            for _ in range(50):
-                self.sim.step()
-            self._post_action(None)
+            for name, pos in zip(obj_names, obj_poses):
+                pos = self.get_abs_pos(name, pos)
+                quat = np.array([1, 0, 0, 0])
+                self.teleport_object(name, pos[0], pos[1], pos[2], uvwt=quat)
+
+                self._pre_action(None)
+                for _ in range(50):
+                    self.sim.step()
+                self._post_action(None)
 
         self._pre_action(None)
         for _ in range(100):
@@ -463,7 +482,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         # change cur pos
 
-        self.target_cur_pos[0:2] += action[0:2].copy()
+        self.target_cur_pos[0:3] += action[0:3].copy()
 
         theta = np.arccos(self.target_cur_pos[3].copy()) * 2
         S = np.sin(theta / 2)
@@ -560,18 +579,6 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         beg_dim = gripper_dim + self.object_names.index(self.target_object) * 6
         ## set force
         sigs = np.sign(action[0:3])
-        # for i in range(len(sigs)):
-        #     ## down
-        #     if sigs[i] == -1:
-        #         ratio = 1. - self.force_ratios[i]
-        #     elif sigs[i] == 1:
-        #         ratio = 1. + self.force_ratios[i]
-        #     else:
-        #         ratio = 1.
-        #     sigs[i] = ratio
-
-        # self.sim.data.qfrc_applied[beg_dim+2] = self.sim.data.qfrc_bias[beg_dim+2] * (1 + self.force_ratios[2] * sigs[2])
-        # self.sim.data.qfrc_applied[beg_dim:beg_dim+2] = self.sim.data.qfrc_bias[beg_dim:beg_dim+2] + (self.force_ratios[0:2] * sigs[0:2] * 0.001)
 
         self.sim.data.qfrc_applied[beg_dim:beg_dim+3] = self.sim.data.qfrc_bias[beg_dim:beg_dim+3] * ( 1 + self.force_ratios * sigs)
         # self.sim.data.qfrc_applied[beg_dim+2:beg_dim+6] = self.sim.data.qfrc_bias[beg_dim+2:beg_dim+6]
@@ -681,15 +688,9 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         # reset cur step
         self.cur_step = 0
 
-        # no test case
-        if len(self.test_cases) == 0:
-            self.initialize_objects = False
-            for obj in self.object_names:
-                self.remove_object(obj)
-        else:
-            # TODO: place_objects()
-            self.model.place_objects()
-            self.initialize_objects = True
+        self.initialize_objects = False
+        for obj in self.object_names:
+            self.remove_object(obj)
 
     def reward(self, action=None, info={}):
         # get z pos

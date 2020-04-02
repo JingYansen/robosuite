@@ -72,13 +72,13 @@ def test_video(env, video_path='demo/test/test.mp4'):
     episodes = 4
     # action = env.action_space.sample()
     # action[0:3] = np.array([1., 0., 0.])
-    action = np.array([1., 0., 0., 0., 0., 0., 0.])
+    action = np.array([0.4, 0.4, -1., 0., 0., 0., 0.])
     down = np.array([0.1, 0., -1.])
     for _ in range(episodes):
         env.reset()
         for i in range(50):
             # run a uniformly random agent
-            action = env.action_space.sample()
+            # action = env.action_space.sample()
 
             # human policy
             # if i < 50:
@@ -171,6 +171,7 @@ if __name__ == "__main__":
         camera_height=128,
         camera_width=128,
         camera_depth=True,
+        test_cases=[],
     )
 
 
