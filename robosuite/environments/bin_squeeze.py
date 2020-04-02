@@ -66,12 +66,11 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             render_drop_freq=0,
             obj_names=['Can'] * 2 + ['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Cereal'],
             place_num=4,
-            initialize_bound=np.array([0.03, 0.02]),
             obj_poses=np.array([
-                np.array([-0.025, 0.02, 0]),
-                np.array([0.025, 0.02, 0]),
-                np.array([-0.025, -0.02, 0]),
-                np.array([0.025, -0.02, 0])
+                np.array([-0.03, 0.03, 0]),
+                np.array([0.03, 0.03, 0]),
+                np.array([-0.03, -0.03, 0]),
+                np.array([0.03, -0.03, 0])
             ]),
             target_object='Cereal3',
             target_init_pos=np.array([0, 0, 0.131]),
@@ -178,7 +177,6 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.target_object = target_object
         self.target_init_pos = target_init_pos
         self.place_num = place_num
-        self.initialize_bound = initialize_bound
         self.test_cases = test_cases
         self.initialize_objects = False
         self.action_pos_index = np.array([0, 1, 2, 3, 4, 5, 6])
@@ -414,8 +412,8 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             object_names = self.object_names[: -1].copy()
             np.random.shuffle(object_names)
 
-            object_z = 0.08
-            delta = 0.01
+            object_z = 0
+            delta = 0
             indices = np.arange(len(self.obj_poses))
             np.random.shuffle(indices)
 
@@ -430,7 +428,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
                 pos = self.get_abs_pos(obj, object_xy)
                 # quat = self.model.sample_quat()
-                quat = None
+                quat = np.array([1, 0, 0, 0])
                 self.teleport_object(obj, pos[0], pos[1], pos[2], uvwt=quat)
 
                 self._pre_action(None)

@@ -171,6 +171,7 @@ if __name__ == "__main__":
         camera_height=128,
         camera_width=128,
         camera_depth=True,
+        place_num=3,
         test_cases=[],
     )
 
