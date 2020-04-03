@@ -75,7 +75,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             target_object='Cereal3',
             target_init_pos=np.array([0, 0, 0.131]),
             total_steps=200,
-            step_size=0.001,
+            step_size=0.002,
             orientation_scale=0.08,
             energy_tradeoff=0,
             neg_ratio=10,
@@ -717,7 +717,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
                 reward = -10 - self.neg_ratio * (self.total_steps - self.cur_step)
             # success
             elif  z_pos_to_bin <= epsilon:
-                reward = 10 + 2
+                reward = 100
             # above
             else:
                 delta = (self.z_limit - z_pos_to_bin) / self.z_limit

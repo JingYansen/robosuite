@@ -3,7 +3,7 @@ set -ex
 python bin_squeeze_baselines.py \
     --alg ppo2 \
     --num_env 16 \
-    --num_timesteps 1200000 \
+    --num_timesteps 1800000 \
     --nsteps 1024 \
     --noptepochs 20 \
     --nminibatches 4 \
@@ -11,8 +11,7 @@ python bin_squeeze_baselines.py \
     --max 3e-4 \
     --min 3e-4 \
     --network 'cnn' \
-    --energy_tradeoff 0 \
+    --step_size 0.003 \
     --camera_depth True \
-    --place_num 3 \
     --log True \
-    --debug 'version-0.6'
+    --debug 'version-0.7'
