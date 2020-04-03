@@ -1,5 +1,6 @@
 import random
 import time
+import cv2
 
 import numpy as np
 import robosuite as suite
@@ -69,27 +70,20 @@ def test_video(env, video_path='demo/test/test.mp4'):
     import imageio
     writer = imageio.get_writer(video_path, fps=20)
 
-    episodes = 4
+    episodes = 1
     # action = env.action_space.sample()
     # action[0:3] = np.array([1., 0., 0.])
-    action = np.array([0.4, 0.4, -1., 0., 0., 0., 0.])
-    down = np.array([0.1, 0., -1.])
+    # action = np.array([0.4, 0.4, -1., 0., 0., 0., 0.])
+    # down = np.array([0.1, 0., -1.])
     for _ in range(episodes):
         env.reset()
+
+        arr_imgs = []
+        succ = False
+
         for i in range(50):
             # run a uniformly random agent
-            # action = env.action_space.sample()
-
-            # human policy
-            # if i < 50:
-            #     action[0:3] = down.copy()
-            # elif i == 50:
-            #     action = np.array([1., 0., 0., 0., 0., 0., 0.])
-            # else:
-            #     if i % 40 == 0:
-            #         action[0:2] = -action[0:2]
-            #     if i % 50 == 0:
-            #         action[3:7] = -action[3:7]
+            action = env.action_space.sample()
 
             obs, reward, done, info = env.step(action)
 
@@ -98,18 +92,30 @@ def test_video(env, video_path='demo/test/test.mp4'):
                 image = obs[:, :, :-1]
                 depth = obs[:, :, -1]
 
-                import cv2
                 depth_shape = depth.shape
                 depth = depth.reshape(depth_shape[0], depth_shape[1], 1)
                 depth = cv2.cvtColor(depth, cv2.COLOR_GRAY2BGR)
 
                 obs = np.concatenate((image, depth), 0)
 
-            writer.append_data(obs)
-            print("Saving frame #{}".format(i))
+            # writer.append_data(obs)
+            arr_imgs.append(obs)
 
             if done:
+                succ = (reward >= 10)
                 break
+
+        if succ:
+            text = 'Success'
+            color = (0, 255, 0)
+        else:
+            text = 'Fail'
+            color = (255, 0, 0)
+
+        for img in arr_imgs:
+            cv2.putText(img, text, (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1, cv2.LINE_AA)
+
+            writer.append_data(img)
 
     writer.close()
 

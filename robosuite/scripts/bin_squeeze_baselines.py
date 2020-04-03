@@ -3,6 +3,7 @@ import os
 import multiprocessing
 import argparse
 import copy
+import cv2
 
 import os.path as osp
 import numpy as np
@@ -117,10 +118,13 @@ def make_video(model_path, env, args):
     import imageio
     writer = imageio.get_writer(DEMO_PATH, fps=20)
 
-    n_episode = 5
+    n_episode = 20
 
     for i_episode in range(n_episode):
         obs = env.reset()
+
+        arr_imgs = []
+        succ = False
 
         for _ in range(1000):
 
@@ -135,17 +139,31 @@ def make_video(model_path, env, args):
                 image = data[:, :, :-1]
                 depth = data[:, :, -1]
 
-                import cv2
                 depth_shape = depth.shape
                 depth = depth.reshape(depth_shape[0], depth_shape[1], 1)
                 depth = cv2.cvtColor(depth, cv2.COLOR_GRAY2BGR)
 
                 data = np.concatenate((image, depth), 0)
 
-            writer.append_data(data)
+            # writer.append_data(data)
+            arr_imgs.append(data)
 
             if dones[0]:
+                succ = (rewards[0] >= 10)
                 break
+
+        if succ:
+            text = 'Success'
+            color = (0, 255, 0)
+        else:
+            text = 'Fail'
+            color = (255, 0, 0)
+
+        for img in arr_imgs:
+            cv2.putText(img, text, (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1, cv2.LINE_AA)
+
+            writer.append_data(img)
+
 
     writer.close()
     print('Make video over.')
