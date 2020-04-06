@@ -743,7 +743,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         bin_y_high = bin_y_low + self.bin_size[1]
 
         res = True
-        delta_x = 0.02
+        delta_x = 0.03
         delta_y = 0.02
         delta_z = 0.01
 
