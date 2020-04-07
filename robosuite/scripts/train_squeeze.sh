@@ -13,6 +13,6 @@ python bin_squeeze_baselines.py \
     --network 'cnn' \
     --step_size 0.002 \
     --place_num 3 \
-    --camera_depth True \
+    --fix_rotation True \
     --log True \
-    --debug 'version-0.9.1'
+    --debug 'version-0.9.2'

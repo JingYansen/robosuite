@@ -91,6 +91,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
                     np.array([0.03, -0.03, 0])
                 ],
             }],
+            fix_rotation=False,
     ):
         """
         Args:
@@ -179,7 +180,11 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.place_num = place_num
         self.test_cases = test_cases
         self.initialize_objects = False
-        self.action_pos_index = np.array([0, 1, 2, 3, 4, 5, 6])
+        self.fix_rotation = fix_rotation
+        if self.fix_rotation:
+            self.action_dim = 3
+        else:
+            self.action_dim = 7
 
         assert self.place_num <= len(self.obj_names)
 
@@ -254,7 +259,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         low = -high
         self.observation_space = spaces.Box(low=low, high=high)
 
-        high = np.ones(len(self.action_pos_index))
+        high = np.ones(self.action_dim)
         low = -high.copy()
         self.action_space = spaces.Box(low=low, high=high)
 
@@ -614,6 +619,12 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             raise ValueError("executing action in terminated episode")
 
         info = {}
+
+        ## fix rotation
+        if self.fix_rotation:
+            temp = action.copy()
+            action = np.zeros(7)
+            action[0:3] = temp
 
         ## prepare
         if not self.initialize_objects:

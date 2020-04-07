@@ -86,8 +86,8 @@ def test_video(env, video_path='demo/test/test.mp4'):
 
         for i in range(200):
             # run a uniformly random agent
-            # action = env.action_space.sample()
-            action = up.copy()
+            action = env.action_space.sample()
+            # action = up.copy()
 
             obs, reward, done, info = env.step(action)
 
@@ -182,6 +182,7 @@ if __name__ == "__main__":
         camera_width=128,
         camera_depth=True,
         place_num=3,
+        # fix_rotation=True,
         test_cases=[],
     )
 
