@@ -15,4 +15,4 @@ python bin_squeeze_baselines.py \
     --place_num 3 \
     --camera_depth True \
     --log True \
-    --debug 'version-0.9'
+    --debug 'version-0.9.1'

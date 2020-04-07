@@ -80,7 +80,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             energy_tradeoff=0,
             neg_ratio=10,
             force_ratios=[2, 2, 0.4],
-            z_limit=0.17,
+            z_limit=0.2,
             keys='image',
             test_cases=[{
                 'obj_names': ['Can1', 'Can2', 'Milk1', 'Milk2'],

@@ -76,6 +76,7 @@ def test_video(env, video_path='demo/test/test.mp4'):
     # action = np.array([0.4, 0.4, -1., 0., 0., 0., 0.])
     left = np.array([1., 0., 0., 0., 0., 0., 0.])
     front = np.array([0., 1., 0., 0., 0., 0., 0.])
+    up = np.array([0., 0., 1., 0., 0., 0., 0.])
     # down = np.array([0.1, 0., -1.])
     for _ in range(episodes):
         env.reset()
@@ -86,7 +87,7 @@ def test_video(env, video_path='demo/test/test.mp4'):
         for i in range(200):
             # run a uniformly random agent
             # action = env.action_space.sample()
-            action = left.copy()
+            action = up.copy()
 
             obs, reward, done, info = env.step(action)
 
