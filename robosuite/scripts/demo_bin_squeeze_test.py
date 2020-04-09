@@ -73,10 +73,10 @@ def test_video(env, video_path='demo/test/test.mp4'):
     episodes = 1
     # action = env.action_space.sample()
     # action[0:3] = np.array([1., 0., 0.])
-    # action = np.array([0.4, 0.4, -1., 0., 0., 0., 0.])
-    left = np.array([1., 0., 0., 0., 0., 0., 0.])
-    front = np.array([0., 1., 0., 0., 0., 0., 0.])
-    up = np.array([0., 0., 1., 0., 0., 0., 0.])
+    # action = np.array([0, 0, 0., 1., 1., 1., 1.])
+    # left = np.array([1., 0., 0., 0., 0., 0., 0.])
+    # front = np.array([0., 1., 0., 0., 0., 0., 0.])
+    # up = np.array([0., 0., 1., 0., 0., 0., 0.])
     # down = np.array([0.1, 0., -1.])
     for _ in range(episodes):
         env.reset()
@@ -84,10 +84,11 @@ def test_video(env, video_path='demo/test/test.mp4'):
         arr_imgs = []
         succ = False
 
-        for i in range(200):
+        for i in range(100):
             # run a uniformly random agent
             action = env.action_space.sample()
             # action = up.copy()
+            action[0:3] = 0.
 
             obs, reward, done, info = env.step(action)
 
@@ -182,7 +183,7 @@ if __name__ == "__main__":
         camera_width=128,
         camera_depth=True,
         place_num=3,
-        # fix_rotation=True,
+        no_delta=True,
         test_cases=[],
     )
 

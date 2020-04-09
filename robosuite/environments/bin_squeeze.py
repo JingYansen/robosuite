@@ -92,6 +92,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
                 ],
             }],
             fix_rotation=False,
+            no_delta=False,
     ):
         """
         Args:
@@ -181,6 +182,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.test_cases = test_cases
         self.initialize_objects = False
         self.fix_rotation = fix_rotation
+        self.no_delta = no_delta
         if self.fix_rotation:
             self.action_dim = 3
         else:
@@ -497,7 +499,12 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         delta_X, delta_Y, delta_Z = action[4:7].copy()
         angle = self._angle(np.array([X, Y, Z]), np.array([delta_X, delta_Y, delta_Z]))
 
-        new_X, new_Y, new_Z = self._normalize(np.array([X + delta_X, Y + delta_Y, Z + delta_Z]))
+        # (u, v, w, t) is world rotation
+        if self.no_delta:
+            new_X, new_Y, new_Z = self._normalize(np.array([delta_X, delta_Y, delta_Z]))
+        # (u, v, w, t) is the delta rotation
+        else:
+            new_X, new_Y, new_Z = self._normalize(np.array([X + delta_X, Y + delta_Y, Z + delta_Z]))
 
         new_theta = theta + action[3].copy()
         if new_theta >= 2 * np.pi and action[3] > 0:
@@ -631,7 +638,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self.prepare_objects()
 
         ## pre action: remove gravity and other forces.
-        info.update({'theta': self._sigmoid(action[3].copy()), 'old_action': action.copy()})
+        info.update({'theta': action[3].copy(), 'old_action': action.copy()})
         self._pre_action(action)
 
         ## get cur pos
@@ -707,7 +714,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         z_pos = target_pos[2]
 
         # energy
-        energy = self.energy_tradeoff * (info['angle'] / 180 + info['theta'])
+        energy = self.energy_tradeoff * (info['angle'] / 180 + np.abs(info['theta']))
         assert energy <= self.energy_tradeoff * 2 and energy >= 0
 
 

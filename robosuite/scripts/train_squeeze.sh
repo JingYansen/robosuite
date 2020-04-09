@@ -8,11 +8,11 @@ python bin_squeeze_baselines.py \
     --noptepochs 20 \
     --nminibatches 4 \
     --lr_type 'linear' \
-    --max 3e-4 \
-    --min 3e-4 \
+    --max 1e-4 \
+    --min 1e-4 \
     --network 'cnn' \
     --step_size 0.002 \
     --place_num 3 \
-    --fix_rotation True \
+    --no_delta True \
     --log True \
-    --debug 'version-0.9.2'
+    --debug 'version-0.9.3'
