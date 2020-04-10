@@ -76,6 +76,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             target_init_pos=np.array([0, 0, 0.131]),
             total_steps=200,
             step_size=0.002,
+            angle_scale=0.008,
             orientation_scale=0.08,
             energy_tradeoff=0,
             neg_ratio=10,
@@ -192,6 +193,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         self.total_steps = total_steps
         self.step_size = step_size
+        self.angle_scale = angle_scale
         self.orientation_scale = orientation_scale
         self.energy_tradeoff = energy_tradeoff
         self.force_ratios = force_ratios
@@ -261,7 +263,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         low = -high
         self.observation_space = spaces.Box(low=low, high=high)
 
-        high = np.ones(self.action_dim)
+        high = np.inf * np.ones(self.action_dim)
         low = -high.copy()
         self.action_space = spaces.Box(low=low, high=high)
 
@@ -570,7 +572,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         ## normalize orientation
         theta = old_action[3].copy()
-        action[3] = self._sigmoid(theta, 0.5) * 2 * np.pi * self.orientation_scale
+        action[3] = np.tanh(theta) * 2 * np.pi * self.angle_scale
 
         xyz = old_action[4:7].copy()
         action[4:7] = self._normalize(xyz) * self.orientation_scale
@@ -638,7 +640,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self.prepare_objects()
 
         ## pre action: remove gravity and other forces.
-        info.update({'theta': action[3].copy(), 'old_action': action.copy()})
+        info.update({'theta': np.tanh(action[3].copy()), 'old_action': action.copy()})
         self._pre_action(action)
 
         ## get cur pos
