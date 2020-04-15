@@ -612,11 +612,11 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.sim.forward()
 
         # calculate reward
-        reward = self.reward(action, info)
+        reward, done = self.reward(action, info)
 
         # done
         self.cur_step += 1
-        done = (self.cur_step >= self.total_steps) or (np.abs(reward) >= 10)
+        # done = (self.cur_step >= self.total_steps) or (np.abs(reward) >= 10)
         if done:
             print('Done!')
 
@@ -719,10 +719,12 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         energy = self.energy_tradeoff * (info['angle'] / 180 + np.abs(info['theta']))
         assert energy <= self.energy_tradeoff * 2 and energy >= 0
 
+        done = False
 
         # not in bin
         if self.not_in_bin(target_pos[0:3]):
             reward = -10 - self.neg_ratio * (self.total_steps - self.cur_step)
+            done = True
         else:
             # get obj mjcf
             target_obj_mjcf = self.mujoco_objects[self.target_object]
@@ -735,17 +737,20 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             # out of z
             if z_pos_to_bin >= self.z_limit:
                 reward = -10 - self.neg_ratio * (self.total_steps - self.cur_step)
+                done = True
             # success
             elif  z_pos_to_bin <= epsilon:
                 reward = 100
+                done = True
             # above
             else:
                 delta = (self.z_limit - z_pos_to_bin) / self.z_limit
                 reward = delta ** 2 - 1
+                done = False
 
         reward -= energy
         print('Reward: ', reward)
-        return reward
+        return reward, done
 
     def staged_rewards(self):
         """
