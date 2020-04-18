@@ -716,7 +716,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         z_pos = target_pos[2]
 
         # energy
-        energy = self.energy_tradeoff * ((info['theta']) ** 2)
+        energy = self.energy_tradeoff * (np.square(info['theta']))
         assert energy <= self.energy_tradeoff * 2 and energy >= 0
 
         done = False
@@ -750,6 +750,8 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         reward -= energy
         print('Reward: ', reward)
+        # float overflow
+        assert reward <= 100
         return reward, done
 
     def staged_rewards(self):
