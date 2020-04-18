@@ -616,7 +616,8 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         # done
         self.cur_step += 1
-        # done = (self.cur_step >= self.total_steps) or (np.abs(reward) >= 10)
+        if self.cur_step >= self.total_steps:
+            done = True
         if done:
             print('Done!')
 
