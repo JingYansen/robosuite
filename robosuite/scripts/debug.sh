@@ -3,15 +3,15 @@ python bin_squeeze_baselines.py \
     --alg ppo2 \
     --num_env 1 \
     --num_timesteps 1200000 \
-    --nsteps 128 \
-    --noptepochs 20 \
-    --nminibatches 4 \
+    --nsteps 1024 \
+    --noptepochs 10 \
+    --nminibatches 32 \
     --lr_type 'linear' \
-    --max 3e-4 \
-    --min 3e-4 \
+    --max 1e-5 \
+    --min 1e-5 \
     --network 'cnn' \
-    --step_size 0.002 \
+    --energy_tradeoff 0.8 \
+    --ent_coef 0.2 \
     --place_num 3 \
-    --fix_rotation True \
     --log True \
     --debug 'debug'

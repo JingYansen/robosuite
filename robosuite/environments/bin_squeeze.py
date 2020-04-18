@@ -716,7 +716,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         z_pos = target_pos[2]
 
         # energy
-        energy = self.energy_tradeoff * (info['angle'] / 180 + np.abs(info['theta']))
+        energy = self.energy_tradeoff * (np.abs(info['theta']))
         assert energy <= self.energy_tradeoff * 2 and energy >= 0
 
         done = False
