@@ -94,6 +94,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             }],
             fix_rotation=False,
             no_delta=False,
+            random_quat=False,
     ):
         """
         Args:
@@ -184,6 +185,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.initialize_objects = False
         self.fix_rotation = fix_rotation
         self.no_delta = no_delta
+        self.random_quat = random_quat
         if self.fix_rotation:
             self.action_dim = 3
         else:
@@ -421,8 +423,12 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             object_names = self.object_names[: -1].copy()
             np.random.shuffle(object_names)
 
-            object_z = 0
-            delta = 0
+            if self.random_quat:
+                object_z = 0.1
+                delta = 0.03
+            else:
+                object_z = 0
+                delta = 0
             indices = np.arange(len(self.obj_poses))
             np.random.shuffle(indices)
 
@@ -436,8 +442,10 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
                 object_xy = np.array([object_x, object_y, object_z])
 
                 pos = self.get_abs_pos(obj, object_xy)
-                # quat = self.model.sample_quat()
-                quat = np.array([1, 0, 0, 0])
+                if self.random_quat:
+                    quat = self.model.sample_quat()
+                else:
+                    quat = np.array([1, 0, 0, 0])
                 self.teleport_object(obj, pos[0], pos[1], pos[2], uvwt=quat)
 
                 self._pre_action(None)

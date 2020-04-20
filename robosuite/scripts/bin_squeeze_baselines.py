@@ -43,7 +43,8 @@ def get_env_kwargs(args):
     env_kwargs['has_offscreen_renderer'] = args.has_offscreen_renderer
     env_kwargs['camera_depth'] = args.camera_depth
     env_kwargs['fix_rotation'] = args.fix_rotation
-    env_kwargs['no_delta'] = args.no_delta
+    # env_kwargs['no_delta'] = args.no_delta
+    env_kwargs['random_quat'] = args.random_quat
     env_kwargs['neg_ratio'] = args.neg_ratio
     env_kwargs['place_num'] = args.place_num
     env_kwargs['test_cases'] = args.test_cases
@@ -218,8 +219,8 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'env', 'noptepochs', 'batch', 'init', 'entropy', 'fix', 'energy', 'nodelta']
-    values = [args.num_timesteps, args.nsteps, args.num_env, args.noptepochs, args.nminibatches, args.place_num, args.ent_coef, args.fix_rotation, args.energy_tradeoff, args.no_delta]
+    keys = ['total', 'nsteps', 'env', 'noptepochs', 'batch', 'init', 'entropy', 'fix', 'energy', 'random']
+    values = [args.num_timesteps, args.nsteps, args.num_env, args.noptepochs, args.nminibatches, args.place_num, args.ent_coef, args.fix_rotation, args.energy_tradeoff, args.random_quat]
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):
@@ -242,7 +243,7 @@ if __name__ == "__main__":
     parser.add_argument('--has_offscreen_renderer', type=bool, default=True)
     parser.add_argument('--camera_depth', type=bool, default=True)
     parser.add_argument('--fix_rotation', type=bool, default=False)
-    parser.add_argument('--no_delta', type=bool, default=False)
+    parser.add_argument('--random_quat', type=bool, default=False)
     parser.add_argument('--neg_ratio', type=float, default=10)
 
     parser.add_argument('--control_freq', type=int, default=20)

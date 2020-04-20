@@ -11,8 +11,9 @@ python bin_squeeze_baselines.py \
     --max 1e-5 \
     --min 1e-5 \
     --network 'cnn' \
-    --energy_tradeoff 1.5 \
+    --energy_tradeoff 0 \
     --ent_coef 0.2 \
-    --place_num 3 \
+    --place_num 4 \
+    --random_quat True \
     --log True \
-    --debug 'version-0.9.8'
+    --debug 'version-0.9.9'
