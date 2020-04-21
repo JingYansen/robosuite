@@ -16,4 +16,4 @@ python bin_squeeze_baselines.py \
     --place_num 4 \
     --random_quat True \
     --log True \
-    --debug 'version-0.9.9'
+    --debug 'version-0.9.9.1'
