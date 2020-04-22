@@ -183,7 +183,7 @@ if __name__ == "__main__":
         camera_width=128,
         camera_depth=True,
         place_num=3,
-        random_quat=True,
+        # random_quat=True,
         test_cases=[],
     )
 

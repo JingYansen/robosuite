@@ -73,15 +73,15 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
                 np.array([0.03, -0.03, 0])
             ]),
             target_object='Cereal3',
-            target_init_pos=np.array([0, 0, 0.131]),
-            total_steps=200,
+            target_init_pos=np.array([0, 0, 0.17]),
+            total_steps=400,
             step_size=0.002,
             angle_scale=0.08,
             orientation_scale=0.08,
             energy_tradeoff=0,
             neg_ratio=10,
             force_ratios=[3, 3, 0.3],
-            z_limit=0.2,
+            z_limit=0.21,
             keys='image',
             test_cases=[{
                 'obj_names': ['Can1', 'Can2', 'Milk1', 'Milk2'],
