@@ -4,7 +4,7 @@ python bin_squeeze_baselines.py \
     --alg ppo2 \
     --num_env 16 \
     --num_timesteps 2000000 \
-    --nsteps 512 \
+    --nsteps 1024 \
     --noptepochs 10 \
     --nminibatches 32 \
     --lr_type 'linear' \

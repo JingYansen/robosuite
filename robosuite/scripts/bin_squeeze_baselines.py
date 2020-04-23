@@ -219,8 +219,8 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'env', 'noptepochs', 'batch', 'init', 'entropy', 'fix', 'energy', 'random']
-    values = [args.num_timesteps, args.nsteps, args.num_env, args.noptepochs, args.nminibatches, args.place_num, args.ent_coef, args.fix_rotation, args.energy_tradeoff, args.random_quat]
+    keys = ['total', 'nsteps', 'env', 'noptepochs', 'batch', 'init', 'entropy', 'fix', 'energy', 'limit', 'random']
+    values = [args.num_timesteps, args.nsteps, args.num_env, args.noptepochs, args.nminibatches, args.place_num, args.ent_coef, args.fix_rotation, args.energy_tradeoff, args.total_steps, args.random_quat]
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):
