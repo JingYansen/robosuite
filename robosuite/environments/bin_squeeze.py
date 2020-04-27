@@ -95,6 +95,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             fix_rotation=False,
             no_delta=False,
             random_quat=False,
+            stack_freq=0,
     ):
         """
         Args:
@@ -186,10 +187,13 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.fix_rotation = fix_rotation
         self.no_delta = no_delta
         self.random_quat = random_quat
+        self.stack_freq = stack_freq
         if self.fix_rotation:
             self.action_dim = 3
         else:
             self.action_dim = 7
+        if self.stack_freq:
+            self.stack = []
 
         assert self.place_num <= len(self.obj_names)
 
@@ -201,6 +205,8 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.force_ratios = force_ratios
         self.z_limit = z_limit
         self.cur_step = 0
+        self.total_reward = 0
+        self.over_times = 0
 
         self.render_drop_freq = render_drop_freq
 
@@ -420,8 +426,37 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
     def prepare_objects(self):
         if not self.test_cases:
-            object_names = self.object_names[: -1].copy()
-            np.random.shuffle(object_names)
+
+            ## if stack
+            if self.stack_freq:
+                ## reset
+                if self.over_times == 0:
+                    self.stack = []
+
+                num_objects = len(self.object_names[: -1])
+                ## push a new case
+                if self.over_times % self.stack_freq == 0:
+                    ## random one
+                    object_names = self.object_names[: -1].copy()
+                    np.random.shuffle(object_names)
+
+                    indices = np.arange(len(self.obj_poses))
+                    np.random.shuffle(indices)
+
+                    new_case = object_names + indices.tolist()
+
+                    self.stack.append(new_case)
+                ## sample from stack
+                new_case = choice(self.stack)
+                object_names = new_case[:num_objects]
+                indices = new_case[num_objects:]
+            ## no stack
+            else:
+                object_names = self.object_names[: -1].copy()
+                np.random.shuffle(object_names)
+
+                indices = np.arange(len(self.obj_poses))
+                np.random.shuffle(indices)
 
             if self.random_quat:
                 object_z = 0.1
@@ -429,8 +464,6 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             else:
                 object_z = 0
                 delta = 0
-            indices = np.arange(len(self.obj_poses))
-            np.random.shuffle(indices)
 
             for i, _ in zip(indices, range(self.place_num)):
                 obj = object_names[i]
@@ -670,7 +703,11 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         ## post action: calculate reward
         reward, done, info = self._post_action(action, info)
+        self.total_reward += reward
         if done:
+            self.over_times += 1
+            info['stack_len'] = len(self.stack)
+            info['total_reward'] = self.total_reward
             info['num_steps'] = self.cur_step
             if reward >= 10:
                 info['num_steps_succ'] = self.cur_step
@@ -714,6 +751,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         # reset cur step
         self.cur_step = 0
+        self.total_reward = 0
 
         self.initialize_objects = False
         for obj in self.object_names:
