@@ -192,8 +192,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             self.action_dim = 3
         else:
             self.action_dim = 7
-        if self.stack_freq:
-            self.stack = []
+        self.stack = []
 
         assert self.place_num <= len(self.obj_names)
 
