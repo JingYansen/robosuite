@@ -43,7 +43,8 @@ def get_env_kwargs(args):
     env_kwargs['has_offscreen_renderer'] = args.has_offscreen_renderer
     env_kwargs['camera_depth'] = args.camera_depth
     env_kwargs['fix_rotation'] = args.fix_rotation
-    # env_kwargs['no_delta'] = args.no_delta
+    env_kwargs['random_target'] = args.random_target
+
     env_kwargs['random_quat'] = args.random_quat
     env_kwargs['neg_ratio'] = args.neg_ratio
     env_kwargs['place_num'] = args.place_num
@@ -54,8 +55,6 @@ def get_env_kwargs(args):
     env_kwargs['orientation_scale'] = args.orientation_scale
     env_kwargs['energy_tradeoff'] = args.energy_tradeoff
 
-    # hard_case_train, hard_case_test = get_hard_cases()
-    # env_kwargs['obj_poses'] = hard_case_train
 
     env_kwargs['keys'] = args.keys
 
@@ -81,7 +80,6 @@ def get_params(args):
 def train(args):
     total_timesteps = int(args.num_timesteps)
     seed = args.seed
-    args.env_id, args.env_type = 'BinPack-v0', 'mujoco'
 
     # get params
     alg_kwargs = get_params(args)
@@ -110,7 +108,7 @@ def build_env(args):
     # make env in gym
     env_kwargs = get_env_kwargs(args)
 
-    env = make_vec_env('BinSqueeze-v0', n_envs=args.num_env, env_kwargs=env_kwargs)
+    env = make_vec_env(args.env_id, n_envs=args.num_env, env_kwargs=env_kwargs)
     return env
 
 
@@ -261,7 +259,7 @@ if __name__ == "__main__":
     parser.add_argument('--keys', type=str, default='image', choices=['image'])
 
     ## alg args
-    parser.add_argument('--out_dir', type=str, default='results_squeeze')
+    parser.add_argument('--env_id', type=str, default='BinSqueeze-v0')
     parser.add_argument('--alg', type=str, default='ppo2')
     parser.add_argument('--num_env', type=int, default=8)
     parser.add_argument('--load_path', type=str, default='gg')
@@ -304,7 +302,7 @@ if __name__ == "__main__":
 
     info_dir = get_info_dir(args)
 
-    dir_list = [PATH, args.out_dir, args.debug,
+    dir_list = [PATH, args.env_id, args.debug,
                 'fix_rotation_' + str(args.fix_rotation),  'random_target_' + str(args.random_target),
                 info_dir]
 
