@@ -70,7 +70,7 @@ def test_video(env, video_path='demo/test/test.mp4'):
     import imageio
     writer = imageio.get_writer(video_path, fps=20)
 
-    episodes = 12
+    episodes = 4
     # action = env.action_space.sample()
     # action[0:3] = np.array([1., 0., 0.])
     # action = np.array([0, 0, 0., 1., 1., 1., 1.])
@@ -185,7 +185,7 @@ if __name__ == "__main__":
         place_num=4,
         stack_freq=0,
         # random_quat=True,
-        total_steps=50,
+        total_steps=200,
         test_cases=[],
     )
 

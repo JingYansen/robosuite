@@ -11,10 +11,10 @@ python bin_squeeze_baselines.py \
     --max 1e-5 \
     --min 1e-5 \
     --network 'cnn' \
-    --energy_tradeoff 0 \
     --ent_coef 0.2 \
     --total_steps 200 \
-    --place_num 1 \
+    --place_num 0 \
+    --random_target True \
     --fix_rotation True \
     --log True \
-    --debug 'version-0.9.9.4'
+    --debug 'version-0.9.9.5'

@@ -49,7 +49,6 @@ def get_env_kwargs(args):
     env_kwargs['place_num'] = args.place_num
     env_kwargs['test_cases'] = args.test_cases
 
-    env_kwargs['stack_freq'] = args.stack_freq
     env_kwargs['total_steps'] = args.total_steps
     env_kwargs['step_size'] = args.step_size
     env_kwargs['orientation_scale'] = args.orientation_scale
@@ -220,8 +219,8 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'env', 'noptepochs', 'batch', 'init', 'entropy', 'fix', 'energy', 'limit', 'random']
-    values = [args.num_timesteps, args.nsteps, args.num_env, args.noptepochs, args.nminibatches, args.place_num, args.ent_coef, args.fix_rotation, args.energy_tradeoff, args.total_steps, args.random_quat]
+    keys = ['total', 'nsteps', 'noptepochs', 'batch', 'init', 'limit', 'random']
+    values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.place_num, args.total_steps, args.random_quat]
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):
@@ -245,13 +244,13 @@ if __name__ == "__main__":
     parser.add_argument('--camera_depth', type=bool, default=True)
     parser.add_argument('--fix_rotation', type=bool, default=False)
     parser.add_argument('--random_quat', type=bool, default=False)
+    parser.add_argument('--random_target', type=bool, default=False)
     parser.add_argument('--neg_ratio', type=float, default=10)
 
     parser.add_argument('--control_freq', type=int, default=20)
     parser.add_argument('--camera_height', type=int, default=64)
     parser.add_argument('--camera_width', type=int, default=64)
 
-    parser.add_argument('--stack_freq', type=int, default=0)
     parser.add_argument('--total_steps', type=int, default=400)
     parser.add_argument('--step_size', type=float, default=0.002)
     parser.add_argument('--orientation_scale', type=float, default=0.1)
@@ -305,7 +304,11 @@ if __name__ == "__main__":
 
     info_dir = get_info_dir(args)
 
-    args.save_dir = os.path.join(PATH, args.out_dir, args.debug, info_dir)
+    dir_list = [PATH, args.out_dir, args.debug,
+                'fix_rotation_' + str(args.fix_rotation),  'random_target_' + str(args.random_target),
+                info_dir]
+
+    args.save_dir = os.path.join(*dir_list)
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
     else:

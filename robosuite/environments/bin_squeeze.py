@@ -64,7 +64,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             camera_width=64,
             camera_depth=False,
             render_drop_freq=0,
-            obj_names=['Can'] * 2 + ['Milk'] * 2 + ['Bread'] * 2 + ['Cereal'] * 2 + ['Cereal'],
+            obj_names=['Can'] * 3 + ['Milk'] * 3 + ['Bread'] * 3 + ['Cereal'] * 3,
             place_num=4,
             obj_poses=np.array([
                 np.array([-0.03, 0.03, 0]),
@@ -95,6 +95,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             fix_rotation=False,
             no_delta=False,
             random_quat=False,
+            random_target=True,
             stack_freq=0,
     ):
         """
@@ -179,7 +180,6 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         # task settings
         self.obj_names = obj_names
         self.obj_poses = obj_poses
-        self.target_object = target_object
         self.target_init_pos = target_init_pos
         self.place_num = place_num
         self.test_cases = test_cases
@@ -187,7 +187,14 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.fix_rotation = fix_rotation
         self.no_delta = no_delta
         self.random_quat = random_quat
+        self.random_target = random_target
         self.stack_freq = stack_freq
+
+        if self.random_target:
+            self.target_object = choice(obj_names) + '1'
+        else:
+            self.target_object = target_object
+
         if self.fix_rotation:
             self.action_dim = 3
         else:
@@ -428,30 +435,32 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
             ## if stack
             if self.stack_freq:
-                ## reset
-                if self.over_times == 0:
-                    self.stack = []
-
-                num_objects = len(self.object_names[: -1])
-                ## push a new case
-                if self.over_times % self.stack_freq == 0:
-                    ## random one
-                    object_names = self.object_names[: -1].copy()
-                    np.random.shuffle(object_names)
-
-                    indices = np.arange(len(self.obj_poses))
-                    np.random.shuffle(indices)
-
-                    new_case = object_names + indices.tolist()
-
-                    self.stack.append(new_case)
-                ## sample from stack
-                new_case = choice(self.stack)
-                object_names = new_case[:num_objects]
-                indices = new_case[num_objects:]
+                raise ValueError('stack freq should be 0.')
+                # ## reset
+                # if self.over_times == 0:
+                #     self.stack = []
+                #
+                # num_objects = len(self.object_names[: -1])
+                # ## push a new case
+                # if self.over_times % self.stack_freq == 0:
+                #     ## random one
+                #     object_names = self.object_names[: -1].copy()
+                #     np.random.shuffle(object_names)
+                #
+                #     indices = np.arange(len(self.obj_poses))
+                #     np.random.shuffle(indices)
+                #
+                #     new_case = object_names + indices.tolist()
+                #
+                #     self.stack.append(new_case)
+                # ## sample from stack
+                # new_case = choice(self.stack)
+                # object_names = new_case[:num_objects]
+                # indices = new_case[num_objects:]
             ## no stack
             else:
-                object_names = self.object_names[: -1].copy()
+                object_names = self.object_names.copy()
+                object_names.remove(self.target_object)
                 np.random.shuffle(object_names)
 
                 indices = np.arange(len(self.obj_poses))
@@ -751,6 +760,9 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         # reset cur step
         self.cur_step = 0
         self.total_reward = 0
+
+        if self.random_target:
+            self.target_object = choice(self.obj_names) + '1'
 
         self.initialize_objects = False
         for obj in self.object_names:
