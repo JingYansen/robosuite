@@ -70,23 +70,24 @@ def test_video(env, video_path='demo/test/test.mp4'):
     import imageio
     writer = imageio.get_writer(video_path, fps=20)
 
-    episodes = 4
+    episodes = 1
     # action = env.action_space.sample()
     # action[0:3] = np.array([1., 0., 0.])
     # action = np.array([0, 0, 0., 1., 1., 1., 1.])
     # left = np.array([1., 0., 0., 0., 0., 0., 0.])
     # front = np.array([0., 1., 0., 0., 0., 0., 0.])
-    # up = np.array([0., 0., 1., 0., 0., 0., 0.])
-    # down = np.array([0.1, 0., -1.])
+    up = np.array([0., 0., 1.])
+    down = np.array([0., 0., -1.])
     for _ in range(episodes):
         env.reset()
 
         arr_imgs = []
         succ = False
 
-        for i in range(100):
+        for i in range(1000):
             # run a uniformly random agent
             action = env.action_space.sample()
+            action[2] = -0.3
             # action = up.copy()
             # action[0:3] = 0.
 
@@ -173,7 +174,7 @@ if __name__ == "__main__":
     case_train, case_test = get_hard_cases()
 
     env = suite.make(
-        'BinSqueeze',
+        'BinSqueezeMulti',
         has_renderer=False,
         has_offscreen_renderer=True,
         ignore_done=True,
@@ -182,10 +183,10 @@ if __name__ == "__main__":
         camera_height=128,
         camera_width=128,
         camera_depth=True,
-        place_num=4,
-        stack_freq=0,
+        place_num=5,
         # random_quat=True,
-        total_steps=200,
+        fix_rotation=True,
+        total_steps=1000,
         test_cases=[],
     )
 

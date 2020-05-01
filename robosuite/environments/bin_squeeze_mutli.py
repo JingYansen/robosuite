@@ -86,6 +86,7 @@ class BinSqueezeMulti(SawyerEnv, mujoco_env.MujocoEnv):
             no_delta=False,
             random_quat=False,
             random_target=True,
+            test_cases=[],
     ):
         """
         Args:
@@ -580,10 +581,8 @@ class BinSqueezeMulti(SawyerEnv, mujoco_env.MujocoEnv):
 
         # done
         self.cur_step += 1
-        if self.cur_step >= self.total_steps:
-            done = True
         if done:
-            print('Done!')
+            print('This Done!')
 
         return reward, done, info
 
@@ -643,9 +642,20 @@ class BinSqueezeMulti(SawyerEnv, mujoco_env.MujocoEnv):
                     info['succ'] = 0
 
                 done = True
+                print('All done!')
             ## next
             else:
+                ## if out of bound clear this
+                if reward < -10:
+                    self.remove_object(self.target_object)
+
+                ## set next
                 self.initialize_objects = False
+                done = False
+        else:
+            if self.cur_step >= self.total_steps:
+                done = True
+            else:
                 done = False
 
         ## obs
@@ -712,14 +722,14 @@ class BinSqueezeMulti(SawyerEnv, mujoco_env.MujocoEnv):
 
             # calculate z offset relative to bin
             z_pos_to_bin = z_pos - (self.model.bin2_offset[2] - bottom_offset[2])
-            epsilon = 1e-4
+            epsilon = 2e-4
 
             # out of z
             if z_pos_to_bin >= self.z_limit:
                 reward = -10 - self.neg_ratio * (self.total_steps - self.cur_step)
                 done = True
             # success
-            elif  z_pos_to_bin <= epsilon:
+            elif z_pos_to_bin <= epsilon:
                 reward = 100
                 done = True
             # above

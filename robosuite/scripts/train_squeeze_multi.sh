@@ -4,7 +4,7 @@ python bin_squeeze_baselines.py \
     --env_id 'BinSqueezeMulti-v0' \
     --alg ppo2 \
     --num_env 16 \
-    --num_timesteps 3000000 \
+    --num_timesteps 2000000 \
     --nsteps 2048 \
     --noptepochs 10 \
     --nminibatches 64 \

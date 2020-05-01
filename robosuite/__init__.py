@@ -11,6 +11,7 @@ from robosuite.environments.baxter_peg_in_hole import BaxterPegInHole
 
 from robosuite.environments.bin_pack_place import BinPackPlace
 from robosuite.environments.bin_squeeze import BinSqueeze
+from robosuite.environments.bin_squeeze_mutli import BinSqueezeMulti
 
 __version__ = "0.3.0"
 __logo__ = """
