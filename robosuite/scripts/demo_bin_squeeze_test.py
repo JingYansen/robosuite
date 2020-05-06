@@ -70,7 +70,11 @@ def test_video(env, video_path='demo/test/test.mp4'):
     import imageio
     writer = imageio.get_writer(video_path, fps=20)
 
-    episodes = 1
+    episodes = 4
+    num_succ = 0
+    steps = 0
+    succ_steps = 0
+    avg_reward = 0
     # action = env.action_space.sample()
     # action[0:3] = np.array([1., 0., 0.])
     # action = np.array([0, 0, 0., 1., 1., 1., 1.])
@@ -92,6 +96,7 @@ def test_video(env, video_path='demo/test/test.mp4'):
             # action[0:3] = 0.
 
             obs, reward, done, info = env.step(action)
+            avg_reward += reward
 
             # contains depth
             if obs.shape[-1] == 4:
@@ -108,10 +113,13 @@ def test_video(env, video_path='demo/test/test.mp4'):
             arr_imgs.append(obs)
 
             if done:
+                steps += i
                 succ = (reward >= 10)
                 break
 
         if succ:
+            num_succ += 1
+            succ_steps += steps
             text = 'Success'
             color = (0, 255, 0)
         else:
@@ -124,6 +132,10 @@ def test_video(env, video_path='demo/test/test.mp4'):
             writer.append_data(img)
 
     writer.close()
+    print('succ rate:', num_succ / episodes)
+    print('avg steps:', steps / episodes)
+    print('succ steps:', succ_steps / episodes)
+    print('avg reward:', avg_reward / episodes)
 
 
 def adjust_camera_pos(env):

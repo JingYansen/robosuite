@@ -630,19 +630,7 @@ class BinSqueezeMulti(SawyerEnv, mujoco_env.MujocoEnv):
             self.success_objs += 1
             ## finish
             if self.success_objs == self.place_num:
-                self.over_times += 1
-                info['stack_len'] = len(self.stack)
-                info['total_reward'] = self.total_reward
-                info['num_steps'] = self.cur_step
-                if reward >= 10:
-                    info['num_steps_succ'] = self.cur_step
-                    info['succ'] = 1
-                else:
-                    info['num_steps_fail'] = self.cur_step
-                    info['succ'] = 0
-
                 done = True
-                print('All done!')
             ## next
             else:
                 ## if out of bound clear this
@@ -658,6 +646,17 @@ class BinSqueezeMulti(SawyerEnv, mujoco_env.MujocoEnv):
             else:
                 done = False
 
+        if done:
+            print('All done!')
+            info['stack_len'] = len(self.stack)
+            info['total_reward'] = self.total_reward
+            info['num_steps'] = self.cur_step
+            if self.success_objs == self.place_num:
+                info['num_steps_succ'] = self.cur_step
+                info['succ'] = 1
+            else:
+                info['num_steps_fail'] = self.cur_step
+                info['succ'] = 0
         ## obs
         ob_dict = self._get_observation()
 
