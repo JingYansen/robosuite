@@ -651,6 +651,7 @@ class BinSqueezeMulti(SawyerEnv, mujoco_env.MujocoEnv):
             info['stack_len'] = len(self.stack)
             info['total_reward'] = self.total_reward
             info['num_steps'] = self.cur_step
+            info['success_objs'] = self.success_objs
             if self.success_objs == self.place_num:
                 info['num_steps_succ'] = self.cur_step
                 info['succ'] = 1
