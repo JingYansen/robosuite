@@ -14,7 +14,8 @@ python bin_squeeze_baselines.py \
     --ent_coef 0.2 \
     --total_steps 200 \
     --place_num 0 \
+    --camera_type 'depth' \
     --random_target True \
     --fix_rotation True \
     --log True \
-    --debug 'version-0.9.9.5'
+    --debug 'version-0.9.9.6'

@@ -41,7 +41,7 @@ def get_env_kwargs(args):
     env_kwargs['use_camera_obs'] = args.use_camera_obs
     env_kwargs['has_renderer'] = args.has_renderer
     env_kwargs['has_offscreen_renderer'] = args.has_offscreen_renderer
-    env_kwargs['camera_depth'] = args.camera_depth
+    env_kwargs['camera_type'] = args.camera_type
     env_kwargs['fix_rotation'] = args.fix_rotation
     env_kwargs['random_target'] = args.random_target
 
@@ -134,7 +134,7 @@ def make_video(model_path, env, args):
 
             obs, rewards, dones, info = env.step(action)
 
-            data = obs[0]
+            data = info[0]['vis']
             # contains depth
             if data.shape[-1] == 4:
                 image = data[:, :, :-1]
@@ -239,7 +239,7 @@ if __name__ == "__main__":
     parser.add_argument('--has_renderer', type=bool, default=False)
     parser.add_argument('--use_camera_obs', type=bool, default=True)
     parser.add_argument('--has_offscreen_renderer', type=bool, default=True)
-    parser.add_argument('--camera_depth', type=bool, default=True)
+    parser.add_argument('--camera_type', type=str, default='image+depth')
     parser.add_argument('--fix_rotation', type=bool, default=False)
     parser.add_argument('--random_quat', type=bool, default=False)
     parser.add_argument('--random_target', type=bool, default=False)
@@ -302,7 +302,7 @@ if __name__ == "__main__":
 
     info_dir = get_info_dir(args)
 
-    dir_list = [PATH, args.env_id, args.debug,
+    dir_list = [PATH, args.env_id, args.debug, args.camera_type,
                 'fix_rotation_' + str(args.fix_rotation),  'random_target_' + str(args.random_target),
                 info_dir]
 

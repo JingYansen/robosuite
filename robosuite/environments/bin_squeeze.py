@@ -62,7 +62,8 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
             camera_name="targetview",
             camera_height=64,
             camera_width=64,
-            camera_depth=False,
+            camera_depth=True,
+            camera_type='image+depth',
             render_drop_freq=0,
             obj_names=['Can'] * 3 + ['Milk'] * 3 + ['Bread'] * 3 + ['Cereal'] * 3,
             place_num=4,
@@ -189,6 +190,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         self.random_quat = random_quat
         self.random_target = random_target
         self.stack_freq = stack_freq
+        self.camera_type = camera_type
 
         if self.random_target:
             self.target_object = choice(obj_names) + '1'
@@ -726,6 +728,7 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
 
         ## obs
         ob_dict = self._get_observation()
+        info['vis'] = ob_dict['vis']
 
         return self._flatten_obs(ob_dict), reward, done, info
 
@@ -858,29 +861,38 @@ class BinSqueeze(SawyerEnv, mujoco_env.MujocoEnv):
         di = super()._get_observation()
 
         if self.use_camera_obs:
-            if self.camera_depth:
-                front_image, front_depth = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='frontview', depth=self.camera_depth)
-                side_image, side_depth = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='sideview', depth=self.camera_depth)
-                bird_image, bird_depth = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview', depth=self.camera_depth)
-                image = np.concatenate((front_image, side_image, bird_image), 1)
-                depth = np.concatenate((front_depth, side_depth, bird_depth), 1)
+            front_image, front_depth = self.sim.render(width=self.camera_width, height=self.camera_height,
+                                                       camera_name='frontview', depth=self.camera_depth)
+            side_image, side_depth = self.sim.render(width=self.camera_width, height=self.camera_height,
+                                                     camera_name='sideview', depth=self.camera_depth)
+            bird_image, bird_depth = self.sim.render(width=self.camera_width, height=self.camera_height,
+                                                     camera_name='birdview', depth=self.camera_depth)
 
-                # norm
-                depth_max = 0.99
-                depth_min = 0.85
-                depth = (depth - depth_min) / (depth_max - depth_min)
-                depth = np.clip(depth, 0, 1)
-                depth = np.uint8(depth * 255)
+            image = np.concatenate((front_image, side_image, bird_image), 1)
+            depth = np.concatenate((front_depth, side_depth, bird_depth), 1)
 
-                depth_shape = depth.shape
-                depth = depth.reshape(depth_shape[0], depth_shape[1], 1)
+            # norm
+            depth_max = 0.99
+            depth_min = 0.85
+            depth = (depth - depth_min) / (depth_max - depth_min)
+            depth = np.clip(depth, 0, 1)
+            depth = np.uint8(depth * 255)
 
-                di["image"] = np.concatenate((image, depth), 2)
+            depth_shape = depth.shape
+            depth = depth.reshape(depth_shape[0], depth_shape[1], 1)
+
+            imgae_depth = np.concatenate((image, depth), 2)
+
+            if self.camera_type == 'image+depth':
+                di["image"] = imgae_depth
+            elif self.camera_type == 'image':
+                di["image"] = image
+            elif self.camera_type == 'depth':
+                di["image"] = depth
             else:
-                front_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='frontview')
-                side_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='sideview')
-                bird_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview')
-                di["image"] = np.concatenate((front_image, side_image, bird_image), 1)
+                raise ValueError('No such camera type: ', self.camera_type)
+
+            di['vis'] = imgae_depth
 
         return di
 
