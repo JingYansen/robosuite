@@ -205,9 +205,10 @@ if __name__=='__main__':
 
     ## policy dir, use model_1.pth, model_2.pth, model_3.pth...
     parser.add_argument('--load_dir', type=str, default='results/MultiStage/multi_test_dir')
-    parser.add_argument('--video_path', type=str, default='results/MultiStage/multi_test_dir/multi_test.mp4')
+    # parser.add_argument('--video_path', type=str, default='results/MultiStage/multi_test_dir/multi_test.mp4')
 
     args = parser.parse_args()
+    args.video_path = os.path.join(args.load_dir, 'demo.mp4')
 
     ## begin
     total_timesteps = int(args.num_timesteps)
