@@ -330,7 +330,7 @@ if __name__ == "__main__":
 
     model, env = train(args)
 
-    if args.save_path is not None and rank == 0:
+    if args.save_path is not None:
         save_path = osp.expanduser(args.save_path)
         model.save(save_path)
         logger.log('Save to ', args.save_dir)
