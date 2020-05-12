@@ -663,6 +663,7 @@ class BinSqueezeMulti(SawyerEnv, mujoco_env.MujocoEnv):
         ## obs
         ob_dict = self._get_observation()
         info['vis'] = ob_dict['vis']
+        info['this_down'] = this_done
 
         return self._flatten_obs(ob_dict), reward, done, info
 

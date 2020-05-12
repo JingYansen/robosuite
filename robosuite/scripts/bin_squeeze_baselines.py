@@ -120,6 +120,7 @@ def make_video(model_path, env, args):
     writer = imageio.get_writer(DEMO_PATH, fps=20)
 
     n_episode = 20
+    acc = 0
 
     for i_episode in range(n_episode):
         obs = env.reset()
@@ -154,6 +155,7 @@ def make_video(model_path, env, args):
                 break
 
         if succ:
+            acc += 1
             text = 'Success'
             color = (0, 255, 0)
         else:
@@ -169,6 +171,8 @@ def make_video(model_path, env, args):
     writer.close()
     print('Make video over.')
     print('Video path: ', DEMO_PATH)
+    acc /= n_episode
+    print('Acc rate: ', acc)
 
 
 def test(model, env, args):
@@ -217,8 +221,8 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'noptepochs', 'batch', 'init', 'limit', 'random']
-    values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.place_num, args.total_steps, args.random_quat]
+    keys = ['total', 'nsteps', 'noptepochs', 'batch', 'init', 'limit', 'random', 'ent']
+    values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.place_num, args.total_steps, args.random_quat, args.ent_coef]
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):
@@ -302,7 +306,7 @@ if __name__ == "__main__":
 
     info_dir = get_info_dir(args)
 
-    dir_list = [PATH, args.env_id, args.debug, args.camera_type,
+    dir_list = [PATH, 'results', args.env_id, args.debug, args.camera_type,
                 'fix_rotation_' + str(args.fix_rotation),  'random_target_' + str(args.random_target),
                 info_dir]
 

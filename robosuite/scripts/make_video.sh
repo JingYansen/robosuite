@@ -8,13 +8,18 @@ python bin_squeeze_baselines.py \
     --noptepochs 10 \
     --nminibatches 32 \
     --lr_type 'linear' \
-    --max 2e-5 \
+    --max 1e-5 \
     --min 1e-5 \
     --network 'cnn' \
     --energy_tradeoff 0.8 \
     --ent_coef 0.1 \
-    --place_num 3 \
-    --load_path 'results_squeeze/version-0.9.5/ppo2_cnn_linear_2e-05_1e-05_1500000total_1024nsteps_16env_10noptepochs_32batch_3init_0.1entropy_Falsefix_0.8energy_Falsenodelta_64x64/checkpoints/00001.zip' \
+    --place_num 0 \
+    --env_id 'BinSqueeze-v0' \
+    --camera_type 'image+depth' \
+    --fix_rotation True \
+    --random_quat True \
+    --random_target True \
+    --load_path '/home/yeweirui/code/robosuite/robosuite/scripts/results/MultiStage/multi_test_dir/model_0.pth' \
     --video_name 'demo.mp4' \
     --log True \
-    --debug 'make_video'
+    --debug 'temp_video'
