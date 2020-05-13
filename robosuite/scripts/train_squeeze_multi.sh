@@ -18,4 +18,4 @@ python bin_squeeze_baselines.py \
     --camera_type 'image+depth' \
     --fix_rotation True \
     --log True \
-    --debug 'version-1.0.1'
+    --debug 'version-1.0.2'

@@ -579,14 +579,14 @@ class BinSqueezeMulti(SawyerEnv, mujoco_env.MujocoEnv):
         self.sim.forward()
 
         # calculate reward
-        reward, done = self.reward(action, info)
+        reward, done, succ = self.reward(action, info)
 
         # done
         self.cur_step += 1
         if done:
             print('This Done!')
 
-        return reward, done, info
+        return reward, done, succ, info
 
     def step(self, action):
         """Takes a step in simulation with control command @action."""
@@ -626,21 +626,23 @@ class BinSqueezeMulti(SawyerEnv, mujoco_env.MujocoEnv):
             self.cur_time += self.model_timestep
 
         ## post action: calculate reward
-        reward, this_done, info = self._post_action(action, info)
+        reward, this_done, this_succ, info = self._post_action(action, info)
         self.total_reward += reward
         if this_done:
-            self.success_objs += 1
-            ## finish
-            if self.success_objs == self.place_num:
-                done = True
-            ## next
+            ## flag: choose next
+            self.initialize_objects = False
+            ## this succ
+            if this_succ:
+                self.success_objs += 1
+                ## finish
+                if self.success_objs == self.place_num:
+                    done = True
+                ## not finish and next
+                else:
+                    done = False
+            ## this fail and next
             else:
-                ## if out of bound clear this
-                if reward < -10:
-                    self.remove_object(self.target_object)
-
-                ## set next
-                self.initialize_objects = False
+                self.remove_object(self.target_object)
                 done = False
 
             self._finish_a_target()
@@ -656,7 +658,7 @@ class BinSqueezeMulti(SawyerEnv, mujoco_env.MujocoEnv):
             info['total_reward'] = self.total_reward
             info['num_steps'] = self.cur_step
             info['success_objs'] = self.success_objs
-            if this_done and self.success_objs == self.place_num:
+            if this_succ and self.success_objs == self.place_num:
                 info['num_steps_succ'] = self.cur_step
                 info['succ'] = 1
             else:
@@ -721,6 +723,7 @@ class BinSqueezeMulti(SawyerEnv, mujoco_env.MujocoEnv):
         if self.not_in_bin(target_pos[0:3]):
             reward = -10 - self.neg_ratio * (self.total_steps - self.cur_step)
             done = True
+            succ = False
         else:
             # get obj mjcf
             target_obj_mjcf = self.mujoco_objects[self.target_object]
@@ -734,21 +737,24 @@ class BinSqueezeMulti(SawyerEnv, mujoco_env.MujocoEnv):
             if z_pos_to_bin >= self.z_limit:
                 reward = -10 - self.neg_ratio * (self.total_steps - self.cur_step)
                 done = True
+                succ = False
             # success
             elif z_pos_to_bin <= epsilon:
                 reward = 100
                 done = True
+                succ = True
             # above
             else:
                 delta = (self.z_limit - z_pos_to_bin) / self.z_limit
                 reward = delta ** 2 - 1
                 done = False
+                succ = False
 
         reward -= energy
         print('Reward: ', reward)
         # float overflow
         assert reward <= 100
-        return reward, done
+        return reward, done, succ
 
     def staged_rewards(self):
         """
