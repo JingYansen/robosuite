@@ -86,10 +86,11 @@ def build_env(args):
 def make_video_multiPolicy(args, env, policies):
     DEMO_PATH = args.video_path
 
-    import imageio
-    writer = imageio.get_writer(DEMO_PATH, fps=20)
+    if args.make_video:
+        import imageio
+        writer = imageio.get_writer(DEMO_PATH, fps=20)
 
-    n_episode = 30
+    n_episode = 40
     acc = 0
 
     assert len(policies) <= args.place_num
@@ -117,20 +118,22 @@ def make_video_multiPolicy(args, env, policies):
             if info[0]['this_down']:
                 policy_id += 1
 
-            data = info[0]['vis']
-            # contains depth
-            if data.shape[-1] == 4:
-                image = data[:, :, :-1]
-                depth = data[:, :, -1]
+            if args.make_video:
 
-                depth_shape = depth.shape
-                depth = depth.reshape(depth_shape[0], depth_shape[1], 1)
-                depth = cv2.cvtColor(depth, cv2.COLOR_GRAY2BGR)
+                data = info[0]['vis']
+                # contains depth
+                if data.shape[-1] == 4:
+                    image = data[:, :, :-1]
+                    depth = data[:, :, -1]
 
-                data = np.concatenate((image, depth), 0)
+                    depth_shape = depth.shape
+                    depth = depth.reshape(depth_shape[0], depth_shape[1], 1)
+                    depth = cv2.cvtColor(depth, cv2.COLOR_GRAY2BGR)
 
-            # writer.append_data(data)
-            arr_imgs.append(data)
+                    data = np.concatenate((image, depth), 0)
+
+                # writer.append_data(data)
+                arr_imgs.append(data)
 
             if dones[0]:
                 succ = (rewards[0] >= 10)
@@ -144,15 +147,16 @@ def make_video_multiPolicy(args, env, policies):
             text = 'Fail'
             color = (255, 0, 0)
 
-        for img in arr_imgs:
-            cv2.putText(img, text, (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1, cv2.LINE_AA)
+        if args.make_video:
+            for img in arr_imgs:
+                cv2.putText(img, text, (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1, cv2.LINE_AA)
 
-            writer.append_data(img)
+                writer.append_data(img)
 
-
-    writer.close()
-    print('Make video over.')
-    print('Video path: ', DEMO_PATH)
+    if args.make_video:
+        writer.close()
+        print('Make video over.')
+        print('Video path: ', DEMO_PATH)
     acc /= n_episode
     print('Acc rate: ', acc)
 
@@ -205,6 +209,7 @@ if __name__=='__main__':
 
     ## policy dir, use model_1.pth, model_2.pth, model_3.pth...
     parser.add_argument('--load_dir', type=str, default='results/MultiStage/multi_test_dir')
+    parser.add_argument('--make_video', type=bool, default=False)
     # parser.add_argument('--video_path', type=str, default='results/MultiStage/multi_test_dir/multi_test.mp4')
 
     args = parser.parse_args()
