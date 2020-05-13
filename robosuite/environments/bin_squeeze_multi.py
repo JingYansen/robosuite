@@ -646,6 +646,8 @@ class BinSqueezeMulti(SawyerEnv, mujoco_env.MujocoEnv):
                 done = False
 
             self._finish_a_target()
+            if len(self.object_to_choose) == 0:
+                done = True
         else:
             if self.cur_step >= self.total_steps:
                 done = True
