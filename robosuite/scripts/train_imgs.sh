@@ -2,15 +2,15 @@
 set -ex
 python bin_packing_baselines.py \
     --alg ppo2 \
-    --num_env 8 \
+    --num_env 16 \
     --num_timesteps 1000000 \
     --nsteps 256 \
-    --noptepochs 40 \
-    --nminibatches 2 \
+    --noptepochs 10 \
+    --nminibatches 16 \
     --save_interval 50 \
     --lr_type 'linear' \
-    --max 1e-4 \
-    --min 1e-4 \
+    --max 1e-5 \
+    --min 1e-5 \
     --ent_coef 0.005 \
     --network 'cnn2x' \
     --keys 'image' \
@@ -21,4 +21,4 @@ python bin_packing_baselines.py \
     --test True \
     --log True \
     --random_take True \
-    --debug 'test1'
+    --debug 'new_version'

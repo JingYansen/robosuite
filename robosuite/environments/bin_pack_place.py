@@ -227,7 +227,8 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         low = -high
         self.observation_space = spaces.Box(low=low, high=high)
 
-        low, high = action_bound
+        high = np.ones(2)
+        low = -high.copy()
         self.action_space = spaces.Box(low=low, high=high)
 
     def reset(self):
@@ -353,7 +354,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
     def remove_object(self, obj):
         self.teleport_object(obj, x=10, y=10)
 
-    def teleport_object(self, obj, x, y, z=1.1):
+    def teleport_object(self, obj, x, y, z=0.95):
         """
         Teleport an object to a certain position (x, y, z).
         """

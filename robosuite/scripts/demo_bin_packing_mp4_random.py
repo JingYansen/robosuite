@@ -132,7 +132,7 @@ def test(env, n_episode):
 if __name__ == "__main__":
 
     ## make video
-    n_episode = 2
+    n_episode = 1
     slower = 5
     make_video(n_episode, slower)
 

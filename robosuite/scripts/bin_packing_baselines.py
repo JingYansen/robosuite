@@ -3,40 +3,23 @@ import os
 import multiprocessing
 import argparse
 import copy
+import cv2
 
 import os.path as osp
 import numpy as np
 import tensorflow as tf
 
-from baselines.common.tf_util import get_session
-from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
-from baselines import logger
-from PIL import Image
+from stable_baselines.common.policies import CnnPolicy
+from stable_baselines.common import make_vec_env
+from stable_baselines import PPO2
+from stable_baselines import logger
 
-from robosuite.scripts.utils import make_vec_env
 from robosuite.scripts.lr_schedule import get_lr_func
-from importlib import import_module
 
 try:
     from mpi4py import MPI
 except ImportError:
     MPI = None
-
-
-def get_alg_module(alg, submodule=None):
-    submodule = submodule or alg
-    try:
-        # first try to import the alg module from baselines
-        alg_module = import_module('.'.join(['baselines', alg, submodule]))
-    except ImportError:
-        # then from rl_algs
-        alg_module = import_module('.'.join(['rl_' + 'algs', alg, submodule]))
-
-    return alg_module
-
-
-def get_learn_function(alg):
-    return get_alg_module(alg).learn
 
 
 def get_lr_kwargs(args):
@@ -55,8 +38,6 @@ def get_env_kwargs(args):
     env_kwargs['render_drop_freq'] = args.render_drop_freq
     env_kwargs['control_freq'] = args.control_freq
 
-    ## TODO: fix NoneType error in param obj_names.
-    # env_kwargs['obj_names'] = args.obj_names
     env_kwargs['camera_height'] = args.camera_height
     env_kwargs['camera_width'] = args.camera_width
     env_kwargs['use_camera_obs'] = args.use_camera_obs
@@ -73,6 +54,7 @@ def get_env_kwargs(args):
     env_kwargs['camera_name'] = args.camera_name
 
     return env_kwargs
+
 
 def get_params(args):
     params = {}
@@ -97,42 +79,21 @@ def get_params(args):
 
     return params
 
-def get_network_params(args):
-    params = {}
-
-    if args.network is 'mlp':
-        params['num_layers'] = args.num_layers
-
-    return params
-
 
 def train(args):
     total_timesteps = int(args.num_timesteps)
     seed = args.seed
-    args.env_id, args.env_type = 'BinPack-v0', 'mujoco'
 
     # get params
-    learn = get_learn_function(args.alg)
     alg_kwargs = get_params(args)
-    extra_args = get_network_params(args)
-    alg_kwargs.update(extra_args)
 
     env = build_env(args)
 
-    if args.save_video_interval != 0:
-        env = VecVideoRecorder(env, osp.join(logger.get_dir(), "videos"),
-                               record_video_trigger=lambda x: x % args.save_video_interval == 0,
-                               video_length=args.save_video_length)
-
-    alg_kwargs['network'] = args.network
-
-    print('Training {} on {}:{} with arguments \n{}'.format(args.alg, args.env_type, args.env_id, alg_kwargs))
-
-    model = learn(
-        env=env,
-        seed=seed,
+    model = PPO2(CnnPolicy, env, verbose=1, **alg_kwargs)
+    model.learn(
         total_timesteps=total_timesteps,
-        **alg_kwargs
+        log_interval=args.log_interval,
+        save_interval=args.save_interval
     )
 
     logger.log('Trained Over.')
@@ -147,88 +108,74 @@ def configure_logger(log_path, **kwargs):
 
 
 def build_env(args):
-    # make env in robosuite
-    obj_names = []
-    args.obj_nums = args.obj_nums.split(',')
-    for i, name in zip(args.obj_nums, args.obj_types):
-        obj_names = obj_names + [name] * int(i)
-
-    args.obj_names = obj_names
-    logger.log('Total objects: ', args.obj_names)
-
     # make env in gym
     env_kwargs = get_env_kwargs(args)
 
-    ncpu = multiprocessing.cpu_count()
-    if sys.platform == 'darwin': ncpu //= 2
-    nenv = args.num_env or ncpu
-
-    seed = args.seed
-
-    config = tf.ConfigProto(allow_soft_placement=True,
-                            intra_op_parallelism_threads=1,
-                            inter_op_parallelism_threads=1)
-    config.gpu_options.allow_growth = True
-    get_session(config=config)
-
-    flatten_dict_observations = args.alg not in {'her'}
-    env = make_vec_env(args.env_id, args.env_type, args.num_env or 1, seed, env_kwargs=env_kwargs,
-                       reward_scale=args.reward_scale,
-                       flatten_dict_observations=flatten_dict_observations)
+    env = make_vec_env(args.env_id, n_envs=args.num_env, env_kwargs=env_kwargs)
     return env
 
 
-def make_video(model, env, args):
-    DEMO_PATH = 'demo'
-    seed = np.random.randint(0, 100000)
-    frame_dir = 'frames' + str(seed)
-    import subprocess
-    subprocess.call(['rm', '-rf', frame_dir])
-    subprocess.call(['mkdir', '-p', frame_dir])
-    subprocess.call(['mkdir', '-p', DEMO_PATH])
+def make_video(model_path, env, args):
+    model = PPO2.load(model_path)
+    DEMO_PATH = os.path.join(args.save_dir, args.video_name)
 
-    DEMO_PATH = os.path.join(DEMO_PATH, args.video_name)
+    import imageio
+    writer = imageio.get_writer(DEMO_PATH, fps=20)
 
-    env.render_drop_freq = args.render_drop_freq
-
-    time_step_counter = 0
-    n_episode = 3
-    slower = 5
-    state = model.initial_state if hasattr(model, 'initial_state') else None
-    dones = np.zeros((1,))
+    n_episode = 20
+    acc = 0
 
     for i_episode in range(n_episode):
         obs = env.reset()
 
-        for _ in range(100):
+        arr_imgs = []
+        succ = False
 
-            if state is not None:
-                actions, _, state, _ = model.step(obs, S=state, M=dones)
-            else:
-                actions, _, _, _ = model.step(obs)
+        for _ in range(1000):
 
-            obs, rew, done, info = env.step(actions)
-            info = info[0]
-            done = done[0]
+            action, _states = model.predict(obs)
+            print('action: ', action)
 
-            for i in range(len(info['birdview'])):
-                image_data_bird, image_data_agent = info['birdview'][i], info['targetview'][i]
-                image_data = np.concatenate((image_data_bird, image_data_agent), 1)
+            obs, rewards, dones, info = env.step(action)
 
-                img = Image.fromarray(image_data, 'RGB')
-                for __ in range(slower):
-                    img.save(frame_dir + '/frame-%.10d.png' % time_step_counter)
-                    time_step_counter += 1
+            data = info[0]['vis']
+            # contains depth
+            if data.shape[-1] == 4:
+                image = data[:, :, :-1]
+                depth = data[:, :, -1]
 
-            if done:
+                depth_shape = depth.shape
+                depth = depth.reshape(depth_shape[0], depth_shape[1], 1)
+                depth = cv2.cvtColor(depth, cv2.COLOR_GRAY2BGR)
+
+                data = np.concatenate((image, depth), 0)
+
+            # writer.append_data(data)
+            arr_imgs.append(data)
+
+            if dones[0]:
+                succ = (rewards[0] >= 10)
                 break
 
-    resolve = str(args.camera_height * 2) + 'x' + str(args.camera_width)
-    subprocess.call(
-        ['ffmpeg', '-framerate', '50', '-y', '-i', frame_dir + '/frame-%010d.png', '-r', '30', '-pix_fmt', 'yuv420p',
-         '-s', resolve, DEMO_PATH])
+        if succ:
+            acc += 1
+            text = 'Success'
+            color = (0, 255, 0)
+        else:
+            text = 'Fail'
+            color = (255, 0, 0)
 
-    subprocess.call(['rm', '-rf', frame_dir])
+        for img in arr_imgs:
+            cv2.putText(img, text, (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1, cv2.LINE_AA)
+
+            writer.append_data(img)
+
+
+    writer.close()
+    print('Make video over.')
+    print('Video path: ', DEMO_PATH)
+    acc /= n_episode
+    print('Acc rate: ', acc)
 
 
 def test(model, env, args):
@@ -271,25 +218,21 @@ def test(model, env, args):
 
 
 def get_info_dir(args):
-    if args.random_take:
-        info_dir = 'random_'
-    else:
-        info_dir = 'fix_'
+    info_dir = ''
 
-    infos = [args.keys, args.alg, args.network, args.lr_type, args.max, args.min]
+    infos = [args.alg, args.network, args.lr_type, args.max, args.min]
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'env', 'clip', 'ent-coef', 'noptepochs', 'batch']
-    values = [args.num_timesteps, args.nsteps, args.num_env, args.cliprange, args.ent_coef, args.noptepochs,
-              args.nminibatches]
+    keys = ['total', 'nsteps', 'noptepochs', 'batch', 'init', 'limit', 'random', 'ent']
+    values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.place_num, args.total_steps, args.random_quat, args.ent_coef]
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):
         info_dir += str(value) + key + '_'
 
-    if args.use_camera_obs:
-        info_dir += '_' + str(args.camera_width) + 'x' + str(args.camera_height)
+
+    info_dir += str(args.camera_width) + 'x' + str(args.camera_height)
 
     return info_dir
 
@@ -361,11 +304,13 @@ if __name__ == "__main__":
     low = np.array([0.5, 0.15])
     high = np.array([0.7, 0.6])
 
-    args.obj_types = ['Milk'] + ['Bread'] + ['Cereal'] + ['Can']
-
     info_dir = get_info_dir(args)
 
-    args.save_dir = os.path.join(PATH, args.out_dir, args.debug, info_dir)
+    dir_list = [PATH, 'results', args.env_id, args.debug, args.camera_type,
+                'fix_rotation_' + str(args.fix_rotation), 'random_target_' + str(args.random_target),
+                info_dir]
+
+    args.save_dir = os.path.join(*dir_list)
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
     else:
@@ -376,6 +321,7 @@ if __name__ == "__main__":
     args.save_path = os.path.join(args.save_dir, 'model.pth')
 
     if args.log:
+        print('rank: ', MPI.COMM_WORLD.Get_rank())
         if MPI is None or MPI.COMM_WORLD.Get_rank() == 0:
             rank = 0
             configure_logger(args.save_dir, format_strs=args.format_strs)
@@ -388,7 +334,7 @@ if __name__ == "__main__":
 
     model, env = train(args)
 
-    if args.save_path is not None and rank == 0:
+    if args.save_path is not None:
         save_path = osp.expanduser(args.save_path)
         model.save(save_path)
         logger.log('Save to ', args.save_dir)
@@ -397,4 +343,8 @@ if __name__ == "__main__":
         test(model, env, args)
 
     if args.make_video:
-        make_video(model, env, args)
+        if osp.exists(args.load_path):
+            model_path = args.load_path
+        else:
+            model_path = args.save_path
+        make_video(model_path, env, args)
