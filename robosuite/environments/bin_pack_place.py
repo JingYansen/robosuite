@@ -73,9 +73,10 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         video_width=256,
         render_drop_freq=0,
         obj_names=['Milk'] + ['Bread'] + ['Cereal'] * 2 + ['Can'] * 2,
+        force_ratios=0.9,
         take_nums=6,
         random_take=False,
-        action_bound=(np.array([0.5, 0.15]), np.array([0.7, 0.6])),
+        action_bound=(np.array([0.55, 0.25]), np.array([0.65, 0.5])),
     ):
 
         # task settings
@@ -83,6 +84,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self.obj_names = obj_names
         self.take_nums = take_nums
         self.camera_type = camera_type
+        self.force_ratios = force_ratios
 
         assert self.take_nums <= len(self.obj_names)
 
@@ -287,7 +289,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         x, y = action[0], action[1]
 
         if len(action) == 2:
-            z = 0.95
+            z = 1.1
         else:
             z = action[2]
 
@@ -322,21 +324,22 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self.objects_not_take[self.obj_to_take] = 0
 
         obj = self.object_names[self.obj_to_take]
+        self.target_object = obj
         self.teleport_object(obj, action)
 
-
     def _pre_action(self, action):
-        # gravity compensation
-        self.sim.data.qfrc_applied[
-            self._ref_joint_vel_indexes
-        ] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
-
-        if self.use_indicator_object:
+        if action is None:
+            # gravity compensation
             self.sim.data.qfrc_applied[
-                self._ref_indicator_vel_low : self._ref_indicator_vel_high
-            ] = self.sim.data.qfrc_bias[
-                self._ref_indicator_vel_low : self._ref_indicator_vel_high
-            ]
+                self._ref_joint_vel_indexes
+            ] = self.sim.data.qfrc_bias[self._ref_joint_vel_indexes]
+            return
+
+        gripper_dim = self.sim.model.get_joint_qpos_addr(self.object_names[0])[0]
+        beg_dim = gripper_dim + self.object_names.index(self.target_object) * 6
+        ## set force
+        self.sim.data.qfrc_applied[beg_dim + 2] = self.sim.data.qfrc_bias[beg_dim + 2] * self.force_ratios
+        # self.sim.data.qfrc_applied[beg_dim+2:beg_dim+6] = self.sim.data.qfrc_bias[beg_dim+2:beg_dim+6]
 
     def _post_action(self, action):
         """
