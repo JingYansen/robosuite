@@ -13,4 +13,4 @@ python bin_packing_baselines.py \
     --camera_height 64 \
     --camera_width 64 \
     --log True \
-    --debug 'version-2.0.0'
+    --debug 'version-1.0.0'
