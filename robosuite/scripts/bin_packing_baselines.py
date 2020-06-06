@@ -37,21 +37,16 @@ def get_env_kwargs(args):
 
     env_kwargs['render_drop_freq'] = args.render_drop_freq
     env_kwargs['control_freq'] = args.control_freq
-
     env_kwargs['camera_height'] = args.camera_height
     env_kwargs['camera_width'] = args.camera_width
     env_kwargs['use_camera_obs'] = args.use_camera_obs
-    env_kwargs['use_object_obs'] = args.use_object_obs
     env_kwargs['has_renderer'] = args.has_renderer
     env_kwargs['has_offscreen_renderer'] = args.has_offscreen_renderer
+    env_kwargs['camera_type'] = args.camera_type
     env_kwargs['random_take'] = args.random_take
+    env_kwargs['take_nums'] = args.take_nums
 
-    if args.keys == 'state':
-        env_kwargs['keys'] = 'state'
-    elif args.keys == 'image':
-        env_kwargs['keys'] = ['image', 'obj_taken']
-
-    env_kwargs['camera_name'] = args.camera_name
+    env_kwargs['keys'] = args.keys
 
     return env_kwargs
 
@@ -59,23 +54,14 @@ def get_env_kwargs(args):
 def get_params(args):
     params = {}
 
-    params['nsteps'] = args.nsteps
+    params['n_steps'] = args.nsteps
     params['nminibatches'] = args.nminibatches
     params['noptepochs'] = args.noptepochs
     params['cliprange'] = args.cliprange
     params['ent_coef'] = args.ent_coef
-    params['save_interval'] = args.save_interval
-    params['log_interval'] = args.log_interval
-    params['save_interval'] = args.save_interval
-    params['network'] = args.network
 
     lr_kwargs = get_lr_kwargs(args)
-    params['lr'] = get_lr_func(**lr_kwargs)
-
-    if osp.exists(args.load_path):
-        params['load_path'] = args.load_path
-    else:
-        logger.log('Warning: path <' + args.load_path + '> not exists.')
+    params['learning_rate'] = get_lr_func(**lr_kwargs)
 
     return params
 
@@ -178,45 +164,6 @@ def make_video(model_path, env, args):
     print('Acc rate: ', acc)
 
 
-def test(model, env, args):
-    logger.log("Test...")
-
-    n_episode = args.test_episode
-    num_env = args.num_env
-    state = model.initial_state if hasattr(model, 'initial_state') else None
-    dones = np.zeros((1,))
-    total_rewards = 0
-
-    for i_episode in range(n_episode):
-        obs = env.reset()
-
-        for i in range(100):
-
-            if state is not None:
-                actions, _, state, _ = model.step(obs, S=state, M=dones)
-            else:
-                actions, _, _, _ = model.step(obs)
-
-            obs, rew, done, info = env.step(actions)
-
-            for r in rew:
-                total_rewards += np.sum(r)
-
-            done = done[0]
-            if done:
-                break
-
-    avg_reward = total_rewards / (n_episode * num_env)
-
-    if args.log:
-        logger.log("Path: ", args.save_dir)
-        logger.log("Test ", n_episode, " episodes, average reward is: ", avg_reward)
-        logger.log("Test over.")
-    else:
-        print("Test ", n_episode, " episodes, average reward is: ", avg_reward)
-        print("Test over.")
-
-
 def get_info_dir(args):
     info_dir = ''
 
@@ -224,8 +171,8 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'noptepochs', 'batch', 'init', 'limit', 'random', 'ent']
-    values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.place_num, args.total_steps, args.random_quat, args.ent_coef]
+    keys = ['total', 'nsteps', 'noptepochs', 'batch', 'take']
+    values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.take_nums]
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):
@@ -244,38 +191,35 @@ if __name__ == "__main__":
 
     ## env args
     parser.add_argument('--has_renderer', type=bool, default=False)
-    parser.add_argument('--use_camera_obs', type=bool, default=False)
-    parser.add_argument('--use_object_obs', type=bool, default=False)
-    parser.add_argument('--has_offscreen_renderer', type=bool, default=False)
-    parser.add_argument('--random_take', type=bool, default=False)
+    parser.add_argument('--use_camera_obs', type=bool, default=True)
+    parser.add_argument('--use_object_obs', type=bool, default=True)
+    parser.add_argument('--has_offscreen_renderer', type=bool, default=True)
+    parser.add_argument('--camera_type', type=str, default='image+depth')
+    parser.add_argument('--random_take', type=bool, default=True)
 
     parser.add_argument('--control_freq', type=int, default=1)
-    parser.add_argument('--obj_nums', type=str, default='1,1,2,2')
-    parser.add_argument('--obj_names', type=list, default=[])
+    parser.add_argument('--render_drop_freq', type=int, default=0)
     parser.add_argument('--camera_height', type=int, default=128)
     parser.add_argument('--camera_width', type=int, default=128)
+    parser.add_argument('--take_nums', type=int, default=6)
 
-    parser.add_argument('--keys', type=str, default='state', choices=['state', 'image'])
-    parser.add_argument('--camera_name', type=str, default='targetview')
+    parser.add_argument('--keys', type=str, default='image', choices=['state', 'image'])
 
     ## alg args
-    parser.add_argument('--out_dir', type=str, default='results')
+    parser.add_argument('--env_id', type=str, default='BinPack-v0')
     parser.add_argument('--alg', type=str, default='ppo2')
-    parser.add_argument('--num_env', type=int, default=4)
+    parser.add_argument('--num_env', type=int, default=16)
     parser.add_argument('--load_path', type=str, default='gg')
-    parser.add_argument('--reward_scale', type=float, default=1)
-    parser.add_argument('--save_video_interval', type=int, default=0)
 
-    parser.add_argument('--num_timesteps', type=int, default=200000)
+    parser.add_argument('--num_timesteps', type=int, default=1000000)
     parser.add_argument('--nsteps', type=int, default=128)
     parser.add_argument('--nminibatches', type=int, default=8)
     parser.add_argument('--noptepochs', type=int, default=10)
     parser.add_argument('--cliprange', type=float, default=0.2)
-    parser.add_argument('--ent_coef', type=float, default=0.0)
-    parser.add_argument('--log_interval', type=int, default=5)
-    parser.add_argument('--save_interval', type=int, default=100)
-    parser.add_argument('--network', type=str, default='mlp')
-    parser.add_argument('--num_layers', type=int, default=2)
+    parser.add_argument('--ent_coef', type=float, default=0.2)
+    parser.add_argument('--log_interval', type=int, default=2)
+    parser.add_argument('--save_interval', type=int, default=20)
+    parser.add_argument('--network', type=str, default='cnn')
 
     ## lr args
     parser.add_argument('--lr_type', type=str, default='const')
@@ -283,8 +227,7 @@ if __name__ == "__main__":
     parser.add_argument('--min', type=float, default=3e-4)
 
     ## video args
-    parser.add_argument('--make_video', type=bool, default=False)
-    parser.add_argument('--render_drop_freq', type=int, default=0)
+    parser.add_argument('--make_video', type=bool, default=True)
     parser.add_argument('--video_name', type=str, default='demo.mp4')
 
     ## test args
@@ -306,9 +249,7 @@ if __name__ == "__main__":
 
     info_dir = get_info_dir(args)
 
-    dir_list = [PATH, 'results', args.env_id, args.debug, args.camera_type,
-                'fix_rotation_' + str(args.fix_rotation), 'random_target_' + str(args.random_target),
-                info_dir]
+    dir_list = [PATH, 'results', args.env_id, args.debug, args.camera_type, info_dir]
 
     args.save_dir = os.path.join(*dir_list)
     if not os.path.exists(args.save_dir):
@@ -338,9 +279,6 @@ if __name__ == "__main__":
         save_path = osp.expanduser(args.save_path)
         model.save(save_path)
         logger.log('Save to ', args.save_dir)
-
-    if args.test:
-        test(model, env, args)
 
     if args.make_video:
         if osp.exists(args.load_path):

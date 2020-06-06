@@ -6,6 +6,7 @@ import numpy as np
 import robosuite as suite
 
 from robosuite.wrappers import MyGymWrapper
+from robosuite.scripts.utils import norm_depth
 from PIL import Image
 
 def test_render_time(env):
@@ -65,7 +66,7 @@ def test_qpos_meaning(env):
     imgs.show()
 
 
-def test_video(env, video_path='demo/test/test.mp4'):
+def test_video_bin_pack(env, video_path='demo/test/test.mp4'):
 
     import imageio
     writer = imageio.get_writer(video_path, fps=20)
@@ -76,19 +77,13 @@ def test_video(env, video_path='demo/test/test.mp4'):
     succ_steps = 0
     avg_reward = 0
     # action = env.action_space.sample()
-    # action[0:3] = np.array([1., 0., 0.])
-    # action = np.array([0, 0, 0., 1., 1., 1., 1.])
-    # left = np.array([1., 0., 0., 0., 0., 0., 0.])
-    # front = np.array([0., 1., 0., 0., 0., 0., 0.])
-    # up = np.array([0., 0., 1.])
-    # down = np.array([0., 0., -1.])
     for _ in range(episodes):
         env.reset()
 
         arr_imgs = []
         succ = False
 
-        for i in range(1000):
+        for i in range(env.take_nums):
             # run a uniformly random agent
             action = env.action_space.sample()
             # action[2] = -0.3
@@ -98,86 +93,19 @@ def test_video(env, video_path='demo/test/test.mp4'):
             obs, reward, done, info = env.step(action)
             avg_reward += reward
 
-            # contains depth
-            if obs.shape[-1] == 4:
-                image = obs[:, :, :-1]
-                depth = obs[:, :, -1]
+            for o in info['birdview']:
+                # contains depth
+
+                image, depth = o
+                depth = norm_depth(depth)
 
                 depth_shape = depth.shape
                 depth = depth.reshape(depth_shape[0], depth_shape[1], 1)
                 depth = cv2.cvtColor(depth, cv2.COLOR_GRAY2BGR)
 
-                obs = np.concatenate((image, depth), 0)
+                view = np.concatenate((image, depth), 0)
 
-            # writer.append_data(obs)
-            arr_imgs.append(obs)
-
-            if done:
-                steps += i
-                succ = (reward >= 10)
-                break
-
-        if succ:
-            num_succ += 1
-            succ_steps += steps
-            text = 'Success'
-            color = (0, 255, 0)
-        else:
-            text = 'Fail'
-            color = (255, 0, 0)
-
-        for img in arr_imgs:
-            cv2.putText(img, text, (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1, cv2.LINE_AA)
-
-            writer.append_data(img)
-
-    writer.close()
-    print('succ rate:', num_succ / episodes)
-    print('avg steps:', steps / episodes)
-    print('succ steps:', succ_steps / episodes)
-    print('avg reward:', avg_reward / episodes)
-
-
-def test_video_bin_pack(env, video_path='demo/test/test.mp4'):
-
-    import imageio
-    writer = imageio.get_writer(video_path, fps=20)
-
-    episodes = 5
-    num_succ = 0
-    steps = 0
-    succ_steps = 0
-    avg_reward = 0
-    # action = env.action_space.sample()
-    for _ in range(episodes):
-        env.reset()
-
-        arr_imgs = []
-        succ = False
-
-        for i in range(1000):
-            # run a uniformly random agent
-            action = env.action_space.sample()
-            # action[2] = -0.3
-            # action = up.copy()
-            # action[0:3] = 0.
-
-            obs, reward, done, info = env.step(action)
-            avg_reward += reward
-
-            # contains depth
-            if obs.shape[-1] == 4:
-                image = obs[:, :, :-1]
-                depth = obs[:, :, -1]
-
-                depth_shape = depth.shape
-                depth = depth.reshape(depth_shape[0], depth_shape[1], 1)
-                depth = cv2.cvtColor(depth, cv2.COLOR_GRAY2BGR)
-
-                obs = np.concatenate((image, depth), 0)
-
-            # writer.append_data(obs)
-            arr_imgs.append(obs)
+                arr_imgs.append(view)
 
             if done:
                 steps += i
@@ -252,23 +180,6 @@ if __name__ == "__main__":
 
     case_train, case_test = get_hard_cases()
 
-    # env = suite.make(
-    #     'BinSqueezeMulti',
-    #     has_renderer=False,
-    #     has_offscreen_renderer=True,
-    #     ignore_done=True,
-    #     use_camera_obs=True,
-    #     control_freq=20,
-    #     camera_height=128,
-    #     camera_width=128,
-    #     camera_depth=True,
-    #     place_num=5,
-    #     # random_quat=True,
-    #     fix_rotation=True,
-    #     total_steps=1000,
-    #     test_cases=[],
-    # )
-
     env = suite.make(
         'BinPackPlace',
         has_renderer=False,
@@ -276,6 +187,7 @@ if __name__ == "__main__":
         ignore_done=True,
         use_camera_obs=True,
         control_freq=1,
+        render_drop_freq=20,
     )
 
 

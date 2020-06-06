@@ -12,6 +12,7 @@ from robosuite.utils.mjcf_utils import string_to_array
 from robosuite.environments.sawyer import SawyerEnv
 from gym.envs.mujoco import mujoco_env
 from gym import spaces
+from robosuite.scripts.utils import norm_depth
 
 try:
     from mpi4py import MPI
@@ -65,97 +66,23 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         camera_names=["birdview", "targetview"],
         camera_height=128,
         camera_width=128,
-        camera_depth=False,
-
+        camera_depth=True,
+        camera_type='image+depth',
+        keys='image',
         video_height=256,
         video_width=256,
         render_drop_freq=0,
         obj_names=['Milk'] + ['Bread'] + ['Cereal'] * 2 + ['Can'] * 2,
-        take_orders = [],
         take_nums=6,
         random_take=False,
-        keys='state',
         action_bound=(np.array([0.5, 0.15]), np.array([0.7, 0.6])),
     ):
-        """
-        Args:
-
-            gripper_type (str): type of gripper, used to instantiate
-                gripper models from gripper factory.
-
-            table_full_size (3-tuple): x, y, and z dimensions of the table.
-
-            table_friction (3-tuple): the three mujoco friction parameters for
-                the table.
-
-            use_camera_obs (bool): if True, every observation includes a
-                rendered image.
-
-            use_object_obs (bool): if True, include object (cube) information in
-                the observation.
-
-            reward_shaping (bool): if True, use dense rewards.
-
-            placement_initializer (ObjectPositionSampler instance): if provided, will
-                be used to place objects on every reset, else a UniformRandomSampler
-                is used by default.
-
-            single_object_mode (int): specifies which version of the task to do. Note that
-                the observations change accordingly.
-
-                0: corresponds to the full task with all types of objects.
-
-                1: corresponds to an easier task with only one type of object initialized
-                   on the table with every reset. The type is randomized on every reset.
-
-                2: corresponds to an easier task with only one type of object initialized
-                   on the table with every reset. The type is kept constant and will not
-                   change between resets.
-
-            object_type (string): if provided, should be one of "milk", "bread", "cereal",
-                or "can". Determines which type of object will be spawned on every
-                environment reset. Only used if @single_object_mode is 2.
-
-            gripper_visualization (bool): True if using gripper visualization.
-                Useful for teleoperation.
-
-            use_indicator_object (bool): if True, sets up an indicator object that 
-                is useful for debugging.
-
-            has_renderer (bool): If true, render the simulation state in
-                a viewer instead of headless mode.
-
-            has_offscreen_renderer (bool): True if using off-screen rendering.
-
-            render_collision_mesh (bool): True if rendering collision meshes 
-                in camera. False otherwise.
-
-            render_visual_mesh (bool): True if rendering visual meshes
-                in camera. False otherwise.
-
-            control_freq (float): how many control signals to receive
-                in every second. This sets the amount of simulation time
-                that passes between every action input.
-
-            horizon (int): Every episode lasts for exactly @horizon timesteps.
-
-            ignore_done (bool): True if never terminating the environment (ignore @horizon).
-
-            camera_name (str): name of camera to be rendered. Must be
-                set if @use_camera_obs is True.
-
-            camera_height (int): height of camera frame.
-
-            camera_width (int): width of camera frame.
-
-            camera_depth (bool): True if rendering RGB-D, and RGB otherwise.
-        """
 
         # task settings
         self.random_take = random_take
         self.obj_names = obj_names
         self.take_nums = take_nums
-        self.take_orders = take_orders
+        self.camera_type = camera_type
 
         assert self.take_nums <= len(self.obj_names)
 
@@ -227,8 +154,9 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         low = -high
         self.observation_space = spaces.Box(low=low, high=high)
 
-        high = np.ones(2)
-        low = -high.copy()
+        high = action_bound[1]
+        low = action_bound[0]
+        assert np.all(high >= low)
         self.action_space = spaces.Box(low=low, high=high)
 
     def reset(self):
@@ -249,12 +177,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
                     print("adding key: {}".format(key))
                 ob_lst.append(obs_dict[key])
 
-        if self.keys == 'state':
-            return np.concatenate(ob_lst)
-        else:
-            image, tp = ob_lst
-            image = image.reshape(-1)
-            return np.concatenate([image, tp])
+        return np.concatenate(ob_lst)
 
     def _name2obj(self, name):
         assert name in self.object_to_id.keys()
@@ -352,13 +275,21 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
                 self.sim.forward()
 
     def remove_object(self, obj):
-        self.teleport_object(obj, x=10, y=10)
+        self.teleport_object(obj, np.array([10, 10]))
 
-    def teleport_object(self, obj, x, y, z=0.95):
+    def teleport_object(self, obj, action):
         """
         Teleport an object to a certain position (x, y, z).
         """
         assert obj in self.mujoco_objects.keys()
+        assert 2 <= len(action) <= 3
+
+        x, y = action[0], action[1]
+
+        if len(action) == 2:
+            z = 0.95
+        else:
+            z = action[2]
 
         sim_state = self.sim.get_state()
         x_dim = self.sim.model.get_joint_qpos_addr(obj)[0]
@@ -374,31 +305,25 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
 
     def take_an_object(self, action):
-        ## given obj to take
-        if len(self.take_orders) > 0:
-            next_obj = self.take_orders.pop(0)
-            self.obj_to_take = self.object_names.index(next_obj)
-        else:
-            ## random take an object
-            if self.random_take:
-                obj_idxs = np.nonzero(self.objects_not_take)[0]
-                if len(obj_idxs) is 0:
-                    print('Warning: All objects have been taken.')
-                    self.obj_to_take = 0
-                else:
-                    self.obj_to_take = np.random.choice(obj_idxs)
-            ## fix order to take
+        ## random take an object
+        if self.random_take:
+            obj_idxs = np.nonzero(self.objects_not_take)[0]
+            if len(obj_idxs) is 0:
+                print('Warning: All objects have been taken.')
+                self.obj_to_take = 0
+                raise ValueError('no object to take.')
             else:
-                self.obj_to_take = (self.objects_not_take != 0).argmax(axis=0)
+                self.obj_to_take = np.random.choice(obj_idxs)
+        ## fix order to take
+        else:
+            self.obj_to_take = (self.objects_not_take != 0).argmax(axis=0)
 
         assert self.objects_not_take[self.obj_to_take] == 1
         self.objects_not_take[self.obj_to_take] = 0
 
         obj = self.object_names[self.obj_to_take]
-        if len(action) > 2:
-            self.teleport_object(obj, action[0], action[1], action[2])
-        else:
-            self.teleport_object(obj, action[0], action[1])
+        self.teleport_object(obj, action)
+
 
     def _pre_action(self, action):
         # gravity compensation
@@ -438,16 +363,12 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         if self.render_drop_freq:
             i = 0
             info['birdview'] = []
-            # info['agentview'] = []
-            info['targetview'] = []
 
         while self.cur_time < end_time:
-
             if self.render_drop_freq:
                 if i % self.render_drop_freq == 0:
-                    info['birdview'].append(self.sim.render(width=self.video_width, height=self.video_height, camera_name='birdview'))
-                    # info['agentview'].append(np.rot90(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='agentview'), 2))
-                    info['targetview'].append(np.rot90(self.sim.render(width=self.video_width, height=self.video_height, camera_name='targetview'), 2))
+                    info['birdview'].append(self.sim.render(width=self.video_width, height=self.video_height,
+                                                            camera_name='birdview', depth=self.camera_depth))
 
                 i += 1
 
@@ -457,9 +378,6 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         reward, done, _ = self._post_action(action)
 
         ## done
-        ## 1. all objects are taken
-        # done = np.all(self.objects_not_take == 0)
-        ## 2. take @take_nums objects
         done = (np.sum(self.objects_not_take != 1) >= self.take_nums)
 
         if done:
@@ -506,110 +424,9 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self._check_success()
         reward = np.sum(self.objects_in_bins) - last_num
 
-
-        # add in shaped rewards
-        if self.reward_shaping:
-            staged_rewards = self.staged_rewards()
-            reward += max(staged_rewards)
-
         # if reward != 0:
         print('Reward: ', reward)
         return reward
-
-    def staged_rewards(self):
-        """
-        Returns staged rewards based on current physical states.
-        Stages consist of reaching, grasping, lifting, and hovering.
-        """
-
-        reach_mult = 0.1
-        grasp_mult = 0.35
-        lift_mult = 0.5
-        hover_mult = 0.7
-
-        # filter out objects that are already in the correct bins
-        objs_to_reach = []
-        geoms_to_grasp = []
-        target_bin_placements = []
-        for i in range(len(self.ob_inits)):
-            if self.objects_in_bins[i]:
-                continue
-            obj_str = str(self.item_names[i])
-            objs_to_reach.append(self.obj_body_id[obj_str])
-            geoms_to_grasp.append(self.obj_geom_id[obj_str])
-            target_bin_placements.append(self.target_bin_placements[i])
-        target_bin_placements = np.array(target_bin_placements)
-
-        ### reaching reward governed by distance to closest object ###
-        r_reach = 0.
-        if len(objs_to_reach):
-            # get reaching reward via minimum distance to a target object
-            target_object_pos = self.sim.data.body_xpos[objs_to_reach]
-            gripper_site_pos = self.sim.data.site_xpos[self.eef_site_id]
-            dists = np.linalg.norm(
-                target_object_pos - gripper_site_pos.reshape(1, -1), axis=1
-            )
-            r_reach = (1 - np.tanh(10.0 * min(dists))) * reach_mult
-
-        ### grasping reward for touching any objects of interest ###
-        touch_left_finger = False
-        touch_right_finger = False
-        for i in range(self.sim.data.ncon):
-            c = self.sim.data.contact[i]
-            if c.geom1 in geoms_to_grasp:
-                bin_id = geoms_to_grasp.index(c.geom1)
-                if c.geom2 in self.l_finger_geom_ids:
-                    touch_left_finger = True
-                if c.geom2 in self.r_finger_geom_ids:
-                    touch_right_finger = True
-            elif c.geom2 in geoms_to_grasp:
-                bin_id = geoms_to_grasp.index(c.geom2)
-                if c.geom1 in self.l_finger_geom_ids:
-                    touch_left_finger = True
-                if c.geom1 in self.r_finger_geom_ids:
-                    touch_right_finger = True
-        has_grasp = touch_left_finger and touch_right_finger
-        r_grasp = int(has_grasp) * grasp_mult
-
-        ### lifting reward for picking up an object ###
-        r_lift = 0.
-        if len(objs_to_reach) and r_grasp > 0.:
-            z_target = self.bin_pos[2] + 0.25
-            object_z_locs = self.sim.data.body_xpos[objs_to_reach][:, 2]
-            z_dists = np.maximum(z_target - object_z_locs, 0.)
-            r_lift = grasp_mult + (1 - np.tanh(15.0 * min(z_dists))) * (
-                lift_mult - grasp_mult
-            )
-
-        ### hover reward for getting object above bin ###
-        r_hover = 0.
-        if len(objs_to_reach):
-            # segment objects into left of the bins and above the bins
-            object_xy_locs = self.sim.data.body_xpos[objs_to_reach][:, :2]
-            y_check = (
-                np.abs(object_xy_locs[:, 1] - target_bin_placements[:, 1])
-                < self.bin_size[1] / 4.
-            )
-            x_check = (
-                np.abs(object_xy_locs[:, 0] - target_bin_placements[:, 0])
-                < self.bin_size[0] / 4.
-            )
-            objects_above_bins = np.logical_and(x_check, y_check)
-            objects_not_above_bins = np.logical_not(objects_above_bins)
-            dists = np.linalg.norm(
-                target_bin_placements[:, :2] - object_xy_locs, axis=1
-            )
-            # objects to the left get r_lift added to hover reward, those on the right get max(r_lift) added (to encourage dropping)
-            r_hover_all = np.zeros(len(objs_to_reach))
-            r_hover_all[objects_above_bins] = lift_mult + (
-                1 - np.tanh(10.0 * dists[objects_above_bins])
-            ) * (hover_mult - lift_mult)
-            r_hover_all[objects_not_above_bins] = r_lift + (
-                1 - np.tanh(10.0 * dists[objects_not_above_bins])
-            ) * (hover_mult - lift_mult)
-            r_hover = np.max(r_hover_all)
-
-        return r_reach, r_grasp, r_lift, r_hover
 
     def not_in_bin(self, obj_pos):
 
@@ -646,61 +463,37 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         di = super()._get_observation()
 
         if self.use_camera_obs:
+            bird_image, bird_depth = self.sim.render(width=self.camera_width, height=self.camera_height,
+                                                     camera_name='birdview', depth=self.camera_depth)
 
-            bird_image = self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='birdview')
-            target_image = np.rot90(self.sim.render(width=self.camera_width, height=self.camera_height, camera_name='targetview'), 2)
+            image = bird_image
+            depth = bird_depth
 
-            di["image"] = np.concatenate((bird_image, target_image), 1)
-            # di['bird_image'] = bird_image
-            # di['target_image'] = target_image
+            # norm
+            depth = norm_depth(depth)
+
+            imgae_depth = np.concatenate((image, depth), 2)
+
+            if self.camera_type == 'image+depth':
+                di["image"] = imgae_depth
+            elif self.camera_type == 'image':
+                di["image"] = image
+            elif self.camera_type == 'depth':
+                di["image"] = depth
+            else:
+                raise ValueError('No such camera type: ', self.camera_type)
+
+            di['vis'] = imgae_depth
 
         ## get type one-hot vector
-        if self.random_take:
-            temp_idx = np.zeros(len(self.object_to_id))
-            if self.obj_to_take >= 0:
-                obj_to_take_name = self.obj_names[self.obj_to_take]
-                obj_type = self.object_to_id[obj_to_take_name]
-                temp_idx[obj_type] = 1
-
-            di["obj_taken"] = np.copy(temp_idx)
-        ## get id one-hot vector
-        else:
-            temp_idx = np.zeros(len(self.objects_not_take))
-            if self.obj_to_take >= 0:
-                temp_idx[self.obj_to_take] = 1
-
-            di["obj_taken"] = np.copy(temp_idx)
-
-        # low-level object information
-        if self.use_object_obs:
-
-            # remember the keys to collect into object info
-            object_state_keys = []
-
-            for i in range(len(self.item_names_org)):
-
-                obj_str = str(self.item_names_org[i])
-
-                ## if unplaced
-                if self.objects_not_take[i]:
-                    obj_pos = np.zeros(3)
-                    obj_quat = np.zeros(4)
-                ## if placed
-                else:
-                    obj_pos = np.array(self.sim.data.body_xpos[self.obj_body_id[obj_str]])
-                    obj_quat = T.convert_quat(
-                        self.sim.data.body_xquat[self.obj_body_id[obj_str]], to="xyzw"
-                    )
-
-                di["{}_pos".format(obj_str)] = obj_pos
-                di["{}_quat".format(obj_str)] = obj_quat
-
-                object_state_keys.append("{}_pos".format(obj_str))
-                object_state_keys.append("{}_quat".format(obj_str))
-
-            object_state_keys.append("obj_taken")
-
-            di["state"] = np.concatenate([di[k] for k in object_state_keys])
+        # if self.random_take:
+        #     temp_idx = np.zeros(len(self.object_to_id))
+        #     if self.obj_to_take >= 0:
+        #         obj_to_take_name = self.obj_names[self.obj_to_take]
+        #         obj_type = self.object_to_id[obj_to_take_name]
+        #         temp_idx[obj_type] = 1
+        #
+        #     di["obj_taken"] = np.copy(temp_idx)
 
         return di
 
