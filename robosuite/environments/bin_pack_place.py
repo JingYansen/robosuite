@@ -73,10 +73,11 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         video_width=256,
         render_drop_freq=0,
         obj_names=['Milk'] + ['Bread'] + ['Cereal'] * 2 + ['Can'] * 2,
-        force_ratios=0.9,
+        force_ratios=0.2,
+        z_limit=1.0,
         take_nums=6,
         random_take=False,
-        action_bound=(np.array([0.55, 0.25]), np.array([0.65, 0.5])),
+        action_bound=(np.array([0.5575, 0.3375]), np.array([0.6425, 0.4225])),
     ):
 
         # task settings
@@ -85,6 +86,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self.take_nums = take_nums
         self.camera_type = camera_type
         self.force_ratios = force_ratios
+        self.z_limit = z_limit
 
         assert self.take_nums <= len(self.obj_names)
 
@@ -289,7 +291,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         x, y = action[0], action[1]
 
         if len(action) == 2:
-            z = 1.1
+            z = self.z_limit
         else:
             z = action[2]
 
@@ -423,13 +425,23 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
     def reward(self, action=None):
         # compute sparse rewards
-        last_num = np.sum(self.objects_in_bins)
-        self._check_success()
-        reward = np.sum(self.objects_in_bins) - last_num
+        # last_num = np.sum(self.objects_in_bins)
+        # self._check_success()
+        # reward = np.sum(self.objects_in_bins) - last_num
+        reward = self._check_success_obj(self.target_object)
 
         # if reward != 0:
         print('Reward: ', reward)
         return reward
+
+    def get_bin_bound(self):
+        bin_x_low = self.bin_pos[0] - self.bin_size[0] / 2
+        bin_y_low = self.bin_pos[1] - self.bin_size[1] / 2
+
+        bin_x_high = bin_x_low + self.bin_size[0]
+        bin_y_high = bin_y_low + self.bin_size[1]
+
+        return np.array([bin_x_low, bin_y_low]), np.array([bin_x_high, bin_y_high])
 
     def not_in_bin(self, obj_pos):
 
@@ -513,6 +525,15 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
                 collision = True
                 break
         return collision
+
+    def _check_success_obj(self, obj_name):
+        obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_name]]
+        not_in_bin = self.not_in_bin(obj_pos)
+        if not_in_bin:
+            reward = 0
+        else:
+            reward = 1
+        return reward
 
     def _check_success(self):
         """
