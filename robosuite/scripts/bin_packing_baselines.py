@@ -109,17 +109,17 @@ def make_video(model_path, env, args):
     import imageio
     writer = imageio.get_writer(DEMO_PATH, fps=20)
 
-    n_episode = 20
-    acc = 0
+    n_episode = 10
+    take_nums = args.take_nums
 
     ## set view
-    env.render_drop_freq = 20
+    # env.envs[0].render_drop_freq = 20
 
     for i_episode in range(n_episode):
         obs = env.reset()
         total_reward = 0
 
-        for _ in range(env.take_nums):
+        for _ in range(take_nums):
 
             action, _states = model.predict(obs)
 
@@ -153,24 +153,24 @@ def make_video(model_path, env, args):
 
 def test(model_path, env, args):
     model = PPO2.load(model_path)
-    logger.log('Begin testing, total ' + str(args.test_episode) + ' episodes...')
 
     test_episode = args.test_episode
+    num_env = args.num_env
+    take_nums = args.take_nums
     avg_reward = 0
+
+    logger.log('Begin testing, total ' + str(test_episode * num_env) + ' episodes...')
     for i_episode in range(test_episode):
         obs = env.reset()
 
-        for _ in range(env.take_nums):
+        for _ in range(take_nums):
 
             action, _states = model.predict(obs)
 
             obs, rewards, dones, info = env.step(action)
-            avg_reward += rewards[0]
+            avg_reward += np.sum(rewards)
 
-            if dones[0]:
-                break
-
-    avg_reward /= test_episode
+    avg_reward /= (test_episode * num_env)
     logger.log('Average reward: ' + str(avg_reward))
 
 
