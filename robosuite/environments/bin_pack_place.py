@@ -90,6 +90,8 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
         assert self.take_nums <= len(self.obj_names)
 
+        self.success_objs = 0
+
         self.render_drop_freq = render_drop_freq
         self.video_height = video_height
         self.video_width = video_width
@@ -380,12 +382,15 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             self.sim.step()
             self.cur_time += self.model_timestep
 
-        reward, done, _ = self._post_action(action)
+        reward = self.reward(action)
+        if reward > 0:
+            self.success_objs += 1
 
         ## done
         done = (np.sum(self.objects_not_take != 1) >= self.take_nums)
 
         if done:
+            info['success_obj'] = self.success_objs
             print('Done!')
 
         ob_dict = self._get_observation()
@@ -420,6 +425,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
     def _reset_internal(self):
         super()._reset_internal()
 
+        self.success_objs = 0
         # reset positions of objects, and move objects out of the scene depending on the mode
         self.model.place_objects()
 
