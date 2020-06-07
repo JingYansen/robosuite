@@ -14,4 +14,5 @@ python bin_packing_baselines.py \
     --camera_width 64 \
     --log True \
     --test True \
-    --debug 'version-1.0.0'
+    --use_typeVector True \
+    --debug 'version-1.0.1'
