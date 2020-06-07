@@ -71,27 +71,19 @@ def test_video_bin_pack(env, video_path='demo/test/test.mp4'):
     import imageio
     writer = imageio.get_writer(video_path, fps=20)
 
-    episodes = 1
-    num_succ = 0
-    steps = 0
-    succ_steps = 0
+    episodes = 2
     avg_reward = 0
-    # action = env.action_space.sample()
     for _ in range(episodes):
         env.reset()
-
-        arr_imgs = []
-        succ = False
+        total_reward = 0
 
         for i in range(env.take_nums):
             # run a uniformly random agent
             action = env.action_space.sample()
-            # action[2] = -0.3
-            # action = up.copy()
-            # action[0:3] = 0.
 
             obs, reward, done, info = env.step(action)
             avg_reward += reward
+            total_reward += reward
 
             for o in info['birdview']:
                 # contains depth
@@ -105,31 +97,14 @@ def test_video_bin_pack(env, video_path='demo/test/test.mp4'):
 
                 view = np.concatenate((image, depth), 0)
 
-                arr_imgs.append(view)
+                text = str(total_reward)
+                cv2.putText(view, text, (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 1, cv2.LINE_AA)
+                writer.append_data(view)
 
             if done:
-                steps += i
-                succ = (reward >= 10)
                 break
 
-        if succ:
-            num_succ += 1
-            succ_steps += steps
-            text = 'Success'
-            color = (0, 255, 0)
-        else:
-            text = 'Fail'
-            color = (255, 0, 0)
-
-        for img in arr_imgs:
-            cv2.putText(img, text, (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1, cv2.LINE_AA)
-
-            writer.append_data(img)
-
     writer.close()
-    print('succ rate:', num_succ / episodes)
-    print('avg steps:', steps / episodes)
-    print('succ steps:', succ_steps / episodes)
     print('avg reward:', avg_reward / episodes)
 
 

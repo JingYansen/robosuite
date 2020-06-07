@@ -15,6 +15,7 @@ from stable_baselines import PPO2
 from stable_baselines import logger
 
 from robosuite.scripts.lr_schedule import get_lr_func
+from robosuite.scripts.utils import norm_depth
 
 try:
     from mpi4py import MPI
@@ -111,57 +112,66 @@ def make_video(model_path, env, args):
     n_episode = 20
     acc = 0
 
+    ## set view
+    env.render_drop_freq = 20
+
     for i_episode in range(n_episode):
         obs = env.reset()
+        total_reward = 0
 
-        arr_imgs = []
-        succ = False
-
-        for _ in range(1000):
+        for _ in range(env.take_nums):
 
             action, _states = model.predict(obs)
-            print('action: ', action)
 
             obs, rewards, dones, info = env.step(action)
+            total_reward += rewards[0]
 
-            data = info[0]['vis']
-            # contains depth
-            if data.shape[-1] == 4:
-                image = data[:, :, :-1]
-                depth = data[:, :, -1]
+            for o in info[0]['birdview']:
+                # contains depth
+
+                image, depth = o
+                depth = norm_depth(depth)
 
                 depth_shape = depth.shape
                 depth = depth.reshape(depth_shape[0], depth_shape[1], 1)
                 depth = cv2.cvtColor(depth, cv2.COLOR_GRAY2BGR)
 
-                data = np.concatenate((image, depth), 0)
+                view = np.concatenate((image, depth), 0)
 
-            # writer.append_data(data)
-            arr_imgs.append(data)
+                text = str(total_reward)
+                cv2.putText(view, text, (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 1, cv2.LINE_AA)
+                writer.append_data(view)
 
             if dones[0]:
-                succ = (rewards[0] >= 10)
                 break
-
-        if succ:
-            acc += 1
-            text = 'Success'
-            color = (0, 255, 0)
-        else:
-            text = 'Fail'
-            color = (255, 0, 0)
-
-        for img in arr_imgs:
-            cv2.putText(img, text, (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1, cv2.LINE_AA)
-
-            writer.append_data(img)
 
 
     writer.close()
     print('Make video over.')
     print('Video path: ', DEMO_PATH)
-    acc /= n_episode
-    print('Acc rate: ', acc)
+
+
+def test(model_path, env, args):
+    model = PPO2.load(model_path)
+    logger.log('Begin testing, total ' + str(args.test_episode) + ' episodes...')
+
+    test_episode = args.test_episode
+    avg_reward = 0
+    for i_episode in range(test_episode):
+        obs = env.reset()
+
+        for _ in range(env.take_nums):
+
+            action, _states = model.predict(obs)
+
+            obs, rewards, dones, info = env.step(action)
+            avg_reward += rewards[0]
+
+            if dones[0]:
+                break
+
+    avg_reward /= test_episode
+    logger.log('Average reward: ' + str(avg_reward))
 
 
 def get_info_dir(args):
@@ -280,9 +290,13 @@ if __name__ == "__main__":
         model.save(save_path)
         logger.log('Save to ', args.save_dir)
 
+    if osp.exists(args.load_path):
+        model_path = args.load_path
+    else:
+        model_path = args.save_path
+
+    if args.test:
+        test(model_path, env, args)
+
     if args.make_video:
-        if osp.exists(args.load_path):
-            model_path = args.load_path
-        else:
-            model_path = args.save_path
         make_video(model_path, env, args)
