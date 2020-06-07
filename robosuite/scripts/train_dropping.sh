@@ -4,12 +4,12 @@ python bin_packing_baselines.py \
     --alg ppo2 \
     --num_env 16 \
     --num_timesteps 1000000 \
-    --nsteps 128 \
-    --noptepochs 10 \
-    --nminibatches 32 \
+    --nsteps 256 \
+    --noptepochs 20 \
+    --nminibatches 4 \
     --lr_type 'linear' \
-    --max 1e-4 \
-    --min 1e-4 \
+    --max 1e-3 \
+    --min 3e-4 \
     --camera_height 64 \
     --camera_width 64 \
     --log True \
