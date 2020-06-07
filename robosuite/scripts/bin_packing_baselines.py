@@ -304,5 +304,6 @@ if __name__ == "__main__":
     if args.test:
         test(model_path, env, args)
 
+    logger.log('Save to ', args.save_dir)
     if args.make_video:
         make_video(model_path, env, args)
