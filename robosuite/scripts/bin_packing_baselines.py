@@ -9,7 +9,7 @@ import os.path as osp
 import numpy as np
 import tensorflow as tf
 
-from stable_baselines.common.policies import CnnPolicy
+from stable_baselines.common.policies import CnnPolicy, CnnVectorPolicy
 from stable_baselines.common import make_vec_env
 from stable_baselines import PPO2
 from stable_baselines import logger
@@ -45,6 +45,7 @@ def get_env_kwargs(args):
     env_kwargs['has_offscreen_renderer'] = args.has_offscreen_renderer
     env_kwargs['camera_type'] = args.camera_type
     env_kwargs['random_take'] = args.random_take
+    env_kwargs['use_typeVector'] = args.use_typeVector
     env_kwargs['take_nums'] = args.take_nums
 
     env_kwargs['keys'] = args.keys
@@ -76,7 +77,10 @@ def train(args):
 
     env = build_env(args)
 
-    model = PPO2(CnnPolicy, env, verbose=1, **alg_kwargs)
+    if args.use_typeVector:
+        model = PPO2(CnnVectorPolicy, env, verbose=1, **alg_kwargs)
+    else:
+        model = PPO2(CnnPolicy, env, verbose=1, **alg_kwargs)
     model.learn(
         total_timesteps=total_timesteps,
         log_interval=args.log_interval,
@@ -181,8 +185,8 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'noptepochs', 'batch', 'take']
-    values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.take_nums]
+    keys = ['total', 'nsteps', 'noptepochs', 'batch', 'take', 'type']
+    values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.take_nums, args.use_typeVector]
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):
@@ -206,6 +210,7 @@ if __name__ == "__main__":
     parser.add_argument('--has_offscreen_renderer', type=bool, default=True)
     parser.add_argument('--camera_type', type=str, default='image+depth')
     parser.add_argument('--random_take', type=bool, default=True)
+    parser.add_argument('--use_typeVector', type=bool, default=False)
 
     parser.add_argument('--control_freq', type=int, default=1)
     parser.add_argument('--render_drop_freq', type=int, default=0)

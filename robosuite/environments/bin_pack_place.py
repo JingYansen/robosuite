@@ -77,6 +77,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         z_limit=1.0,
         take_nums=6,
         random_take=False,
+        use_typeVector=False,
         action_bound=(np.array([0.5575, 0.3375]), np.array([0.6425, 0.4225])),
     ):
 
@@ -87,6 +88,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self.camera_type = camera_type
         self.force_ratios = force_ratios
         self.z_limit = z_limit
+        self.use_typeVector = use_typeVector
 
         assert self.take_nums <= len(self.obj_names)
 
@@ -183,7 +185,14 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
                     print("adding key: {}".format(key))
                 ob_lst.append(obs_dict[key])
 
-        return np.concatenate(ob_lst)
+        if self.use_typeVector:
+            ob_image = np.concatenate(ob_lst)
+            type_vector = np.zeros(len(self.object_to_id))
+
+            obs = np.concatenate((ob_image.reshape(-1), type_vector))
+            return obs
+        else:
+            return np.concatenate(ob_lst)
 
     def _name2obj(self, name):
         assert name in self.object_to_id.keys()
