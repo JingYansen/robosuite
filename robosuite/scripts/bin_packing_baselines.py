@@ -186,8 +186,8 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'noptepochs', 'batch', 'take', 'type']
-    values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.take_nums, args.use_typeVector]
+    keys = ['total', 'nsteps', 'noptepochs', 'batch', 'take', 'type', 'ent']
+    values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.take_nums, args.use_typeVector, args.ent_coef]
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):

@@ -10,6 +10,7 @@ python bin_packing_baselines.py \
     --lr_type 'linear' \
     --max 1e-3 \
     --min 3e-4 \
+    --ent_coef 0.005 \
     --camera_height 64 \
     --camera_width 64 \
     --log True \
