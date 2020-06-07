@@ -17,6 +17,7 @@ from stable_baselines import logger
 from robosuite.scripts.lr_schedule import get_lr_func
 from robosuite.scripts.utils import norm_depth
 
+
 try:
     from mpi4py import MPI
 except ImportError:
