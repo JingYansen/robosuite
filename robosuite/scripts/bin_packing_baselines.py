@@ -243,7 +243,7 @@ if __name__ == "__main__":
     parser.add_argument('--min', type=float, default=3e-4)
 
     ## video args
-    parser.add_argument('--make_video', type=bool, default=True)
+    parser.add_argument('--make_video', type=bool, default=False)
     parser.add_argument('--video_name', type=str, default='demo.mp4')
 
     ## test args
