@@ -443,7 +443,10 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             data_reward = reward
 
             # image
-            img_path = os.path.join(self.dataset_path, str(data_type), str(self.dataset_count) + '.npy')
+            img_dir = os.path.join(self.dataset_path, str(data_type))
+            if not os.path.exists(img_dir):
+                os.makedirs(img_dir)
+            img_path = os.path.join(img_dir, str(self.dataset_count) + '.npy')
             np.save(img_path, data_input)
 
             # info
