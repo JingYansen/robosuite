@@ -46,8 +46,10 @@ def get_env_kwargs(args):
     env_kwargs['has_offscreen_renderer'] = args.has_offscreen_renderer
     env_kwargs['camera_type'] = args.camera_type
     env_kwargs['random_take'] = args.random_take
-    env_kwargs['use_typeVector'] = args.use_typeVector
     env_kwargs['take_nums'] = args.take_nums
+    env_kwargs['use_typeVector'] = args.use_typeVector
+    env_kwargs['make_dataset'] = args.make_dataset
+    env_kwargs['dataset_path'] = args.dataset_path
 
     env_kwargs['keys'] = args.keys
 
@@ -186,8 +188,8 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'noptepochs', 'batch', 'take', 'type', 'ent']
-    values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.take_nums, args.use_typeVector, args.ent_coef]
+    keys = ['total', 'nsteps', 'noptepochs', 'batch', 'take', 'type', 'ent', 'dataset']
+    values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.take_nums, args.use_typeVector, args.ent_coef, args.make_dataset]
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):
@@ -212,6 +214,7 @@ if __name__ == "__main__":
     parser.add_argument('--camera_type', type=str, default='image+depth')
     parser.add_argument('--random_take', type=bool, default=True)
     parser.add_argument('--use_typeVector', type=bool, default=False)
+    parser.add_argument('--make_dataset', type=bool, default=False)
 
     parser.add_argument('--control_freq', type=int, default=1)
     parser.add_argument('--render_drop_freq', type=int, default=0)
@@ -220,6 +223,7 @@ if __name__ == "__main__":
     parser.add_argument('--take_nums', type=int, default=6)
 
     parser.add_argument('--keys', type=str, default='image', choices=['state', 'image'])
+    parser.add_argument('--dataset_path', type=str, default='data/temp/')
 
     ## alg args
     parser.add_argument('--env_id', type=str, default='BinPack-v0')

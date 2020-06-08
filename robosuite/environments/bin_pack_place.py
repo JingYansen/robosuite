@@ -78,6 +78,8 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         take_nums=6,
         random_take=False,
         use_typeVector=False,
+        make_dataset=False,
+        dataset_path='data/temp/',
         action_bound=(np.array([0.56, 0.34]), np.array([0.64, 0.42])),
         # action_bound=(np.array([0.5575, 0.3375]), np.array([0.6425, 0.4225])),
     ):
@@ -90,6 +92,14 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self.force_ratios = force_ratios
         self.z_limit = z_limit
         self.use_typeVector = use_typeVector
+        self.make_dataset = make_dataset
+        self.dataset_path = dataset_path
+        self.dataset_count = 0
+
+        if self.make_dataset:
+            self.label_file = os.path.join(self.dataset_path, 'label.txt')
+            if os.path.exists(self.label_file):
+                os.remove(self.label_file)
 
         assert self.take_nums <= len(self.obj_names)
 
@@ -319,6 +329,15 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self.sim.set_state(sim_state)
         self.sim.forward()
 
+    def obj2type(self, obj_name):
+        type = -1
+        for obj_type, val in self.object_to_id.items():
+            if obj_type in obj_name:
+                type = val
+                break
+
+        assert type >= 0
+        return type
 
     def take_an_object(self, action):
         ## random take an object
@@ -368,6 +387,10 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         if self.done:
             raise ValueError("executing action in terminated episode")
 
+        if self.make_dataset:
+            ob_dict = self._get_observation()
+            data_input = ob_dict['image'].copy()
+
         # take an obj
         self.take_an_object(action)
 
@@ -404,6 +427,32 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             print('Done!')
 
         ob_dict = self._get_observation()
+
+        # make data
+        if self.make_dataset:
+            def arr2str(arr):
+                s = ''
+                for i, a in enumerate(arr):
+                    s += str(a)
+                    if i != len(arr) - 1:
+                        s += ','
+                return s
+
+            data_position = action.copy()
+            data_type = self.obj2type(self.target_object)
+            data_reward = reward
+
+            # image
+            img_path = os.path.join(self.dataset_path, str(data_type), str(self.dataset_count) + '.npy')
+            np.save(img_path, data_input)
+
+            # info
+            label = img_path + ' ' + arr2str(data_position) + ' ' + str(data_type) + ' ' + str(data_reward)
+
+            with open(self.label_file, 'a+') as f:
+                f.write(label + '\n')
+
+            self.dataset_count += 1
 
         return self._flatten_obs(ob_dict), reward, done, info
 
