@@ -10,10 +10,10 @@ python bin_packing_baselines.py \
     --lr_type 'linear' \
     --max 1e-3 \
     --min 3e-4 \
-    --ent_coef 0.005 \
+    --ent_coef 0.2 \
     --camera_height 64 \
     --camera_width 64 \
     --log True \
     --test True \
     --use_typeVector True \
-    --debug 'version-1.0.1'
+    --debug 'version-1.0.2'
