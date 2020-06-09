@@ -16,4 +16,4 @@ python bin_packing_baselines.py \
     --log True \
     --test True \
     --use_typeVector True \
-    --debug 'version-1.0.2'
+    --debug 'version-1.0.2.2'
