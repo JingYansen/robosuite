@@ -3,6 +3,7 @@ robosuite/scripts/frames
 robosuite/scripts/data
 robosuite/scripts/results*
 *temp/
+robosuite/models/segmentation/results*
 
 
 # Byte-compiled / optimized / DLL files

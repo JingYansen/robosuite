@@ -24,6 +24,9 @@ def make_dataset(lines, datadir):
     images = []
 
     for line in lines:
+        line = line.strip()
+        if not line:
+            continue
         path, action, obj_type, reward = line.split()
 
         path = osp.join(datadir, path)
