@@ -70,8 +70,11 @@ def train(args):
     optimizers = []
     train_loaders = []
     test_loaders = []
+    gpus = args.gpu_ids.split(',')
     for i in range(args.type):
         model = smp.FPN('resnet50', in_channels=4, classes=3).cuda()
+        model = nn.DataParallel(model, device_ids=[int(_) for _ in gpus])
+
         optimizer = optim.SGD(model.parameters(), lr=1e-3, momentum=0.9, weight_decay=0.0005, nesterov=True)
 
         models.append(model)
@@ -152,7 +155,7 @@ if __name__=='__main__':
     parser.add_argument('--type', type=int, default=4)
     parser.add_argument('--batch_size', type=int, default=16)
 
-    parser.add_argument('--gpu_id', type=str, default='0', help="device id to run")
+    parser.add_argument('--gpu_ids', type=str, default='0,1,2,3', help="device id to run")
 
     args = parser.parse_args()
 
