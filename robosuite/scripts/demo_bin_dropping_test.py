@@ -149,6 +149,43 @@ def test_random_take(env):
                 break
 
 
+def test_mapping_from_action_to_img(env):
+    for _ in range(1):
+        env.reset()
+        total_reward = 0
+
+        for i in range(env.take_nums):
+            # run a uniformly random agent
+            # action = env.action_space.sample()
+            action = np.array([0.6425, 0.4225])
+
+            obs, reward, done, info = env.step(action)
+
+            for o in info['birdview']:
+                # contains depth
+
+                image, depth = o
+                depth = norm_depth(depth)
+
+                depth_shape = depth.shape
+                depth = depth.reshape(depth_shape[0], depth_shape[1], 1)
+                depth = cv2.cvtColor(depth, cv2.COLOR_GRAY2BGR)
+
+                view = np.concatenate((image, depth), 0)
+
+                point_size = 1
+                point_color = (0, 0, 255) # BGR
+                thickness = 4
+                # point = (11, 16)
+                # point = (11, 46) # [0.5575, 0.3375]
+                point = (41, 16) # [0.6425, 0.4225]
+                # point = (0, 0)
+                cv2.circle(view, point, point_size, point_color, thickness)
+                Image.fromarray(view).save('temp.jpeg')
+
+                return
+
+
 if __name__ == "__main__":
 
     from robosuite.scripts.hard_case import get_hard_cases
@@ -163,9 +200,14 @@ if __name__ == "__main__":
         use_camera_obs=True,
         control_freq=1,
         render_drop_freq=20,
-    )
+        camera_height=64,
+        camera_width=64,
+        video_height=64,
+        video_width=64
+        )
 
 
     # run(env)
-    test_video_bin_pack(env)
+    # test_video_bin_pack(env)
+    test_mapping_from_action_to_img(env)
     # adjust_camera_pos(env)
