@@ -164,7 +164,7 @@ if __name__=='__main__':
     parser.add_argument('--total_epochs', type=int, default=100)
     parser.add_argument('--test_interval', type=int, default=10)
     parser.add_argument('--type', type=int, default=4)
-    parser.add_argument('--batch_size', type=int, default=16)
+    parser.add_argument('--batch_size', type=int, default=64)
 
     parser.add_argument('--gpu_ids', type=str, default='0,1,2,3', help="device id to run")
 
