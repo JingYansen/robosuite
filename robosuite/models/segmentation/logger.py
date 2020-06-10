@@ -20,6 +20,12 @@ class Logger:
     def step(self, step):
         self.global_step += step
 
+    def add_scalar_print(self, name, val):
+        self.writer.add_scalar(name, val, self.global_step)
+        self.writer.file_writer.flush()
+
+        print(name, ': ', val)
+
     def add_scalar(self, name, val):
         self.writer.add_scalar(name, val, self.global_step)
         self.writer.file_writer.flush()

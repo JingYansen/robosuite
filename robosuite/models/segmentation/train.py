@@ -46,7 +46,7 @@ def test(args, models, test_loaders):
             rewards = rewards.cuda()
             masks = model(imgs)
 
-            for batch in masks.size(0):
+            for batch in range(masks.size(0)):
                 pixel = pixels[batch]
                 mask = masks[batch][:, pixel[0], pixel[1]]
                 mask = mask.argmax(0)
@@ -99,42 +99,53 @@ def train(args):
     for epoch in range(total_epochs):
         total_progress_bar.update(1)
         ## train $type$ model
-        for tp in range(args.type):
-            train_loader = train_loaders[tp]
-            test_loader = test_loaders[tp]
-            model = models[tp]
-            optimizer = optimizers[tp]
-
-            model.train()
-
-            temp_progress_bar = tqdm.tqdm(desc='Train iter for type ' + str(tp), total=len(train_loader))
-            for it, (imgs, pixels, obj_types, rewards) in enumerate(train_loader):
-                temp_progress_bar.update(1)
-
-                imgs = imgs.cuda()
-                pixels = pixels.cuda()
-                rewards = rewards.cuda()
-                masks = model(imgs)
-
-                ## TODO: better format
-                loss = CE_pixel(masks, pixels, rewards)
-
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-
-                ## vis
-                logger.add_scalar('loss_' + str(tp), loss.item() / args.batch_size)
+        # for tp in range(args.type):
+        #     train_loader = train_loaders[tp]
+        #     test_loader = test_loaders[tp]
+        #     model = models[tp]
+        #     optimizer = optimizers[tp]
+        #
+        #     model.train()
+        #
+        #     temp_progress_bar = tqdm.tqdm(desc='Train iter for type ' + str(tp), total=len(train_loader))
+        #     for it, (imgs, pixels, obj_types, rewards) in enumerate(train_loader):
+        #         temp_progress_bar.update(1)
+        #
+        #         imgs = imgs.cuda()
+        #         pixels = pixels.cuda()
+        #         rewards = rewards.cuda()
+        #         masks = model(imgs)
+        #
+        #         ## TODO: better format
+        #         loss = CE_pixel(masks, pixels, rewards)
+        #
+        #         optimizer.zero_grad()
+        #         loss.backward()
+        #         optimizer.step()
+        #
+        #         ## vis
+        #         logger.add_scalar('loss_' + str(tp), loss.item() / args.batch_size)
 
         ## test
         if epoch % args.test_interval == 1:
             accs = test(args, models, test_loaders)
+            import ipdb
+            ipdb.set_trace()
             state = {}
             for i in range(args.type):
                 state['FPN_' + str(i)] = models[i].state_dict()
-                logger.add_scalar('acc_' + str(i), accs[i])
+                logger.add_scalar_print('acc_' + str(i), accs[i])
 
             logger.save_ckpt_iter(state=state, iter=epoch)
+
+    ## at last
+    accs = test(args, models, test_loaders)
+    state = {}
+    for i in range(args.type):
+        state['FPN_' + str(i)] = models[i].state_dict()
+        logger.add_scalar_print('acc_' + str(i), accs[i])
+
+    logger.save_ckpt_iter(state=state, iter=total_epochs)
 
 
 if __name__=='__main__':
