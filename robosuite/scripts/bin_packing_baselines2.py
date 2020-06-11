@@ -142,15 +142,6 @@ def configure_logger(log_path, **kwargs):
 
 
 def build_env(args):
-    # make env in robosuite
-    obj_names = []
-    args.obj_nums = args.obj_nums.split(',')
-    for i, name in zip(args.obj_nums, args.obj_types):
-        obj_names = obj_names + [name] * int(i)
-
-    args.obj_names = obj_names
-    logger.log('Total objects: ', args.obj_names)
-
     # make env in gym
     env_kwargs = get_env_kwargs(args)
 
@@ -168,7 +159,6 @@ def build_env(args):
 
     flatten_dict_observations = args.alg not in {'her'}
     env = make_vec_env(args.env_id, args.env_type, args.num_env or 1, seed, env_kwargs=env_kwargs,
-                       reward_scale=args.reward_scale,
                        flatten_dict_observations=flatten_dict_observations)
     return env
 

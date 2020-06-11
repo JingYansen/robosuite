@@ -1,6 +1,6 @@
 ## train with states
 set -ex
-python bin_packing_baselines.py \
+python bin_packing_baselines2.py \
     --alg ppo2 \
     --num_env 16 \
     --num_timesteps 1000000 \
