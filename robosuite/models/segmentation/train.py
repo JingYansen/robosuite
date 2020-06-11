@@ -129,8 +129,6 @@ def train(args):
         ## test
         if epoch % args.test_interval == 1:
             accs = test(args, models, test_loaders)
-            import ipdb
-            ipdb.set_trace()
             state = {}
             for i in range(args.type):
                 state['FPN_' + str(i)] = models[i].state_dict()
@@ -161,8 +159,8 @@ if __name__=='__main__':
     parser.add_argument('--vis_path', type=str, default='results/')
 
     # alg
-    parser.add_argument('--total_epochs', type=int, default=100)
-    parser.add_argument('--test_interval', type=int, default=10)
+    parser.add_argument('--total_epochs', type=int, default=10)
+    parser.add_argument('--test_interval', type=int, default=2)
     parser.add_argument('--type', type=int, default=4)
     parser.add_argument('--batch_size', type=int, default=64)
 
