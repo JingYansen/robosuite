@@ -318,7 +318,7 @@ if __name__ == "__main__":
     low = np.array([0.5, 0.15])
     high = np.array([0.7, 0.6])
 
-    if args.typeVector:
+    if args.use_typeVector:
         args.network = 'cnn_type'
 
     info_dir = get_info_dir(args)
