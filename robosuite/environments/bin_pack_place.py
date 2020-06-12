@@ -80,8 +80,8 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         use_typeVector=False,
         make_dataset=False,
         dataset_path='data/temp/',
-        # action_bound=(np.array([0.56, 0.34]), np.array([0.64, 0.42])),
-        action_bound=(np.array([0.53, 0.3]), np.array([0.67, 0.45])),
+        action_bound=(np.array([0.5, 0.3]), np.array([0.7, 0.5])),
+        # action_bound=(np.array([0.53, 0.3]), np.array([0.67, 0.45])),
         # action_bound=(np.array([0.5575, 0.3375]), np.array([0.6425, 0.4225])),
     ):
 

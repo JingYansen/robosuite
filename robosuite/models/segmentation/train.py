@@ -87,7 +87,7 @@ def train(args):
         test_dset = ImageList(open(test_list).readlines(), datadir=args.data_path, transform=test_transforms)
 
         train_loader = DataLoader(train_dset, batch_size=args.batch_size, shuffle=True, num_workers=4, drop_last=False)
-        test_loader = DataLoader(test_dset, batch_size=args.batch_size, shuffle=False, num_workers=4, drop_last=False)
+        test_loader = DataLoader(test_dset, batch_size=args.test_batch, shuffle=False, num_workers=4, drop_last=False)
 
         train_loaders.append(train_loader)
         test_loaders.append(test_loader)
@@ -125,6 +125,7 @@ def train(args):
 
                 ## vis
                 logger.add_scalar('loss_' + str(tp), loss.item() / args.batch_size)
+            logger.step(1)
 
         ## test
         if epoch % args.test_interval == 1:
@@ -163,6 +164,7 @@ if __name__=='__main__':
     parser.add_argument('--test_interval', type=int, default=2)
     parser.add_argument('--type', type=int, default=4)
     parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--test_batch', type=int, default=4)
 
     parser.add_argument('--gpu_ids', type=str, default='0,1,2,3', help="device id to run")
 

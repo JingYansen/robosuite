@@ -1,6 +1,6 @@
 ## train with states
 set -ex
-python bin_packing_baselines2.py \
+python bin_packing_baselines.py \
     --alg ppo2 \
     --num_env 16 \
     --num_timesteps 1000000 \
@@ -10,9 +10,10 @@ python bin_packing_baselines2.py \
     --lr_type 'linear' \
     --max 1e-3 \
     --min 3e-4 \
-    --ent_coef 0.005 \
+    --ent_coef 0.2 \
     --camera_height 64 \
     --camera_width 64 \
     --log True \
     --test True \
-    --debug 'version-1.1.0'
+    --use_typeVector True \
+    --debug 'version-1.0.2.6'
