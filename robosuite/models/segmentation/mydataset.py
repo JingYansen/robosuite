@@ -17,7 +17,10 @@ def action2pixel(action):
 
     pixel_x, pixel_y = int(pixel_x), int(pixel_y)
 
-    return np.array([pixel_x, pixel_y])
+    pixel = np.array([pixel_x, pixel_y])
+    pixel = np.clip(pixel, np.array([0, 0]), np.array([64, 64]))
+
+    return pixel
 
 
 def make_dataset(lines, datadir):
