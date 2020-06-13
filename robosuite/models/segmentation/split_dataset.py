@@ -47,8 +47,8 @@ def split_train_test(file, ratio=0.8):
 
 
 if __name__ == '__main__':
-    # split_by_type('/home/yeweirui/data/temp/label.txt', '/home/yeweirui/data/temp/')
-    split_train_test('/home/yeweirui/data/temp/label_0.txt')
-    split_train_test('/home/yeweirui/data/temp/label_1.txt')
-    split_train_test('/home/yeweirui/data/temp/label_2.txt')
-    split_train_test('/home/yeweirui/data/temp/label_3.txt')
+    split_by_type('/home/yeweirui/data/random/label.txt', '/home/yeweirui/data/random/')
+    split_train_test('/home/yeweirui/data/random/label_0.txt')
+    split_train_test('/home/yeweirui/data/random/label_1.txt')
+    split_train_test('/home/yeweirui/data/random/label_2.txt')
+    split_train_test('/home/yeweirui/data/random/label_3.txt')

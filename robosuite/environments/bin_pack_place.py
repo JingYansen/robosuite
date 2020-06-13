@@ -500,7 +500,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         reward = self._check_success_obj(self.target_object)
 
         # if reward != 0:
-        print('Reward: ', reward)
+        print('Reward: ', reward, ' by Action: ', action)
         return reward
 
     def get_bin_bound(self):

@@ -174,6 +174,8 @@ def make_video(model, env, args):
 
     ## set view
     # env.envs[0].render_drop_freq = 20
+    state = model.initial_state if hasattr(model, 'initial_state') else None
+    dones = np.zeros((1,))
 
     for i_episode in range(n_episode):
         obs = env.reset()
@@ -181,9 +183,12 @@ def make_video(model, env, args):
 
         for _ in range(take_nums):
 
-            action, _states = model.predict(obs)
+            if state is not None:
+                actions, _, state, _ = model.step(obs, S=state, M=dones)
+            else:
+                actions, _, _, _ = model.step(obs)
 
-            obs, rewards, dones, info = env.step(action)
+            obs, rewards, dones, info = env.step(actions)
             total_reward += rewards[0]
 
             for o in info[0]['birdview']:
@@ -217,15 +222,20 @@ def test(model, env, args):
     take_nums = args.take_nums
     avg_reward = 0
 
+    state = model.initial_state if hasattr(model, 'initial_state') else None
+    dones = np.zeros((num_env,))
+
     logger.log('Begin testing, total ' + str(test_episode * num_env) + ' episodes...')
     for i_episode in range(test_episode):
         obs = env.reset()
 
         for _ in range(take_nums):
+            if state is not None:
+                actions, _, state, _ = model.step(obs, S=state, M=dones)
+            else:
+                actions, _, _, _ = model.step(obs)
 
-            action, _states = model.predict(obs)
-
-            obs, rewards, dones, info = env.step(action)
+            obs, rewards, dones, info = env.step(actions)
             avg_reward += np.sum(rewards)
 
     avg_reward /= (test_episode * num_env)
@@ -347,6 +357,8 @@ if __name__ == "__main__":
         ## log
         logger.log(args)
 
+    # import ipdb
+    # ipdb.set_trace()
     model, env = train(args)
 
     if args.save_path is not None:
@@ -356,7 +368,7 @@ if __name__ == "__main__":
 
     if args.test:
         test(model, env, args)
+        logger.log('Save to ', args.save_dir)
 
-    logger.log('Save to ', args.save_dir)
     if args.make_video:
         make_video(model, env, args)
