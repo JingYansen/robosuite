@@ -79,7 +79,8 @@ def test_video_bin_pack(env, video_path='demo/test/test.mp4'):
 
         for i in range(env.take_nums):
             # run a uniformly random agent
-            action = env.action_space.sample()
+            # action = env.action_space.sample()
+            action = np.array([0.5, 0.3])
 
             obs, reward, done, info = env.step(action)
             avg_reward += reward
@@ -208,6 +209,6 @@ if __name__ == "__main__":
 
 
     # run(env)
-    # test_video_bin_pack(env)
-    test_mapping_from_action_to_img(env)
+    test_video_bin_pack(env)
+    # test_mapping_from_action_to_img(env)
     # adjust_camera_pos(env)

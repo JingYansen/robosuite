@@ -125,7 +125,7 @@ def train(args):
 
                 ## vis
                 logger.add_scalar('loss_' + str(tp), loss.item() / args.batch_size)
-            logger.step(1)
+                logger.step(1)
 
         ## test
         if epoch % args.test_interval == 1:
@@ -164,7 +164,7 @@ if __name__=='__main__':
     parser.add_argument('--test_interval', type=int, default=2)
     parser.add_argument('--type', type=int, default=4)
     parser.add_argument('--batch_size', type=int, default=64)
-    parser.add_argument('--test_batch', type=int, default=4)
+    parser.add_argument('--test_batch', type=int, default=64)
 
     parser.add_argument('--gpu_ids', type=str, default='0,1,2,3', help="device id to run")
 
