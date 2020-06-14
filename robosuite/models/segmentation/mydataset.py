@@ -58,7 +58,7 @@ def l_loader(path):
 
 
 class ImageList(Dataset):
-    def __init__(self, image_list, datadir='', transform=None):
+    def __init__(self, image_list, datadir='', transform=None, show_path=False):
         imgs = make_dataset(image_list, datadir)
         if len(imgs) == 0:
             raise ValueError('Empty img list')
@@ -66,6 +66,7 @@ class ImageList(Dataset):
         self.imgs = imgs
         self.transform = transform
         self.loader = np.load
+        self.show_path = show_path
 
     def __getitem__(self, index):
         path, pixel, obj_type, reward = self.imgs[index]
@@ -73,7 +74,10 @@ class ImageList(Dataset):
         if self.transform is not None:
             img = self.transform(img)
 
-        return img, pixel, obj_type, reward
+        if self.show_path:
+            return img, pixel, obj_type, reward, path
+        else:
+            return img, pixel, obj_type, reward
 
     def __len__(self):
         return len(self.imgs)

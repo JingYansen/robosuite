@@ -152,12 +152,12 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Segmentation Training...')
 
     # data
-    parser.add_argument('--data_list_path', type=str, default='/home/yeweirui/data/random')
+    parser.add_argument('--data_list_path', type=str, default='/home/yeweirui/data/random_take')
     parser.add_argument('--data_path', type=str, default='/home/yeweirui/')
 
     # log
-    parser.add_argument('--ckpt_path', type=str, default='results/random_data')
-    parser.add_argument('--vis_path', type=str, default='results/random_data')
+    parser.add_argument('--ckpt_path', type=str, default='results/random_take_data')
+    parser.add_argument('--vis_path', type=str, default='results/random_take_data')
 
     # alg
     parser.add_argument('--total_epochs', type=int, default=10)

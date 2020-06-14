@@ -8,9 +8,9 @@ python bin_packing_baselines2.py \
     --noptepochs 20 \
     --nminibatches 4 \
     --lr_type 'linear' \
-    --max 3e-4 \
+    --max 1e-3 \
     --min 3e-4 \
-    --ent_coef 0.005 \
+    --ent_coef 0.01 \
     --camera_height 64 \
     --camera_width 64 \
     --log True \

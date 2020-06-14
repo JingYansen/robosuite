@@ -17,30 +17,15 @@ if __name__=='__main__':
         'video_height': 64,
         'video_width': 64,
         'make_dataset': True,
-        'dataset_path': 'data/random',
+        'random_take': True,
+        'dataset_path': 'data/random_take',
         'action_bound': (np.array([0.5, 0.3]), np.array([0.7, 0.5]))
     }
 
     env_nums = 32
     env = make_vec_env(env_id, env_type, env_nums, None, env_kwargs=env_kwargs)
 
-    # env = suite.make(
-    #     'BinPackPlace',
-    #     has_renderer=False,
-    #     has_offscreen_renderer=True,
-    #     ignore_done=True,
-    #     use_camera_obs=True,
-    #     control_freq=1,
-    #     camera_height=64,
-    #     camera_width=64,
-    #     video_height=64,
-    #     video_width=64,
-    #     make_dataset=True,
-    #     dataset_path='data/random',
-    #     action_bound=(np.array([0.5, 0.3]), np.array([0.7, 0.5]))
-    # )
-
-    episodes = 1200000 // (6 * env_nums)
+    episodes = 1500000 // (6 * env_nums)
 
     progress_bar = tqdm.tqdm(desc='Collect data ', total=episodes)
     for i in range(episodes):

@@ -1,12 +1,14 @@
 import argparse
 import torch
 import os
+import cv2
+import tqdm
 
 import numpy as np
 import torch.nn as nn
 import segmentation_models_pytorch as smp
 
-from PIL import Image
+from PIL import Image, ImageDraw
 from torchvision import transforms
 from torch.utils.data import DataLoader
 
@@ -24,34 +26,37 @@ def vis(args, model, loader):
         [255, 255, 255]
     ]).astype('uint8')
 
-    for it, (imgs, pixels, obj_types, rewards) in enumerate(loader):
+    total_progress_bar = tqdm.tqdm(desc='Train iter', total=args.total_num)
+
+    for it, (imgs, pixels, obj_types, rewards, paths) in enumerate(loader):
 
         imgs = imgs.cuda()
         pixels = pixels.cuda()
         rewards = rewards.cuda()
         masks = model(imgs)
 
-        for img_ori, mask, pixel, obj_type in zip(masks, imgs, pixels, obj_types):
+        for _, mask, pixel, obj_type, path in zip(imgs, masks, pixels, obj_types, paths):
+            point = pixel.detach().cpu().numpy()
+
             mask = mask.argmax(0)
 
             seg = Image.fromarray(mask.byte().cpu().numpy()).resize((64, 64))
             seg.putpalette(colors)
             seg = seg.convert('RGB')
+            draw = ImageDraw.Draw(seg)
+            draw.ellipse((point[0]-1, point[1]-1, point[0]+1, point[1]+1), fill=(255, 255, 255))
 
-            import ipdb
-            ipdb.set_trace()
+            img_np = np.load(path)[:, :, :3]
+            img_np = Image.fromarray(img_np)
+            img_seg = Image.new(img_np.mode, (128, 64))
 
-            img_ori = img_ori.byte().detach().cpu().numpy()
-            img_ori = img_ori.transpose((1,2,0))
-            img_ori = Image.fromarray(img_ori)
-            img_seg = Image.new(img_ori.mode, (128, 64))
-
-            img_seg.paste(img_ori, box=(0, 0))
+            img_seg.paste(img_np, box=(0, 0))
             img_seg.paste(seg, box=(64, 0))
 
-            img_seg.save(os.path.join(args.vis_path, str(obj_type) + '_' + str(idx) + '.jpg'))
+            img_seg.save(os.path.join(args.vis_path, str(obj_type.item()) + '_' + str(idx) + '.jpg'))
 
             idx += 1
+            total_progress_bar.update(1)
 
             if idx > args.total_num:
                 return
@@ -63,12 +68,12 @@ if __name__=='__main__':
 
     parser.add_argument('--type', type=int, default=0)
     parser.add_argument('--total_num', type=int, default=20)
-    parser.add_argument('--img_path', type=str, default='/home/yeweirui/data/temp/0/1.npy')
-    parser.add_argument('--model_path', type=str, default='results/checkpoint_3.pth')
-    parser.add_argument('--data_list_path', type=str, default='/home/yeweirui/data/temp')
+    # parser.add_argument('--img_path', type=str, default='/home/yeweirui/data/temp/0/1.npy')
+    parser.add_argument('--model_path', type=str, default='results/random_data/checkpoint_1.pth')
+    parser.add_argument('--data_list_path', type=str, default='/home/yeweirui/data/random')
     parser.add_argument('--data_path', type=str, default='/home/yeweirui/')
-    parser.add_argument('--vis_path', type=str, default='results/vis')
-    parser.add_argument('--vis_name', type=str, default='results/show.jpg')
+    parser.add_argument('--vis_path', type=str, default='results/random_data/vis')
+    # parser.add_argument('--vis_name', type=str, default='results/show.jpg')
     parser.add_argument('--gpu_ids', type=str, default='0,1,2,3', help="device id to run")
 
     args = parser.parse_args()
@@ -81,45 +86,14 @@ if __name__=='__main__':
     gpus = args.gpu_ids.split(',')
     model = nn.DataParallel(model, device_ids=[int(_) for _ in gpus])
 
-    # img_ori = np.load(args.img_path)
     ckpt = torch.load(args.model_path)
     model.load_state_dict(ckpt['FPN_' + str(args.type)])
-    # model.eval()
-    #
-    # preprocess = transforms.Compose([
-    #     transforms.ToTensor(),
-    # ])
-    #
-    # img = preprocess(img_ori)
-    # img = img.unsqueeze(0).cuda()
-    #
-    # mask = model(img)[0]
-    # mask = mask.argmax(0)
-    #
-    # colors = np.array([
-    #     [255, 0, 0],
-    #     [0, 255, 0],
-    #     [255, 255, 255]
-    # ]).astype('uint8')
-    #
-    # seg = Image.fromarray(mask.byte().cpu().numpy()).resize((64, 64))
-    # seg.putpalette(colors)
-    # seg = seg.convert('RGB')
-    #
-    # img_ori = img_ori[:, :, :3]
-    # img_ori = Image.fromarray(img_ori)
-    # img_seg = Image.new(img_ori.mode, (128, 64))
-    #
-    # img_seg.paste(img_ori, box=(0, 0))
-    # img_seg.paste(seg, box=(64, 0))
-    #
-    # img_seg.save(args.vis_name)
 
     test_transform = image_test()
 
     test_list = os.path.join(args.data_list_path, 'label_' + str(args.type) + '_test.txt')
-    test_dset = ImageList(open(test_list).readlines(), datadir=args.data_path, transform=test_transform)
+    test_dset = ImageList(open(test_list).readlines(), datadir=args.data_path, transform=test_transform, show_path=True)
 
-    test_loader = DataLoader(test_dset, batch_size=4, shuffle=False, num_workers=4, drop_last=False)
+    test_loader = DataLoader(test_dset, batch_size=4, shuffle=True, num_workers=4, drop_last=False)
 
     vis(args, model, test_loader)
