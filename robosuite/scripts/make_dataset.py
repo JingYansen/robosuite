@@ -8,6 +8,7 @@ from robosuite.scripts.utils import make_vec_env, norm_depth
 if __name__=='__main__':
 
     env_id, env_type = 'BinPack-v0', 'mujoco'
+    take_nums = 8
     env_kwargs = {
         'has_offscreen_renderer': True,
         'use_camera_obs': True,
@@ -18,14 +19,15 @@ if __name__=='__main__':
         'video_width': 64,
         'make_dataset': True,
         'random_take': True,
-        'dataset_path': 'data/random_take',
+        'dataset_path': 'data/random_take_8obj',
+        'take_nums': take_nums,
         'action_bound': (np.array([0.5, 0.3]), np.array([0.7, 0.5]))
     }
 
     env_nums = 32
     env = make_vec_env(env_id, env_type, env_nums, None, env_kwargs=env_kwargs)
 
-    episodes = 1500000 // (6 * env_nums)
+    episodes = 2000000 // (take_nums * env_nums)
 
     progress_bar = tqdm.tqdm(desc='Collect data ', total=episodes)
     for i in range(episodes):

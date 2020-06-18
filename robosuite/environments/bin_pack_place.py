@@ -80,8 +80,9 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         use_typeVector=False,
         make_dataset=False,
         dataset_path='data/temp/',
-        # action_bound=(np.array([0.5, 0.3]), np.array([0.7, 0.5])),
-        action_bound=(np.array([0.53, 0.3]), np.array([0.67, 0.45])),
+        # action_bound=(np.array([-np.inf, -np.inf]), np.array([np.inf, np.inf])),
+        action_bound=(np.array([0.5, 0.3]), np.array([0.7, 0.5])),
+        # action_bound=(np.array([0.53, 0.3]), np.array([0.67, 0.45])),
         # action_bound=(np.array([0.5575, 0.3375]), np.array([0.6425, 0.4225])),
     ):
 
@@ -497,7 +498,14 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         # last_num = np.sum(self.objects_in_bins)
         # self._check_success()
         # reward = np.sum(self.objects_in_bins) - last_num
-        reward = self._check_success_obj(self.target_object)
+        succ = self._check_success_obj(self.target_object)
+        if succ:
+            reward = 1
+        else:
+            if self.in_box_bound(action):
+                reward = 0
+            else:
+                reward = -0.1
 
         # if reward != 0:
         print('Reward: ', reward, ' by Action: ', action)
@@ -531,6 +539,25 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         ):
             res = False
         return res
+
+    def in_box_bound(self, action):
+
+        bin_x_low = self.bin_pos[0] - self.bin_size[0] / 2
+        bin_y_low = self.bin_pos[1] - self.bin_size[1] / 2
+
+        bin_x_high = bin_x_low + self.bin_size[0]
+        bin_y_high = bin_y_low + self.bin_size[1]
+
+        if (
+                action[0] <= bin_x_high
+                and action[0] >= bin_x_low
+                and action[1] <= bin_y_high
+                and action[1] >= bin_y_low
+        ):
+            return True
+        else:
+            return False
+
 
     def _get_observation(self):
         """
@@ -599,10 +626,9 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_name]]
         not_in_bin = self.not_in_bin(obj_pos)
         if not_in_bin:
-            reward = 0
+            return False
         else:
-            reward = 1
-        return reward
+            return True
 
     def _check_success(self):
         """

@@ -40,7 +40,7 @@ def vis(args, model, loader):
 
             mask = mask.argmax(0)
 
-            seg = Image.fromarray(mask.byte().cpu().numpy()).resize((64, 64))
+            seg = Image.fromarray(mask.byte().cpu().numpy().transpose()).resize((64, 64))
             seg.putpalette(colors)
             seg = seg.convert('RGB')
             draw = ImageDraw.Draw(seg)
