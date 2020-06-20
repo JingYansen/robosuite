@@ -72,10 +72,10 @@ def train(args):
     test_loaders = []
     gpus = args.gpu_ids.split(',')
     for i in range(args.type):
-        model = smp.FPN('resnet50', in_channels=4, classes=3).cuda()
+        model = smp.FPN(args.encoder, in_channels=4, classes=3).cuda()
         model = nn.DataParallel(model, device_ids=[int(_) for _ in gpus])
 
-        optimizer = optim.SGD(model.parameters(), lr=1e-3, momentum=0.9, weight_decay=0.0005, nesterov=True)
+        optimizer = optim.SGD(model.parameters(), lr=1e-5, momentum=0.9, weight_decay=0.0005, nesterov=True)
 
         models.append(model)
         optimizers.append(optimizer)
@@ -127,6 +127,8 @@ def train(args):
                 logger.add_scalar('loss_' + str(tp), loss.item() / args.batch_size)
                 logger.step(1)
 
+                logger.log('Loss {:d}: {:.3f}'.format(tp, loss.item()))
+
         ## test
         if epoch % args.test_interval == 1:
             accs = test(args, models, test_loaders)
@@ -134,6 +136,8 @@ def train(args):
             for i in range(args.type):
                 state['FPN_' + str(i)] = models[i].state_dict()
                 logger.add_scalar_print('acc_' + str(i), accs[i])
+
+                logger.log('Acc {:d}: {:.3f}'.format(i, accs[i]))
 
             logger.save_ckpt_iter(state=state, iter=epoch)
 
@@ -143,6 +147,8 @@ def train(args):
     for i in range(args.type):
         state['FPN_' + str(i)] = models[i].state_dict()
         logger.add_scalar_print('acc_' + str(i), accs[i])
+
+        logger.log('Acc {:d}: {:.3f}'.format(i, accs[i]))
 
     logger.save_ckpt_iter(state=state, iter=total_epochs)
 
@@ -160,6 +166,7 @@ if __name__=='__main__':
     parser.add_argument('--vis_path', type=str, default='results/random_take_data')
 
     # alg
+    parser.add_argument('--encoder', type=str, default='resnet34')
     parser.add_argument('--total_epochs', type=int, default=10)
     parser.add_argument('--test_interval', type=int, default=2)
     parser.add_argument('--type', type=int, default=4)

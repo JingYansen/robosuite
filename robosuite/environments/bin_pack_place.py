@@ -502,10 +502,11 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         if succ:
             reward = 1
         else:
-            if self.in_box_bound(action):
-                reward = 0
-            else:
-                reward = -0.1
+            # if self.in_box_bound(action):
+            #     reward = 0
+            # else:
+            #     reward = -0.1
+            reward = 0
 
         # if reward != 0:
         print('Reward: ', reward, ' by Action: ', action)

@@ -165,6 +165,7 @@ def test_mapping_from_action_to_img(env):
         for i in range(env.take_nums):
             # run a uniformly random agent
             # action = env.action_space.sample()
+            # action = np.array([0.5575, 0.3375])
             # action = np.array([0.6425, 0.4225])
             action = np.array([0.5575, 0.3375])
 
@@ -186,8 +187,8 @@ def test_mapping_from_action_to_img(env):
                 point_color = (0, 0, 255) # BGR
                 thickness = 4
                 # point = (11, 16)
-                point = (11, 46) # [0.5575, 0.3375]
-                # point = (41, 16) # [0.6425, 0.4225]
+                # point = (11, 46) # [0.5575, 0.3375]
+                point = (41, 16) # [0.6425, 0.4225]
                 # point = (0, 0)
                 cv2.circle(view, point, point_size, point_color, thickness)
                 Image.fromarray(view).save('temp.jpeg')
@@ -208,7 +209,7 @@ if __name__ == "__main__":
         ignore_done=True,
         use_camera_obs=True,
         control_freq=1,
-        render_drop_freq=0,
+        render_drop_freq=20,
         camera_height=64,
         camera_width=64,
         video_height=64,
@@ -218,5 +219,5 @@ if __name__ == "__main__":
 
     # run(env)
     # test_video_bin_pack(env)
-    # test_mapping_from_action_to_img(env)
-    test_random_res(env)
+    test_mapping_from_action_to_img(env)
+    # test_random_res(env)

@@ -13,12 +13,17 @@ class Logger:
         self.writer = SummaryWriter(tsbd_path)
         self.global_step = global_step
         self.best_metric_val = best_metric_val
+        self.log_file = open(os.path.join(tsbd_path, 'log.txt'), 'a+')
 
     def reset(self):
         self.global_step = 0
 
     def step(self, step):
         self.global_step += step
+
+    def log(self, s):
+        self.log_file.write(s + '\n')
+        self.log_file.flush()
 
     def add_scalar_print(self, name, val):
         self.writer.add_scalar(name, val, self.global_step)

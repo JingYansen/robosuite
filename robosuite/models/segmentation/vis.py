@@ -16,6 +16,12 @@ from robosuite.models.segmentation.mydataset import ImageList
 from robosuite.models.segmentation.pre_process import image_test
 
 
+def show_data(img_path, save_file):
+    img_np = np.load(img_path)[:, :, :3]
+    img_np = Image.fromarray(img_np)
+    img_np.save(save_file)
+
+
 def vis(args, model, loader):
     model.eval()
 
@@ -40,7 +46,7 @@ def vis(args, model, loader):
 
             mask = mask.argmax(0)
 
-            seg = Image.fromarray(mask.byte().cpu().numpy().transpose()).resize((64, 64))
+            seg = Image.fromarray(mask.byte().cpu().numpy())#.resize((64, 64))
             seg.putpalette(colors)
             seg = seg.convert('RGB')
             draw = ImageDraw.Draw(seg)
@@ -53,7 +59,11 @@ def vis(args, model, loader):
             img_seg.paste(img_np, box=(0, 0))
             img_seg.paste(seg, box=(64, 0))
 
-            img_seg.save(os.path.join(args.vis_path, str(obj_type.item()) + '_' + str(idx) + '.jpg'))
+            if args.train_data:
+                f_name= os.path.join(args.vis_path, 'train_' + str(obj_type.item()) + '_' + str(idx) + '.jpg')
+            else:
+                f_name = os.path.join(args.vis_path, 'test_' + str(obj_type.item()) + '_' + str(idx) + '.jpg')
+            img_seg.save(f_name)
 
             idx += 1
             total_progress_bar.update(1)
@@ -69,6 +79,7 @@ if __name__=='__main__':
     parser.add_argument('--type', type=int, default=0)
     parser.add_argument('--total_num', type=int, default=20)
     # parser.add_argument('--img_path', type=str, default='/home/yeweirui/data/temp/0/1.npy')
+    parser.add_argument('--train_data', type=bool, default=False)
     parser.add_argument('--model_path', type=str, default='results/random_data/checkpoint_1.pth')
     parser.add_argument('--data_list_path', type=str, default='/home/yeweirui/data/random')
     parser.add_argument('--data_path', type=str, default='/home/yeweirui/')
@@ -91,7 +102,10 @@ if __name__=='__main__':
 
     test_transform = image_test()
 
-    test_list = os.path.join(args.data_list_path, 'label_' + str(args.type) + '_test.txt')
+    if args.train_data:
+        test_list = os.path.join(args.data_list_path, 'label_' + str(args.type) + '_train.txt')
+    else:
+        test_list = os.path.join(args.data_list_path, 'label_' + str(args.type) + '_test.txt')
     test_dset = ImageList(open(test_list).readlines(), datadir=args.data_path, transform=test_transform, show_path=True)
 
     test_loader = DataLoader(test_dset, batch_size=4, shuffle=True, num_workers=4, drop_last=False)
