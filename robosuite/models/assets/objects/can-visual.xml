@@ -1,6 +1,6 @@
 <mujoco model="can">
   <asset>
-    <mesh file="meshes/can.stl" name="can_mesh"/>
+    <mesh file="meshes/can.stl" name="can_mesh" scale="0.8 0.8 0.8"/>
   </asset>
   <worldbody>
     <body>

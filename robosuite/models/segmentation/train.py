@@ -75,7 +75,7 @@ def train(args):
         model = smp.FPN(args.encoder, in_channels=4, classes=3).cuda()
         model = nn.DataParallel(model, device_ids=[int(_) for _ in gpus])
 
-        optimizer = optim.SGD(model.parameters(), lr=1e-5, momentum=0.9, weight_decay=0.0005, nesterov=True)
+        optimizer = optim.SGD(model.parameters(), lr=1e-6, momentum=0.9, weight_decay=0.0005, nesterov=True)
 
         models.append(model)
         optimizers.append(optimizer)

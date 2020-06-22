@@ -1,65 +1,65 @@
 <mujoco model="bowl">
   <asset>
-    <mesh file="meshes/bowl/bowl.stl" name="bowl_mesh"/>
-    <mesh file="meshes/bowl/bowl_hull_1.stl" name="m1"/>
-    <mesh file="meshes/bowl/bowl_hull_2.stl" name="m2"/>
-    <mesh file="meshes/bowl/bowl_hull_3.stl" name="m3"/>
-    <mesh file="meshes/bowl/bowl_hull_4.stl" name="m4"/>
-    <mesh file="meshes/bowl/bowl_hull_5.stl" name="m5"/>
-    <mesh file="meshes/bowl/bowl_hull_6.stl" name="m6"/>
-    <mesh file="meshes/bowl/bowl_hull_7.stl" name="m7"/>
-    <mesh file="meshes/bowl/bowl_hull_8.stl" name="m8"/>
-    <mesh file="meshes/bowl/bowl_hull_9.stl" name="m9"/>
-    <mesh file="meshes/bowl/bowl_hull_10.stl" name="m10"/>
-    <mesh file="meshes/bowl/bowl_hull_11.stl" name="m11"/>
-    <mesh file="meshes/bowl/bowl_hull_12.stl" name="m12"/>
-    <mesh file="meshes/bowl/bowl_hull_13.stl" name="m13"/>
-    <mesh file="meshes/bowl/bowl_hull_14.stl" name="m14"/>
-    <mesh file="meshes/bowl/bowl_hull_15.stl" name="m15"/>
-    <mesh file="meshes/bowl/bowl_hull_16.stl" name="m16"/>
-    <mesh file="meshes/bowl/bowl_hull_17.stl" name="m17"/>
-    <mesh file="meshes/bowl/bowl_hull_18.stl" name="m18"/>
-    <mesh file="meshes/bowl/bowl_hull_19.stl" name="m19"/>
-    <mesh file="meshes/bowl/bowl_hull_20.stl" name="m20"/>
-    <mesh file="meshes/bowl/bowl_hull_21.stl" name="m21"/>
-    <mesh file="meshes/bowl/bowl_hull_22.stl" name="m22"/>
-    <mesh file="meshes/bowl/bowl_hull_23.stl" name="m23"/>
-    <mesh file="meshes/bowl/bowl_hull_24.stl" name="m24"/>
-    <mesh file="meshes/bowl/bowl_hull_25.stl" name="m25"/>
-    <mesh file="meshes/bowl/bowl_hull_26.stl" name="m26"/>
-    <mesh file="meshes/bowl/bowl_hull_27.stl" name="m27"/>
-    <mesh file="meshes/bowl/bowl_hull_28.stl" name="m28"/>
-    <mesh file="meshes/bowl/bowl_hull_29.stl" name="m29"/>
-    <mesh file="meshes/bowl/bowl_hull_30.stl" name="m30"/>
-    <mesh file="meshes/bowl/bowl_hull_31.stl" name="m31"/>
-    <mesh file="meshes/bowl/bowl_hull_32.stl" name="m32"/>
-    <mesh file="meshes/bowl/bowl_hull_33.stl" name="m33"/>
-    <mesh file="meshes/bowl/bowl_hull_34.stl" name="m34"/>
-    <mesh file="meshes/bowl/bowl_hull_35.stl" name="m35"/>
-    <mesh file="meshes/bowl/bowl_hull_36.stl" name="m36"/>
-    <mesh file="meshes/bowl/bowl_hull_37.stl" name="m37"/>
-    <mesh file="meshes/bowl/bowl_hull_38.stl" name="m38"/>
-    <mesh file="meshes/bowl/bowl_hull_39.stl" name="m39"/>
-    <mesh file="meshes/bowl/bowl_hull_40.stl" name="m40"/>
-    <mesh file="meshes/bowl/bowl_hull_41.stl" name="m41"/>
-    <mesh file="meshes/bowl/bowl_hull_42.stl" name="m42"/>
-    <mesh file="meshes/bowl/bowl_hull_43.stl" name="m43"/>
-    <mesh file="meshes/bowl/bowl_hull_44.stl" name="m44"/>
-    <mesh file="meshes/bowl/bowl_hull_45.stl" name="m45"/>
-    <mesh file="meshes/bowl/bowl_hull_46.stl" name="m46"/>
-    <mesh file="meshes/bowl/bowl_hull_47.stl" name="m47"/>
-    <mesh file="meshes/bowl/bowl_hull_48.stl" name="m48"/>
-    <mesh file="meshes/bowl/bowl_hull_49.stl" name="m49"/>
-    <mesh file="meshes/bowl/bowl_hull_50.stl" name="m50"/>
-    <mesh file="meshes/bowl/bowl_hull_51.stl" name="m51"/>
-    <mesh file="meshes/bowl/bowl_hull_52.stl" name="m52"/>
-    <mesh file="meshes/bowl/bowl_hull_53.stl" name="m53"/>
-    <mesh file="meshes/bowl/bowl_hull_54.stl" name="m54"/>
-    <mesh file="meshes/bowl/bowl_hull_55.stl" name="m55"/>
-    <mesh file="meshes/bowl/bowl_hull_56.stl" name="m56"/>
-    <mesh file="meshes/bowl/bowl_hull_57.stl" name="m57"/>
+    <mesh file="meshes/bowl/bowl.stl" name="bowl_mesh" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_1.stl" name="m1" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_2.stl" name="m2" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_3.stl" name="m3" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_4.stl" name="m4" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_5.stl" name="m5" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_6.stl" name="m6" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_7.stl" name="m7" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_8.stl" name="m8" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_9.stl" name="m9" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_10.stl" name="m10" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_11.stl" name="m11" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_12.stl" name="m12" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_13.stl" name="m13" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_14.stl" name="m14" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_15.stl" name="m15" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_16.stl" name="m16" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_17.stl" name="m17" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_18.stl" name="m18" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_19.stl" name="m19" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_20.stl" name="m20" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_21.stl" name="m21" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_22.stl" name="m22" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_23.stl" name="m23" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_24.stl" name="m24" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_25.stl" name="m25" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_26.stl" name="m26" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_27.stl" name="m27" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_28.stl" name="m28" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_29.stl" name="m29" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_30.stl" name="m30" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_31.stl" name="m31" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_32.stl" name="m32" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_33.stl" name="m33" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_34.stl" name="m34" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_35.stl" name="m35" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_36.stl" name="m36" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_37.stl" name="m37" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_38.stl" name="m38" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_39.stl" name="m39" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_40.stl" name="m40" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_41.stl" name="m41" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_42.stl" name="m42" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_43.stl" name="m43" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_44.stl" name="m44" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_45.stl" name="m45" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_46.stl" name="m46" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_47.stl" name="m47" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_48.stl" name="m48" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_49.stl" name="m49" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_50.stl" name="m50" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_51.stl" name="m51" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_52.stl" name="m52" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_53.stl" name="m53" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_54.stl" name="m54" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_55.stl" name="m55" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_56.stl" name="m56" scale="0.5 0.5 0.5"/>
+    <mesh file="meshes/bowl/bowl_hull_57.stl" name="m57" scale="0.5 0.5 0.5"/>
 
-    <texture file="../textures/can.png" name="tex-bowl"/>
+    <texture file="../textures/textures.png" name="tex-bowl"/>
     <material name="coke" reflectance="0.7" texrepeat="5 5" texture="tex-bowl" texuniform="true"/>
   </asset>
   <worldbody>

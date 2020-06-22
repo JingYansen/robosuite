@@ -92,7 +92,7 @@ if __name__=='__main__':
     if not os.path.exists(args.vis_path):
         os.mkdir(args.vis_path)
 
-    model = smp.FPN('resnet50', in_channels=4, classes=3).cuda()
+    model = smp.FPN('resnet34', in_channels=4, classes=3).cuda()
 
     gpus = args.gpu_ids.split(',')
     model = nn.DataParallel(model, device_ids=[int(_) for _ in gpus])

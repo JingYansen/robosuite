@@ -1,10 +1,10 @@
 <mujoco model="banana">
   <asset>
-    <mesh file="meshes/banana/banana.stl" name="banana_mesh"/>
-    <mesh file="meshes/banana/banana_hull_1.stl" name="m1"/>
-    <mesh file="meshes/banana/banana_hull_2.stl" name="m2"/>
-    <mesh file="meshes/banana/banana_hull_3.stl" name="m3"/>
-    <texture file="../textures/can.png" name="tex-banana"/>
+    <mesh file="meshes/banana/banana.stl" name="banana_mesh" scale="0.6 0.6 0.6"/>
+    <mesh file="meshes/banana/banana_hull_1.stl" name="m1" scale="0.6 0.6 0.6"/>
+    <mesh file="meshes/banana/banana_hull_2.stl" name="m2" scale="0.6 0.6 0.6"/>
+    <mesh file="meshes/banana/banana_hull_3.stl" name="m3" scale="0.6 0.6 0.6"/>
+    <texture file="../textures/lemon.png" name="tex-banana"/>
     <material name="coke" reflectance="0.7" texrepeat="5 5" texture="tex-banana" texuniform="true"/>
   </asset>
   <worldbody>

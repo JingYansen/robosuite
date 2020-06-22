@@ -47,8 +47,8 @@ def split_train_test(file, ratio=0.8):
 
 
 if __name__ == '__main__':
-    split_by_type('/home/yeweirui/data/8obj_smaller_bound/label.txt', '/home/yeweirui/data/8obj_smaller_bound/')
-    split_train_test('/home/yeweirui/data/8obj_smaller_bound/label_0.txt')
-    split_train_test('/home/yeweirui/data/8obj_smaller_bound/label_1.txt')
-    split_train_test('/home/yeweirui/data/8obj_smaller_bound/label_2.txt')
-    split_train_test('/home/yeweirui/data/8obj_smaller_bound/label_3.txt')
+    split_by_type('/home/yeweirui/data/8obj_half_in_1m/label.txt', '/home/yeweirui/data/8obj_half_in_1m/')
+    split_train_test('/home/yeweirui/data/8obj_half_in_1m/label_0.txt')
+    split_train_test('/home/yeweirui/data/8obj_half_in_1m/label_1.txt')
+    split_train_test('/home/yeweirui/data/8obj_half_in_1m/label_2.txt')
+    split_train_test('/home/yeweirui/data/8obj_half_in_1m/label_3.txt')

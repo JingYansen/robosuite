@@ -71,7 +71,7 @@ def test_video_bin_pack(env, video_path='demo/test/test.mp4'):
     import imageio
     writer = imageio.get_writer(video_path, fps=20)
 
-    episodes = 10
+    episodes = 1
     avg_reward = 0
     for _ in range(episodes):
         env.reset()
@@ -210,14 +210,15 @@ if __name__ == "__main__":
         use_camera_obs=True,
         control_freq=1,
         render_drop_freq=20,
-        camera_height=64,
-        camera_width=64,
-        video_height=64,
-        video_width=64
+        camera_height=128,
+        camera_width=128,
+        video_height=128,
+        video_width=128,
+        random_take=True
         )
 
 
     # run(env)
-    # test_video_bin_pack(env)
-    test_mapping_from_action_to_img(env)
+    test_video_bin_pack(env)
+    # test_mapping_from_action_to_img(env)
     # test_random_res(env)

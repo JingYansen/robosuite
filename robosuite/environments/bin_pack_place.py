@@ -21,20 +21,28 @@ except ImportError:
 
 from robosuite.models.arenas import BinPackingArena
 from robosuite.models.objects import (
-    MilkObject,
-    BreadObject,
-    CerealObject,
-    CanObject,
     BananaObject,
+    BottleObject,
     BowlObject,
-)
-from robosuite.models.objects import (
-    MilkVisualObject,
-    BreadVisualObject,
-    CerealVisualObject,
-    CanVisualObject,
+    BreadObject,
+    CanObject,
+    CerealObject,
+    LemonObject,
+    MilkObject,
+    PlateWithHoleObject,
+    RoundNutObject,
+    SquareNutObject,
     BananaVisualObject,
+    BottleVisualObject,
     BowlVisualObject,
+    BreadVisualObject,
+    CanVisualObject,
+    CerealVisualObject,
+    LemonVisualObject,
+    MilkVisualObject,
+    PlateWithHoleVisualObject,
+    RoundNutVisualObject,
+    SquareNutVisualObject,
 )
 
 from robosuite.models.tasks import BinPackingTask, UniformRandomSampler
@@ -72,7 +80,8 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         video_height=256,
         video_width=256,
         render_drop_freq=0,
-        obj_names=['Milk'] + ['Bread'] + ['Cereal'] * 2 + ['Can'] * 2,
+        obj_names=['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 1 + ['Can'] * 1 + ['Banana'] * 1 + ['Bowl'] * 1 + ['Bottle'] * 1 + ['Lemon'] * 1,
+        # obj_names=['Cereal'] * 6,
         force_ratios=0.2,
         z_limit=1.0,
         take_nums=6,
@@ -113,7 +122,19 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         self.camera_names = camera_names
 
         self.single_object_mode = single_object_mode
-        self.object_to_id = {"Milk": 0, "Bread": 1, "Cereal": 2, "Can": 3, "Banana": 4, "Bowl": 5}
+        self.object_to_id = {
+            "Milk"          : 0,
+            "Bread"         : 1,
+            "Cereal"        : 2,
+            "Can"           : 3,
+            "Banana"        : 4,
+            "Bowl"          : 5,
+            "Lemon"         : 6,
+            "Bottle"        : 7,
+            "PlateWithHole" : 8,
+            "RoundNut"      : 9,
+            "SquaredNut"    : 10,
+        }
         self.obj_to_take = -1
 
         # settings for table top
@@ -210,18 +231,28 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
     def _name2obj(self, name):
         assert name in self.object_to_id.keys()
 
-        if name is 'Milk':
+        if name == 'Milk':
             return MilkObject, MilkVisualObject
-        elif name is 'Bread':
+        elif name == 'Bread':
             return BreadObject, BreadVisualObject
-        elif name is 'Cereal':
+        elif name == 'Cereal':
             return CerealObject, CerealVisualObject
-        elif name is 'Can':
+        elif name == 'Can':
             return CanObject, CanVisualObject
-        elif name is 'Banana':
+        elif name == 'Banana':
             return BananaObject, BananaVisualObject
-        elif name is 'Bowl':
+        elif name == 'Bowl':
             return BowlObject, BowlVisualObject
+        elif name == 'Lemon':
+            return LemonObject, LemonVisualObject
+        elif name == 'Bottle':
+            return BottleObject, BottleVisualObject
+        elif name == 'PlateWithHole':
+            return PlateWithHoleObject, PlateWithHoleVisualObject
+        elif name == 'RoundNut':
+            return RoundNutObject, RoundNutVisualObject
+        elif name == 'SquaredNut':
+            return SquareNutObject, SquareNutVisualObject
 
     def _make_objects(self, names):
         self.item_names = []
@@ -529,6 +560,8 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         bin_x_high = bin_x_low + self.bin_size[0]
         bin_y_high = bin_y_low + self.bin_size[1]
 
+        delta = 0.02
+
         res = True
         if (
             obj_pos[2] > self.bin_pos[2]
@@ -536,7 +569,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             and obj_pos[0] > bin_x_low
             and obj_pos[1] < bin_y_high
             and obj_pos[1] > bin_y_low
-            and obj_pos[2] < self.bin_pos[2] + self.bin_size[2]
+            and obj_pos[2] < self.bin_pos[2] + self.bin_size[2] - delta
         ):
             res = False
         return res

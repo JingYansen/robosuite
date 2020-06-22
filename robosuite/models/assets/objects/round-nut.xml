@@ -1,6 +1,6 @@
 <mujoco model="round-nut">
   <asset>
-    <texture file="../textures/metal.png" type="2d" name="tex-metal"/>
+    <texture file="../textures/ceramic.png" type="2d" name="tex-metal"/>
     <material name="metal" reflectance="0.7" texrepeat="1 1" texture="tex-metal" texuniform="true"/>
   </asset>
   <worldbody>
