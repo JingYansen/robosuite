@@ -10,7 +10,7 @@ python bin_packing_baselines2.py \
     --lr_type 'linear' \
     --max 3e-4 \
     --min 3e-4 \
-    --obj_names 8 \
+    --take_nums 8 \
     --ent_coef 0.005 \
     --camera_height 64 \
     --camera_width 64 \
