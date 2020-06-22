@@ -84,7 +84,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         # obj_names=['Cereal'] * 6,
         force_ratios=0.2,
         z_limit=1.0,
-        take_nums=6,
+        take_nums=8,
         random_take=False,
         use_typeVector=False,
         make_dataset=False,
