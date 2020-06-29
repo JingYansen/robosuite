@@ -298,7 +298,7 @@ if __name__=='__main__':
     ## alg args
     parser.add_argument('--env_id', type=str, default='BinPack-v0')
     parser.add_argument('--alg', type=str, default='ppo2')
-    parser.add_argument('--num_env', type=int, default=16)
+    parser.add_argument('--num_env', type=int, default=1)
     parser.add_argument('--rl_model_path', type=str, default='../../scripts/results/BinPack-v0/version-1.1.8/image+depth/ppo2_cnn_type_linear_0.0001_0.0001_2000000total_256nsteps_10noptepochs_32batch_6take_Truetype_0.005ent_Falsedataset_64x64/model.pth')
 
     parser.add_argument('--num_timesteps', type=int, default=0)

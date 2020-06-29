@@ -10,13 +10,17 @@ import os.path as osp
 def action2pixel(action):
     # point = (11, 46) # [0.5575, 0.3375]
     # point = (41, 16)  # [0.6425, 0.4225]
-    x, y = action
 
-    pixel_x = (41 - 11) * (x - 0.5575) / (0.6425 - 0.5575) + 11
-    pixel_y = (46 - 16) * (y - 0.4225) / (0.3375 - 0.4225) + 16
+    y, x = action
+    x1, p1 = 0.4225, 41
+    x2, p2 = 0.3375, 11
+    y1, q1 = 0.6425, 16
+    y2, q2 = 0.5575, 46
+
+    pixel_x = (x - x1) * (p2 - p1) / (x2 - x1) + p1
+    pixel_y = (y - y1) * (q2 - q1) / (y2 - y1) + q1
 
     pixel_x, pixel_y = int(pixel_x), int(pixel_y)
-
     pixel = np.array([pixel_x, pixel_y])
     pixel = np.clip(pixel, np.array([0, 0]), np.array([64, 64]))
 

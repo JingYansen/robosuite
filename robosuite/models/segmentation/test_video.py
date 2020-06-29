@@ -60,13 +60,17 @@ def make_video(env, seg_models, args):
     for i_episode in range(n_episode):
         obs = env.reset()
         total_reward = 0
-        action = np.array([0.5575, 0.3375])
+        actions = [np.array([0.6425, 0.4225]), np.array([0.5575, 0.4225]), np.array([0.6425, 0.3375]), np.array([0.5575, 0.3375])]
 
         for _ in range(take_nums):
 
+            import random
+            action = random.choice(actions)
             # action = env.action_space.sample()
-            action[0] += (0.6425 - 0.5575) / take_nums
-            action[1] += (0.4225 - 0.3375) / take_nums
+            # action[0] -= np.random.rand() / 20
+            # action[1] -= np.random.rand() / 20
+            # action[0] += (0.6425 - 0.5575) / take_nums
+            # action[1] += (0.4225 - 0.3375) / take_nums
 
             obs, rewards, dones, info = env.step(action)
             total_reward += rewards
