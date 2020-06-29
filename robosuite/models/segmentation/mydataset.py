@@ -22,7 +22,7 @@ def action2pixel(action):
 
     pixel_x, pixel_y = int(pixel_x), int(pixel_y)
     pixel = np.array([pixel_x, pixel_y])
-    pixel = np.clip(pixel, np.array([0, 0]), np.array([64, 64]))
+    pixel = np.clip(pixel, np.array([0, 0]), np.array([63, 63]))
 
     return pixel
 
