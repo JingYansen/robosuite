@@ -187,8 +187,8 @@ def test_mapping_from_action_to_img(env):
                 point_color = (0, 0, 255) # BGR
                 thickness = 4
                 # point = (11, 16)
-                # point = (11, 46) # [0.5575, 0.3375]
-                point = (41, 16) # [0.6425, 0.4225]
+                point = (11, 46) # [0.5575, 0.3375]
+                # point = (41, 16) # [0.6425, 0.4225]
                 # point = (0, 0)
                 cv2.circle(view, point, point_size, point_color, thickness)
                 Image.fromarray(view).save('temp.jpeg')
