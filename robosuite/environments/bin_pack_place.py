@@ -80,8 +80,8 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         video_height=256,
         video_width=256,
         render_drop_freq=0,
-        obj_names=['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 1 + ['Can'] * 1 + ['Banana'] * 1 + ['Bowl'] * 1 + ['Bottle'] * 1 + ['Lemon'] * 1,
-        # obj_names=['Cereal'] * 6,
+        # obj_names=['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 1 + ['Can'] * 1 + ['Banana'] * 1 + ['Bowl'] * 1 + ['Bottle'] * 1 + ['Lemon'] * 1,
+        obj_names=['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 2 + ['Can'] * 2,
         force_ratios=0.2,
         z_limit=1.0,
         take_nums=8,
@@ -129,11 +129,11 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             "Can"           : 3,
             "Banana"        : 4,
             "Bowl"          : 5,
-            "Lemon"         : 6,
-            "Bottle"        : 7,
-            "PlateWithHole" : 8,
-            "RoundNut"      : 9,
-            "SquaredNut"    : 10,
+            # "Lemon"         : 6,
+            # "Bottle"        : 7,
+            # "PlateWithHole" : 8,
+            # "RoundNut"      : 9,
+            # "SquaredNut"    : 10,
         }
         self.obj_to_take = -1
 
@@ -432,6 +432,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         end_time = self.cur_time + self.control_timestep
 
         info = {}
+        info['obj_type'] = self.obj2type(self.target_object)
 
         if self.render_drop_freq:
             i = 0
@@ -560,7 +561,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         bin_x_high = bin_x_low + self.bin_size[0]
         bin_y_high = bin_y_low + self.bin_size[1]
 
-        delta = 0.02
+        delta = 0
 
         res = True
         if (

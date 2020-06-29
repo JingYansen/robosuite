@@ -20,9 +20,9 @@ if __name__=='__main__':
         'video_width': 64,
         'make_dataset': True,
         'random_take': True,
-        'dataset_path': 'data/8obj_half_in_1m',
+        'dataset_path': 'data/8types_1m',
         'take_nums': take_nums,
-        'action_bound': (np.array([0.5, 0.3]), np.array([0.67, 0.45]))
+        'action_bound': (np.array([0.5, 0.3]), np.array([0.7, 0.5]))
     }
 
     env_nums = 32

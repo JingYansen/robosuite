@@ -4,14 +4,16 @@ import multiprocessing
 import argparse
 import copy
 import cv2
+import gym
 
 import os.path as osp
 import numpy as np
 import tensorflow as tf
 
-from stable_baselines.common.policies import CnnPolicy, CnnVectorPolicy
+# from stable_baselines.common.policies import CnnPolicy, CnnVectorPolicy
+from stable_baselines.sac.policies import CnnPolicy
 from stable_baselines.common import make_vec_env
-from stable_baselines import PPO2
+from stable_baselines import PPO2, SAC
 from stable_baselines import logger
 
 from robosuite.scripts.lr_schedule import get_lr_func
@@ -58,17 +60,37 @@ def get_env_kwargs(args):
 
 def get_params(args):
     params = {}
+    policy_kwargs = {}
 
-    params['n_steps'] = args.nsteps
-    params['nminibatches'] = args.nminibatches
-    params['noptepochs'] = args.noptepochs
-    params['cliprange'] = args.cliprange
-    params['ent_coef'] = args.ent_coef
+    if args.alg == 'ppo':
+        params['n_steps'] = args.nsteps
+        params['nminibatches'] = args.nminibatches
+        params['noptepochs'] = args.noptepochs
+        params['cliprange'] = args.cliprange
+        params['ent_coef'] = args.ent_coef
+    elif args.alg == 'sac':
+        params['buffer_size'] = 50000
+        params['learning_starts'] = 1000
+        params['batch_size'] = args.nsteps
+        policy_kwargs['n_steps'] = args.nsteps
+        policy_kwargs['n_env'] = args.num_env
+        policy_kwargs['n_batch'] = args.num_env * args.nsteps
 
     lr_kwargs = get_lr_kwargs(args)
     params['learning_rate'] = get_lr_func(**lr_kwargs)
 
-    return params
+    return params, policy_kwargs
+
+
+def get_policy(args):
+    if args.alg == 'ppo':
+        policy = PPO2
+    elif args.alg == 'sac':
+        policy = SAC
+    else:
+        policy = None
+
+    return policy
 
 
 def train(args):
@@ -76,18 +98,21 @@ def train(args):
     seed = args.seed
 
     # get params
-    alg_kwargs = get_params(args)
+    alg_kwargs, policy_kwargs = get_params(args)
 
     env = build_env(args)
+    policy = get_policy(args)
 
-    if args.use_typeVector:
-        model = PPO2(CnnVectorPolicy, env, verbose=1, **alg_kwargs)
-    else:
-        model = PPO2(CnnPolicy, env, verbose=1, **alg_kwargs)
+    # if args.use_typeVector:
+    #     model = policy(CnnVectorPolicy, env, verbose=1, policy_kwargs=policy_kwargs, **alg_kwargs)
+    # else:
+    #     model = policy(CnnPolicy, env, verbose=1, policy_kwargs=policy_kwargs, **alg_kwargs)
+    model = policy(CnnPolicy, env, verbose=1, policy_kwargs=policy_kwargs, **alg_kwargs)
+
     model.learn(
         total_timesteps=total_timesteps,
         log_interval=args.log_interval,
-        save_interval=args.save_interval
+        # save_interval=args.save_interval
     )
 
     logger.log('Trained Over.')
@@ -110,7 +135,8 @@ def build_env(args):
 
 
 def make_video(model_path, env, args):
-    model = PPO2.load(model_path)
+    policy = get_policy(args)
+    model = policy.load(model_path)
     DEMO_PATH = os.path.join(args.save_dir, args.video_name)
 
     import imageio
@@ -159,7 +185,8 @@ def make_video(model_path, env, args):
 
 
 def test(model_path, env, args):
-    model = PPO2.load(model_path)
+    policy = get_policy(args)
+    model = policy.load(model_path)
 
     test_episode = args.test_episode
     num_env = args.num_env
@@ -188,7 +215,7 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'noptepochs', 'batch', 'take', 'type', 'ent', 'dataset']
+    keys = ['total', 'nsteps', 'noptepochs', 'nminibatch', 'take', 'type', 'ent', 'dataset']
     values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.take_nums, args.use_typeVector, args.ent_coef, args.make_dataset]
     assert len(keys) == len(values)
 
@@ -227,7 +254,7 @@ if __name__ == "__main__":
 
     ## alg args
     parser.add_argument('--env_id', type=str, default='BinPack-v0')
-    parser.add_argument('--alg', type=str, default='ppo2')
+    parser.add_argument('--alg', type=str, default='ppo')
     parser.add_argument('--num_env', type=int, default=16)
     parser.add_argument('--load_path', type=str, default='gg')
 
@@ -305,8 +332,8 @@ if __name__ == "__main__":
     else:
         model_path = args.save_path
 
-    if args.test:
-        test(model_path, env, args)
+    # if args.test:
+    #     test(model_path, env, args)
 
     logger.log('Save to ', args.save_dir)
     if args.make_video:
