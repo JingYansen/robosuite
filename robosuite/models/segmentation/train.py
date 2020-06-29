@@ -75,7 +75,7 @@ def train(args):
         model = smp.FPN(args.encoder, in_channels=4, classes=3).cuda()
         model = nn.DataParallel(model, device_ids=[int(_) for _ in gpus])
 
-        optimizer = optim.SGD(model.parameters(), lr=1e-6, momentum=0.9, weight_decay=0.0005, nesterov=True)
+        optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0005, nesterov=True)
 
         models.append(model)
         optimizers.append(optimizer)
@@ -166,9 +166,10 @@ if __name__=='__main__':
     parser.add_argument('--vis_path', type=str, default='results/random_take_data')
 
     # alg
-    parser.add_argument('--encoder', type=str, default='resnet34')
+    parser.add_argument('--encoder', type=str, default='resnet50')
     parser.add_argument('--total_epochs', type=int, default=10)
     parser.add_argument('--test_interval', type=int, default=2)
+    parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--type', type=int, default=4)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--test_batch', type=int, default=64)
