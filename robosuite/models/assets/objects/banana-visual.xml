@@ -5,13 +5,13 @@
     <mesh file="meshes/banana/banana_hull_2.stl" name="m2" scale="0.6 0.6 0.6"/>
     <mesh file="meshes/banana/banana_hull_3.stl" name="m3" scale="0.6 0.6 0.6"/>
     <texture file="../textures/lemon.png" name="tex-banana"/>
-    <material name="coke" reflectance="0.7" texrepeat="5 5" texture="tex-banana" texuniform="true"/>
+    <material name="banana" reflectance="0.7" texrepeat="5 5" texture="tex-banana" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="visual">
-        <geom pos="0 0 0" mesh="banana_mesh" type="mesh" material="coke"  conaffinity="0" contype="0" group="0" mass="0.0001"/>
-        <geom pos="0 0 0" mesh="banana_mesh" type="mesh" material="coke"  conaffinity="0" contype="0" group="1" mass="0.0001"/>
+        <geom pos="0 0 0" mesh="banana_mesh" type="mesh" material="banana"  conaffinity="0" contype="0" group="0" mass="0.0001"/>
+        <geom pos="0 0 0" mesh="banana_mesh" type="mesh" material="banana"  conaffinity="0" contype="0" group="1" mass="0.0001"/>
       </body>
       <site rgba="0 0 0 0" size="0.005" pos="0 0 -0.06" name="bottom_site"/>
       <site rgba="0 0 0 0" size="0.005" pos="0 0 0.04" name="top_site"/>

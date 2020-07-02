@@ -60,72 +60,72 @@
     <mesh file="meshes/bowl/bowl_hull_57.stl" name="m57" scale="0.5 0.5 0.5"/>
 
     <texture file="../textures/metal.png" name="tex-bowl"/>
-    <material name="coke" reflectance="0.7" texrepeat="5 5" texture="tex-bowl" texuniform="true"/>
+    <material name="bowl" reflectance="0.7" texrepeat="5 5" texture="tex-bowl" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="collision">
-        <geom pos="0 0 0" mesh="m1" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m2" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m3" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m4" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m5" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m6" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m7" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m8" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m9" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m10" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m11" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m12" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m13" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m14" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m15" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m16" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m17" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m18" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m19" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m20" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m21" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m22" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m23" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m24" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m25" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m26" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m27" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m28" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m29" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m30" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m31" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m32" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m33" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m34" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m35" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m36" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m37" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m38" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m39" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m40" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m41" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m42" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m43" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m44" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m45" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m46" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m47" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m48" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m49" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m50" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m51" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m52" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m53" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m54" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m55" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m56" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
-        <geom pos="0 0 0" mesh="m57" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="coke" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m1" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m2" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m3" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m4" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m5" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m6" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m7" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m8" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m9" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m10" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m11" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m12" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m13" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m14" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m15" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m16" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m17" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m18" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m19" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m20" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m21" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m22" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m23" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m24" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m25" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m26" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m27" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m28" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m29" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m30" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m31" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m32" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m33" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m34" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m35" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m36" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m37" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m38" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m39" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m40" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m41" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m42" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m43" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m44" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m45" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m46" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m47" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m48" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m49" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m50" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m51" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m52" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m53" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m54" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m55" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m56" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
+        <geom pos="0 0 0" mesh="m57" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1" material="bowl" group="1" condim="4"/>
       </body>
       <body name="visual">
-        <geom pos="0 0 0" mesh="bowl_mesh" type="mesh" material="coke"  conaffinity="0" contype="0" group="0" mass="0.0001"/>
-        <geom pos="0 0 0" mesh="bowl_mesh" type="mesh" material="coke"  conaffinity="0" contype="0" group="1" mass="0.0001"/>
+        <geom pos="0 0 0" mesh="bowl_mesh" type="mesh" material="bowl"  conaffinity="0" contype="0" group="0" mass="0.0001"/>
+        <geom pos="0 0 0" mesh="bowl_mesh" type="mesh" material="bowl"  conaffinity="0" contype="0" group="1" mass="0.0001"/>
       </body>
       <site rgba="0 0 0 0" size="0.005" pos="0 0 -0.06" name="bottom_site"/>
       <site rgba="0 0 0 0" size="0.005" pos="0 0 0.04" name="top_site"/>

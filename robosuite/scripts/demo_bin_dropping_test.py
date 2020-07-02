@@ -214,7 +214,8 @@ if __name__ == "__main__":
         camera_width=128,
         video_height=128,
         video_width=128,
-        random_take=True
+        random_take=True,
+        action_bound=(np.array([0.5575, 0.3375]), np.array([0.6425, 0.4225])),
         )
 
 

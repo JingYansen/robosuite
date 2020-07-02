@@ -60,13 +60,13 @@
     <mesh file="meshes/bowl/bowl_hull_57.stl" name="m57" scale="0.5 0.5 0.5"/>
 
     <texture file="../textures/textures.png" name="tex-bowl"/>
-    <material name="coke" reflectance="0.7" texrepeat="5 5" texture="tex-bowl" texuniform="true"/>
+    <material name="bowl" reflectance="0.7" texrepeat="5 5" texture="tex-bowl" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="visual">
-        <geom pos="0 0 0" mesh="bowl_mesh" type="mesh" material="coke"  conaffinity="0" contype="0" group="0" mass="0.0001"/>
-        <geom pos="0 0 0" mesh="bowl_mesh" type="mesh" material="coke"  conaffinity="0" contype="0" group="1" mass="0.0001"/>
+        <geom pos="0 0 0" mesh="bowl_mesh" type="mesh" material="bowl"  conaffinity="0" contype="0" group="0" mass="0.0001"/>
+        <geom pos="0 0 0" mesh="bowl_mesh" type="mesh" material="bowl"  conaffinity="0" contype="0" group="1" mass="0.0001"/>
       </body>
       <site rgba="0 0 0 0" size="0.005" pos="0 0 -0.06" name="bottom_site"/>
       <site rgba="0 0 0 0" size="0.005" pos="0 0 0.04" name="top_site"/>

@@ -80,7 +80,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         video_height=256,
         video_width=256,
         render_drop_freq=0,
-        obj_names=['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 1 + ['Can'] * 1 + ['Banana'] * 1 + ['Bowl'] * 1 + ['Bottle'] * 1 + ['Lemon'] * 1,
+        obj_names=['Bowl'] * 1 + ['Banana'] * 1 + ['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 1 + ['Bottle'] * 1 + ['Lemon'] * 1 + ['Can'] * 1,
         # obj_names=['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 2 + ['Can'] * 2,
         force_ratios=0.2,
         z_limit=1.0,

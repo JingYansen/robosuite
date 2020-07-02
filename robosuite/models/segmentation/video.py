@@ -180,7 +180,7 @@ def make_video(model, env, seg_models, args):
     import imageio
     writer = imageio.get_writer(DEMO_PATH, fps=20)
 
-    n_episode = 10
+    n_episode = args.n_episode
     take_nums = args.take_nums
 
     ## set view
@@ -317,11 +317,12 @@ if __name__=='__main__':
     parser.add_argument('--min', type=float, default=1e-4)
 
     ## video args
+    parser.add_argument('--n_episode', type=int, default=10)
     parser.add_argument('--video_path', type=str, default='results/test/demo.mp4')
 
     ## seg model
     parser.add_argument('--gpu_ids', type=str, default='0', help="device id to run")
-    parser.add_argument('--seg_model_path', type=str, default='results/random_take_8obj/checkpoint_10.pth')
+    parser.add_argument('--seg_model_path', type=str, default='results/random_take_8obj_1e-4_ok/checkpoint_3.pth')
 
     args = parser.parse_args()
 
