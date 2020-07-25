@@ -12,6 +12,7 @@ from robosuite.utils.mjcf_utils import string_to_array
 from robosuite.environments.sawyer import SawyerEnv
 from gym.envs.mujoco import mujoco_env
 from gym import spaces
+from gym import utils
 from robosuite.scripts.utils import norm_depth
 
 try:
@@ -48,7 +49,7 @@ from robosuite.models.objects import (
 from robosuite.models.tasks import BinPackingTask, UniformRandomSampler
 
 
-class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
+class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv, utils.EzPickle):
     def __init__(
         self,
         gripper_type="TwoFingerGripper",
@@ -72,19 +73,19 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         ignore_done=False,
         camera_name="targetview",
         camera_names=["birdview", "targetview"],
-        camera_height=128,
-        camera_width=128,
+        camera_height=64,
+        camera_width=64,
         camera_depth=True,
         camera_type='image+depth',
         keys='image',
-        video_height=256,
-        video_width=256,
-        render_drop_freq=0,
-        obj_names=['Bowl'] * 1 + ['Banana'] * 1 + ['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 1 + ['Bottle'] * 1 + ['Lemon'] * 1 + ['Can'] * 1,
-        # obj_names=['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 2 + ['Can'] * 2,
+        video_height=64,
+        video_width=64,
+        render_drop_freq=20,
+        # obj_names=['Bowl'] * 1 + ['Banana'] * 1 + ['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 1 + ['Bottle'] * 1 + ['Lemon'] * 1 + ['Can'] * 1,
+        obj_names=['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 2 + ['Can'] * 2,
         force_ratios=0.2,
         z_limit=1.0,
-        take_nums=8,
+        take_nums=6,
         random_take=False,
         use_typeVector=False,
         make_dataset=False,
@@ -127,13 +128,13 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             "Bread"         : 1,
             "Cereal"        : 2,
             "Can"           : 3,
-            "Banana"        : 4,
-            "Bowl"          : 5,
-            "Lemon"         : 6,
-            "Bottle"        : 7,
-            "PlateWithHole" : 8,
-            "RoundNut"      : 9,
-            "SquaredNut"    : 10,
+            # "Banana"        : 4,
+            # "Bowl"          : 5,
+            # "Lemon"         : 6,
+            # "Bottle"        : 7,
+            # "PlateWithHole" : 8,
+            # "RoundNut"      : 9,
+            # "SquaredNut"    : 10,
         }
         self.obj_to_take = -1
 
@@ -165,6 +166,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             camera_width=camera_width,
             camera_depth=camera_depth,
         )
+        utils.EzPickle.__init__(self)
 
         # reward configuration
         self.reward_shaping = reward_shaping
@@ -221,7 +223,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
         if self.use_typeVector:
             ob_image = np.concatenate(ob_lst)
-            type_vector = np.zeros(len(self.object_to_id))
+            type_vector = obs_dict['sequence_vector']
 
             obs = np.concatenate((ob_image.reshape(-1), type_vector))
             return obs
@@ -374,20 +376,21 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
     def take_an_object(self, action):
         ## random take an object
-        if self.random_take:
-            obj_idxs = np.nonzero(self.objects_not_take)[0]
-            if len(obj_idxs) is 0:
-                print('Warning: All objects have been taken.')
-                self.obj_to_take = 0
-                raise ValueError('no object to take.')
-            else:
-                self.obj_to_take = np.random.choice(obj_idxs)
-        ## fix order to take
-        else:
-            self.obj_to_take = (self.objects_not_take != 0).argmax(axis=0)
+        # if self.random_take:
+        #     obj_idxs = np.nonzero(self.objects_not_take)[0]
+        #     if len(obj_idxs) is 0:
+        #         print('Warning: All objects have been taken.')
+        #         self.obj_to_take = 0
+        #         raise ValueError('no object to take.')
+        #     else:
+        #         self.obj_to_take = np.random.choice(obj_idxs)
+        # ## fix order to take
+        # else:
+        #     self.obj_to_take = (self.objects_not_take != 0).argmax(axis=0)
+        self.obj_to_take = self.order[self.finished_objs]
 
-        assert self.objects_not_take[self.obj_to_take] == 1
-        self.objects_not_take[self.obj_to_take] = 0
+        # assert self.objects_not_take[self.obj_to_take] == 1
+        # self.objects_not_take[self.obj_to_take] = 0
 
         obj = self.object_names[self.obj_to_take]
         self.target_object = obj
@@ -414,6 +417,26 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
         ret = super()._post_action(action)
         self._gripper_visualization()
         return ret
+
+    def discreteId_to_action(self, action_id, x_num, y_num):
+        assert x_num > 0 and y_num > 0
+
+        x_id = action_id // x_num
+        y_id = action_id % y_num
+
+        bound = self.action_space
+
+        delta_x = (bound.high[0] - bound.low[0]) / x_num
+        delta_y = (bound.high[1] - bound.low[1]) / y_num
+
+        x = bound.low[0] + delta_x * x_id
+        y = bound.low[1] + delta_y * y_id
+
+        return np.array([x, y])
+
+    def step_discrete(self, action_id, x_num, y_num):
+        action = self.discreteId_to_action(action_id, x_num, y_num)
+        return self.step(action)
 
     def step(self, action):
         """Takes a step in simulation with control command @action."""
@@ -450,15 +473,17 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             self.cur_time += self.model_timestep
 
         reward = self.reward(action)
+
+        self.finished_objs += 1
         if reward > 0:
             self.success_objs += 1
 
         ## done
-        done = (np.sum(self.objects_not_take != 1) >= self.take_nums)
+        done = (self.finished_objs >= self.take_nums)
 
         if done:
             info['success_obj'] = self.success_objs
-            print('Done!')
+            # print('Done!')
 
         ob_dict = self._get_observation()
 
@@ -516,14 +541,19 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
         # keep track of which objects are in their corresponding bins
         self.objects_in_bins = np.zeros(len(self.ob_inits))
-        self.objects_not_take = np.ones(len(self.ob_inits))
+        # self.objects_not_take = np.ones(len(self.ob_inits))
+        self.order = np.array(range(0, len(self.ob_inits)))
 
     def _reset_internal(self):
         super()._reset_internal()
 
+        self.finished_objs = 0
         self.success_objs = 0
         # reset positions of objects, and move objects out of the scene depending on the mode
         self.model.place_objects()
+        # reset order
+        if self.random_take:
+            np.random.shuffle(self.order)
 
     def reward(self, action=None):
         # compute sparse rewards
@@ -541,7 +571,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             reward = 0
 
         # if reward != 0:
-        print('Reward: ', reward, ' by Action: ', action)
+        # print('Reward: ', reward, ' by Action: ', action)
         return reward
 
     def get_bin_bound(self):
@@ -594,6 +624,18 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
             return False
 
 
+    def make_type_vector(self, idx):
+        temp_idx = np.zeros(len(self.object_to_id))
+        if idx < 0:
+            return temp_idx.astype(np.int)
+
+        obj_to_take_name = self.obj_names[idx]
+        obj_type = self.object_to_id[obj_to_take_name]
+        temp_idx[obj_type] = 1
+
+        return temp_idx.astype(np.int)
+
+
     def _get_observation(self):
         """
         Returns an OrderedDict containing observations [(name_string, np.array), ...].
@@ -631,15 +673,18 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv):
 
             di['vis'] = imgae_depth
 
-        ## get type one-hot vector
-        # if self.random_take:
-        #     temp_idx = np.zeros(len(self.object_to_id))
-        #     if self.obj_to_take >= 0:
-        #         obj_to_take_name = self.obj_names[self.obj_to_take]
-        #         obj_type = self.object_to_id[obj_to_take_name]
-        #         temp_idx[obj_type] = 1
-        #
-        #     di["obj_taken"] = np.copy(temp_idx)
+        ## get type one-hot vector in sequence
+        if self.use_typeVector:
+            sequence_vector = []
+            for i in range(self.take_nums):
+                idx = self.finished_objs + i
+                if idx < len(self.order):
+                    type_vector = self.make_type_vector(self.order[idx])
+                else:
+                    type_vector = self.make_type_vector(-1)
+                sequence_vector.extend(type_vector)
+
+            di["sequence_vector"] = np.array(sequence_vector)
 
         return di
 

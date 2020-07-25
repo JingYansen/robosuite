@@ -191,6 +191,8 @@ def test_mapping_from_action_to_img(env):
                 # point = (41, 16) # [0.6425, 0.4225]
                 # point = (0, 0)
                 cv2.circle(view, point, point_size, point_color, thickness)
+                import ipdb
+                ipdb.set_trace()
                 Image.fromarray(view).save('temp.jpeg')
 
                 return
@@ -215,6 +217,7 @@ if __name__ == "__main__":
         video_height=128,
         video_width=128,
         random_take=True,
+        use_typeVector=True,
         action_bound=(np.array([0.5575, 0.3375]), np.array([0.6425, 0.4225])),
         )
 
