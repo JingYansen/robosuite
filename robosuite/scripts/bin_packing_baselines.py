@@ -69,9 +69,9 @@ def get_params(args):
         params['cliprange'] = args.cliprange
         params['ent_coef'] = args.ent_coef
     elif args.alg == 'sac':
-        params['buffer_size'] = 50000
-        params['learning_starts'] = 1000
-        params['batch_size'] = args.nsteps
+        params['buffer_size'] = args.buffer_size
+        params['learning_starts'] = args.learning_starts
+        params['batch_size'] = args.batch_size
         policy_kwargs['n_steps'] = args.nsteps
         policy_kwargs['n_env'] = args.num_env
         policy_kwargs['n_batch'] = args.num_env * args.nsteps
@@ -215,8 +215,16 @@ def get_info_dir(args):
     for info in infos:
         info_dir += str(info) + '_'
 
-    keys = ['total', 'nsteps', 'noptepochs', 'nminibatch', 'take', 'type', 'ent', 'dataset']
-    values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.take_nums, args.use_typeVector, args.ent_coef, args.make_dataset]
+    if args.alg == 'ppo':
+        keys = ['total', 'nsteps', 'noptepochs', 'nminibatch', 'take', 'type', 'ent', 'dataset']
+        values = [args.num_timesteps, args.nsteps, args.noptepochs, args.nminibatches, args.take_nums, args.use_typeVector, args.ent_coef, args.make_dataset]
+    elif args.alg == 'sac':
+        keys = ['total', 'nsteps', 'batch_size', 'buffer_size', 'learning_starts', 'take', 'type']
+        values = [args.num_timesteps, args.nsteps, args.batch_size, args.buffer_size, args.learning_starts, args.take_nums, args.use_typeVector]
+    else:
+        keys = []
+        values = []
+
     assert len(keys) == len(values)
 
     for key, value in zip(keys, values):
@@ -267,6 +275,10 @@ if __name__ == "__main__":
     parser.add_argument('--log_interval', type=int, default=2)
     parser.add_argument('--save_interval', type=int, default=20)
     parser.add_argument('--network', type=str, default='cnn')
+
+    parser.add_argument('--batch_size', type=int, default=256)
+    parser.add_argument('--buffer_size', type=int, default=50000)
+    parser.add_argument('--learning_starts', type=int, default=100)
 
     ## lr args
     parser.add_argument('--lr_type', type=str, default='const')

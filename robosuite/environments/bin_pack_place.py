@@ -80,7 +80,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv, utils.EzPickle):
         keys='image',
         video_height=64,
         video_width=64,
-        render_drop_freq=20,
+        render_drop_freq=0,
         # obj_names=['Bowl'] * 1 + ['Banana'] * 1 + ['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 1 + ['Bottle'] * 1 + ['Lemon'] * 1 + ['Can'] * 1,
         obj_names=['Milk'] * 1 + ['Bread'] * 1 + ['Cereal'] * 2 + ['Can'] * 2,
         force_ratios=0.2,
@@ -89,6 +89,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv, utils.EzPickle):
         random_take=False,
         use_typeVector=False,
         make_dataset=False,
+        obs_to_tensor=False,
         dataset_path='data/temp/',
         # action_bound=(np.array([-np.inf, -np.inf]), np.array([np.inf, np.inf])),
         action_bound=(np.array([0.5, 0.3]), np.array([0.7, 0.5])),
@@ -107,6 +108,8 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv, utils.EzPickle):
         self.make_dataset = make_dataset
         self.dataset_path = dataset_path
         self.dataset_count = 0
+        self.obs_to_tensor = obs_to_tensor
+        self._max_episode_steps = self.take_nums
 
         if self.make_dataset:
             self.label_file = os.path.join(self.dataset_path, 'label.txt')
@@ -226,9 +229,16 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv, utils.EzPickle):
             type_vector = obs_dict['sequence_vector']
 
             obs = np.concatenate((ob_image.reshape(-1), type_vector))
-            return obs
         else:
-            return np.concatenate(ob_lst)
+            obs = np.concatenate(ob_lst)
+
+        if self.obs_to_tensor:
+            import cv2
+            obs = cv2.resize(obs, (84, 84), interpolation=cv2.INTER_AREA)
+            # obs = np.asarray(obs, dtype=np.float32) / 255.0
+            obs = np.moveaxis(obs, -1, 0)
+
+        return obs
 
     def _name2obj(self, name):
         assert name in self.object_to_id.keys()
@@ -483,7 +493,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv, utils.EzPickle):
 
         if done:
             info['success_obj'] = self.success_objs
-            # print('Done!')
+            print('Done!')
 
         ob_dict = self._get_observation()
 
@@ -571,7 +581,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv, utils.EzPickle):
             reward = 0
 
         # if reward != 0:
-        # print('Reward: ', reward, ' by Action: ', action)
+        print('Reward: ', reward, ' by Action: ', action)
         return reward
 
     def get_bin_bound(self):
@@ -676,15 +686,26 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv, utils.EzPickle):
         ## get type one-hot vector in sequence
         if self.use_typeVector:
             sequence_vector = []
-            for i in range(self.take_nums):
-                idx = self.finished_objs + i
-                if idx < len(self.order):
-                    type_vector = self.make_type_vector(self.order[idx])
-                else:
-                    type_vector = self.make_type_vector(-1)
-                sequence_vector.extend(type_vector)
+            # for i in range(self.take_nums):
+            #     idx = self.finished_objs + i
+            #     if idx < len(self.order):
+            #         type_vector = self.make_type_vector(self.order[idx])
+            #     else:
+            #         type_vector = self.make_type_vector(-1)
+            #     sequence_vector.extend(type_vector)
 
-            di["sequence_vector"] = np.array(sequence_vector)
+            # for i in range(self.take_nums):
+            #     idx = self.finished_objs + i
+            #     if idx < len(self.order):
+            #         type_vector = self.make_type_vector(self.order[self.finished_objs])
+            #     else:
+            #         type_vector = self.make_type_vector(-1)
+            #     sequence_vector.extend(type_vector)
+
+            # di["sequence_vector"] = np.array(sequence_vector)
+
+            type_vector = self.make_type_vector(self.order[self.finished_objs - 1])
+            di["sequence_vector"] = type_vector
 
         return di
 

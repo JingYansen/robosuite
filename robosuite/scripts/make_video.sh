@@ -13,9 +13,9 @@ python bin_packing_baselines2.py \
     --camera_width 64 \
     --log True \
     --render_drop_freq 20 \
-    --take_nums 8 \
+    --take_nums 6 \
     --use_typeVector True \
-    --load_path 'results/BinPack-v0/version-1.2.0/image+depth/ppo2_cnn_type_linear_0.0001_0.0001_4000000total_256nsteps_10noptepochs_32batch_8take_Truetype_0.005ent_Falsedataset_64x64/checkpoints/00680' \
+    --load_path 'results/BinPack-v0/version-1.3.0.0/image+depth/ppo2_cnn_type_linear_0.0001_0.0001_4000000total_256nsteps_10noptepochs_32batch_6take_Truetype_0.005ent_Falsedataset_64x64/checkpoints/00700' \
     --make_video True \
     --video_name 'demo.mp4' \
     --debug 'temp_video'

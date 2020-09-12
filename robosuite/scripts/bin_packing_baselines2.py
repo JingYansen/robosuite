@@ -346,7 +346,7 @@ if __name__ == "__main__":
     args.save_path = os.path.join(args.save_dir, 'model.pth')
 
     if args.log:
-        print('rank: ', MPI.COMM_WORLD.Get_rank())
+        # print('rank: ', MPI.COMM_WORLD.Get_rank())
         if MPI is None or MPI.COMM_WORLD.Get_rank() == 0:
             rank = 0
             configure_logger(args.save_dir, format_strs=args.format_strs)
