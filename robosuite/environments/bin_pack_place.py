@@ -89,7 +89,7 @@ class BinPackPlace(SawyerEnv, mujoco_env.MujocoEnv, utils.EzPickle):
         random_take=False,
         use_typeVector=False,
         make_dataset=False,
-        obs_to_tensor=False,
+        obs_to_tensor=True,
         dataset_path='data/temp/',
         # action_bound=(np.array([-np.inf, -np.inf]), np.array([np.inf, np.inf])),
         action_bound=(np.array([0.5, 0.3]), np.array([0.7, 0.5])),
